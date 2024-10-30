@@ -39,7 +39,17 @@ const login = () => {
       if (data.status === "success") {
         // Sla de ontvangen token op in localStorage
         localStorage.setItem("jwtToken", data.data.token);
-        router.push("/admin");
+
+        // Decodeer de token om de rol te controleren
+        const decodedToken = JSON.parse(atob(data.data.token.split(".")[1]));
+        const userRole = decodedToken.role; // Haal de rol uit de gedecodeerde token
+
+        // Controleer of de rol admin is
+        if (userRole === "admin") {
+          router.push("/admin");
+        } else {
+          errorMessage.value = "Geen toegang tot de admin sectie.";
+        }
       } else {
         errorMessage.value = data.message || "Inloggen mislukt.";
       }
