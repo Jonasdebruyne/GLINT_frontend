@@ -1,62 +1,60 @@
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { ref, onMounted } from "vue";
 
-interface Product {
-  id: number;
-  name: string;
-  price: string;
-  image: string;
-  isNew: boolean;
-  category: string;
-}
+const products = ref([]);
+const loading = ref(false); // Voeg de loading variabele toe
+const error = ref(null); // Voeg de error variabele toe voor foutafhandeling
 
-const products = ref<Product[]>(Array.from({ length: 12 }, (_, index) => ({
-  id: index + 1,
-  name: index % 2 === 0 ? 'The Fuzz' : index % 3 === 0 ? 'The Riff' : 'Bertha',
-  price: index % 3 === 0 ? '€ 289,-' : '€ 99,-',
-  image: `https://picsum.photos/300?random=${Math.random()}`, // Random image from Picsum
-  isNew: index % 5 === 0,
-  category: index % 2 === 0 ? 'Sun' : 'Optical',
-})));
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1"
+  : "http://localhost:3000/api/v1";
 
-const selectedCategory = ref<string>('All');
-
-const filterCategory = (category: string) => {
-  selectedCategory.value = category;
+const fetchProducts = async () => {
+  try {
+    loading.value = true; // Zet loading op true bij het starten van het fetch-proces
+    console.log("Fetching products from:", `${baseURL}/products/`);
+    const response = await fetch(`${baseURL}/products/`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const result = await response.json();
+    products.value = result.data.products; // Dit haalt de producten uit de juiste structuur
+    error.value = null; // Reset de error indien succesvol
+  } catch (error) {
+    console.error("Error fetching products:", error.message);
+    error.value = "Er is een fout opgetreden bij het ophalen van de producten."; // Zet de error bericht
+  } finally {
+    loading.value = false; // Zet loading terug op false nadat het fetch-proces is voltooid
+  }
 };
 
-const sortedProducts = computed(() => {
-  if (selectedCategory.value === 'All') {
-    return products.value;
-  }
-  if (selectedCategory.value === 'New') {
-    return products.value.filter(product => product.isNew);
-  }
-  return products.value.filter(product => product.category === selectedCategory.value);
+onMounted(() => {
+  fetchProducts();
 });
 </script>
 
 <template>
   <div class="collection-page">
-    <h1>Product Collection</h1>
-    <nav class="collection-nav">
-      <ul class="nav-list">
-        <li @click="filterCategory('All')" :class="['nav-item', { active: selectedCategory === 'All' }]">All</li>
-        <li @click="filterCategory('Sun')" :class="['nav-item', { active: selectedCategory === 'Sun' }]">Sun</li>
-        <li @click="filterCategory('Optical')" :class="['nav-item', { active: selectedCategory === 'Optical' }]">Optical</li>
-        <li @click="filterCategory('New')" :class="['nav-item', { active: selectedCategory === 'New' }]">New Arrivals</li>
-      </ul>
-    </nav>
+    <div class="top">
+      <h1>Collections</h1>
+      <nav class="collection-nav">
+        <p class="active">All</p>
+        <p>Optical</p>
+        <p>Sun</p>
+      </nav>
+    </div>
     <div class="product-grid">
-      <div class="product-card" v-for="product in sortedProducts" :key="product.id">
+      <div v-for="product in products" :key="product._id" class="product-card">
         <div class="product-image-container">
-          <img :src="product.image" :alt="product.name" class="product-image" />
-          <span v-if="product.isNew" class="new-badge">New!</span>
+          <div
+            class="product-image"
+            :style="{ backgroundColor: product.colors[0] }"
+          ></div>
         </div>
         <div class="product-info">
-          <h3 class="product-name">{{ product.name }}</h3>
-          <p class="product-price">{{ product.price }}</p>
-          <span class="product-category">{{ product.category }}</span>
+          <p class="product-name">{{ product.productName }}</p>
+          <p class="product-price">{{ product.productCode }}</p>
         </div>
       </div>
     </div>
@@ -65,62 +63,38 @@ const sortedProducts = computed(() => {
 
 <style scoped>
 .collection-page {
-  padding: 20px;
-  font-family: Arial, sans-serif;
-  max-width: 1200px;
-  margin: 0 auto;
-  color: #fff;
+  padding: 80px 24px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 48px;
+  width: 100%;
+}
+
+.collection-page .top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
 }
 
 .collection-nav {
   display: flex;
-  justify-content: center;
-  margin-bottom: 30px;
+  gap: 24px;
 }
 
-.nav-list {
-  list-style: none;
-  display: flex;
-  gap: 30px;
-  padding: 0;
-  margin: 0;
-}
-
-.nav-item {
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding-bottom: 10px;
-  position: relative;
-  color: #e5e5e5;
-  transition: color 0.3s;
-}
-
-.nav-item.active::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 2px;
-  background-color: #aa91de;
-}
-
-.nav-item:hover {
-  color: #aa91de;
-}
-
-h1 {
-  text-align: center;
-  font-size: 2.5rem;
-  margin-bottom: 20px;
-  color: #fff;
+.collection-nav .active {
+  color: var(--white);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--white);
 }
 
 .product-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 30px;
+  gap: 24px;
   justify-content: center;
+  width: 100%;
 }
 
 .product-card {
@@ -143,51 +117,28 @@ h1 {
 .product-image-container {
   position: relative;
   width: 100%;
+  height: 200px; /* Stel een hoogte in voor de afbeelding */
   background: #333;
   padding: 20px;
 }
 
 .product-image {
   width: 100%;
-  height: auto;
-  object-fit: cover;
+  height: 100%;
   border-bottom: 1px solid #444;
   border-radius: 0;
 }
 
-.new-badge {
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  background-color: #aa91de;
-  color: white;
-  padding: 5px 10px;
-  font-size: 0.8rem;
-  border-radius: 4px;
-}
-
 .product-info {
-  padding: 20px;
-}
-
-.product-name {
-  font-size: 1.4rem;
-  color: #fff;
-  margin: 0;
-  font-weight: bold;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .product-price {
-  font-size: 1.1rem;
   color: #aa91de;
-  margin-top: 10px;
-}
-
-.product-category {
-  font-size: 0.9rem;
-  color: #888;
-  margin-top: 10px;
-  display: block;
 }
 
 @media (max-width: 768px) {
