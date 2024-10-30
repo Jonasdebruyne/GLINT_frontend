@@ -8,6 +8,11 @@ if (!jwtToken) {
   router.push("/login");
 }
 
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1/"
+  : "http://localhost:3000/api/v1";
+
 const data = ref(null);
 const searchTerm = ref("");
 const selectedFilter = ref("All");
@@ -35,7 +40,7 @@ const toggleSelection = (userId) => {
 const fetchData = async () => {
   try {
     const token = localStorage.getItem("jwtToken");
-    const response = await fetch("http://localhost:3000/api/v1/users", {
+    const response = await fetch(`${baseURL}/users`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -57,12 +62,9 @@ const deleteSelectedUsers = async () => {
     // Gebruik Promise.all om alle DELETE-aanroepen tegelijk uit te voeren
     await Promise.all(
       selectedUsers.value.map(async (userId) => {
-        const response = await fetch(
-          `http://localhost:3000/api/v1/users/${userId}`,
-          {
-            method: "DELETE",
-          }
-        );
+        const response = await fetch(`${baseURL}/users/${userId}`, {
+          method: "DELETE",
+        });
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

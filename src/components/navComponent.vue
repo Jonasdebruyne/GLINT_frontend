@@ -37,11 +37,14 @@ onMounted(() => {
   }
 });
 
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1"
+  : "http://localhost:3000/api/v1";
+
 const fetchUserData = async (userId) => {
   try {
-    const response = await axios.get(
-      `http://localhost:3000/api/v1/users/${userId}`
-    );
+    const response = await axios.get(`${baseURL}/users/${userId}`);
 
     const userData = response.data.data.user;
     if (userData) {

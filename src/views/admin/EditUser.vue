@@ -3,20 +3,26 @@ import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Navigation from "../../components/navComponent.vue";
 
+// Bepaal de basis-URL op basis van de hostname
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1"
+  : "http://localhost:3000/api/v1";
+
+const route = useRoute();
+const router = useRouter();
 const jwtToken = localStorage.getItem("jwtToken");
+
 if (!jwtToken) {
   router.push("/login");
 }
 
-const route = useRoute();
-const router = useRouter();
 const firstname = ref<string>("");
 const lastname = ref<string>("");
 const email = ref<string>("");
 const role = ref<string>("user");
 const status = ref<string>("active");
 const userData = ref<any>(null);
-
 const userId = route.params.id;
 
 const isValidEmail = (email: string) => {
@@ -26,9 +32,7 @@ const isValidEmail = (email: string) => {
 
 const fetchUserData = async () => {
   try {
-    const response = await fetch(
-      `http://localhost:3000/api/v1/users?id=${userId}`
-    );
+    const response = await fetch(`${baseURL}/users?id=${userId}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -70,24 +74,21 @@ const updateUser = async () => {
   }
 
   try {
-    const response = await fetch(
-      `http://localhost:3000/api/v1/users/${userId}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
+    const response = await fetch(`${baseURL}/users/${userId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user: {
+          firstname: firstname.value,
+          lastname: lastname.value,
+          email: email.value,
+          role: role.value,
+          activeUnactive: status.value,
         },
-        body: JSON.stringify({
-          user: {
-            firstname: firstname.value,
-            lastname: lastname.value,
-            email: email.value,
-            role: role.value,
-            activeUnactive: status.value,
-          },
-        }),
-      }
-    );
+      }),
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -105,39 +106,39 @@ const updateUser = async () => {
 <template>
   <Navigation />
   <div class="content">
-    <h1>Edit User</h1>
+    <h1>Gebruiker Bewerken</h1>
     <form v-if="userData" @submit.prevent="updateUser">
       <div class="row">
         <div class="column">
-          <label for="firstname">First Name:</label>
+          <label for="firstname">Voornaam:</label>
           <input v-model="firstname" id="firstname" type="text" required />
         </div>
         <div class="column">
-          <label for="lastname">Last Name:</label>
+          <label for="lastname">Achternaam:</label>
           <input v-model="lastname" id="lastname" type="text" required />
         </div>
       </div>
       <div class="column">
-        <label for="email">Email:</label>
+        <label for="email">E-mail:</label>
         <input v-model="email" id="email" type="email" required />
       </div>
       <div class="row">
         <div class="column">
-          <label for="role">Role:</label>
+          <label for="role">Rol:</label>
           <select v-model="role" id="role">
-            <option value="user">User</option>
+            <option value="user">Gebruiker</option>
             <option value="admin">Admin</option>
           </select>
         </div>
         <div class="column">
           <label for="status">Status:</label>
           <select v-model="status" id="status">
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="active">Actief</option>
+            <option value="inactive">Inactief</option>
           </select>
         </div>
       </div>
-      <button type="submit" class="btn active">Edit User</button>
+      <button type="submit" class="btn active">Bewerk Gebruiker</button>
     </form>
   </div>
 </template>

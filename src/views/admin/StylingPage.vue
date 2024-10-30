@@ -28,6 +28,11 @@ if (!jwtToken) {
   router.push("/login");
 }
 
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1/"
+  : "http://localhost:3000/api/v1";
+
 const userId = ref(null);
 const houseStyleId = ref(null);
 const backgroundColor = ref("#ffffff"); // Default value
@@ -63,7 +68,7 @@ const fetchData = async () => {
     }
 
     // Maak de API-aanroep aan de hand van de juiste ID
-    const apiUrl = `http://localhost:3000/api/v1/housestyle/${houseStyleId.value}`;
+    const apiUrl = `${baseURL}/housestyle/${houseStyleId.value}`;
 
     const response = await axios.get(apiUrl, {
       headers: {
@@ -109,9 +114,7 @@ const saveColor = async () => {
     };
 
     // Zorg ervoor dat userId de juiste waarde heeft
-    const apiUrl = `http://localhost:3000/api/v1/housestyle/${
-      userId.value || userId
-    }`; // Maak de API-URL
+    const apiUrl = `${baseURL}/housestyle/${userId.value || userId}`; // Maak de API-URL
     console.log("Verzend de volgende gegevens naar de API:", colorData); // Log de verzonden gegevens
 
     const response = await axios.put(apiUrl, colorData, {

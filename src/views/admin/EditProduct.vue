@@ -3,6 +3,12 @@ import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Navigation from "../../components/navComponent.vue";
 
+// Bepaal de basis-URL op basis van de omgeving
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1"
+  : "http://localhost:3000/api/v1";
+
 const router = useRouter();
 const jwtToken = localStorage.getItem("jwtToken");
 
@@ -26,9 +32,7 @@ const fetchProductData = async () => {
   const id = route.params.id;
   productId.value = id;
   try {
-    const response = await fetch(
-      `http://localhost:3000/api/v1/products?id=${id}`
-    );
+    const response = await fetch(`${baseURL}/products?id=${id}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -68,27 +72,24 @@ const updateProduct = async () => {
   }
 
   try {
-    const response = await fetch(
-      `http://localhost:3000/api/v1/products/${productId.value}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
+    const response = await fetch(`${baseURL}/products/${productId.value}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        product: {
+          productCode: productCode.value,
+          typeOfProduct: typeOfProduct.value,
+          brand: brand.value,
+          productName: productName.value,
+          colors: colors.value,
+          description: description.value,
+          glassColour: glassColour.value, // Wees consistent
+          activeUnactive: activeUnactive.value,
         },
-        body: JSON.stringify({
-          product: {
-            productCode: productCode.value,
-            typeOfProduct: typeOfProduct.value,
-            brand: brand.value,
-            productName: productName.value,
-            colors: colors.value,
-            description: description.value,
-            glassColour: glassColour.value, // Wees consistent
-            activeUnactive: activeUnactive.value,
-          },
-        }),
-      }
-    );
+      }),
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

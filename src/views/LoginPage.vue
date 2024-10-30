@@ -6,6 +6,11 @@ const email = ref("");
 const password = ref("");
 const errorMessage = ref("");
 
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1"
+  : "http://localhost:3000/api/v1";
+
 const login = () => {
   errorMessage.value = "";
 
@@ -14,7 +19,7 @@ const login = () => {
     return;
   }
 
-  fetch(`http://localhost:3000/api/v1/users/login`, {
+  fetch(`${baseURL}/users/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -8,6 +8,11 @@ if (!jwtToken) {
   router.push("/login");
 }
 
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1/"
+  : "http://localhost:3000/api/v1";
+
 const selectedTypeFilter = ref("All");
 const data = ref([]);
 const searchTerm = ref("");
@@ -18,7 +23,7 @@ const isPopupVisible = ref(false);
 const fetchData = async () => {
   try {
     const token = localStorage.getItem("jwtToken");
-    const response = await fetch("http://localhost:3000/api/v1/products", {
+    const response = await fetch(`${baseURL}/products`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -62,12 +67,9 @@ const confirmDelete = async () => {
 const deleteProducts = async () => {
   try {
     for (const id of selectedProducts.value) {
-      const response = await fetch(
-        `http://localhost:3000/api/v1/products/${id}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(`${baseURL}/products/${id}`, {
+        method: "DELETE",
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

@@ -5,6 +5,13 @@ import Navigation from "../../components/navComponent.vue";
 
 const router = useRouter();
 const jwtToken = localStorage.getItem("jwtToken");
+const errorMessage = ref<string>("");
+
+// Basis-URL bepalen afhankelijk van de omgeving
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1"
+  : "http://localhost:3000/api/v1";
 
 const checkToken = () => {
   if (!jwtToken) {
@@ -49,7 +56,7 @@ const addProduct = async () => {
   }
 
   try {
-    const response = await fetch("http://localhost:3000/api/v1/products", {
+    const response = await fetch(`${baseURL}/products`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -68,7 +75,6 @@ const addProduct = async () => {
       }),
     });
 
-    // Controleer de status van de response
     if (!response.ok) {
       const errorData = await response.json();
       console.error("Error response:", errorData);

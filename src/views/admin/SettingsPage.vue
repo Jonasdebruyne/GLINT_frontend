@@ -52,6 +52,11 @@ if (!tokenPayload || !tokenPayload.userId) {
   router.push("/login");
 }
 
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1/"
+  : "http://localhost:3000/api/v1";
+
 const userId = tokenPayload.userId;
 const activeSection = ref("My profile");
 const profileEditPopup = ref(false);
@@ -64,14 +69,11 @@ const setActiveSection = (section) => {
 
 const fetchUserProfile = async () => {
   try {
-    const response = await axios.get(
-      `http://localhost:3000/api/v1/users/${userId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${jwtToken}`,
-        },
-      }
-    );
+    const response = await axios.get(`${baseURL}/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${jwtToken}`,
+      },
+    });
 
     console.log("User Profile Response:", response.data);
 
@@ -100,7 +102,7 @@ const fetchUserProfile = async () => {
 const updateProfile = async () => {
   try {
     const response = await axios.put(
-      `http://localhost:3000/api/v1/users/${userId}`,
+      `${baseURL}/users/${userId}`,
       {
         user: {
           firstname: user.value.firstName,
@@ -135,7 +137,7 @@ const updateProfile = async () => {
 const updateEmailAddress = async () => {
   try {
     const response = await axios.put(
-      `http://localhost:3000/api/v1/users/${userId}`,
+      `${baseURL}/users/${userId}`,
       {
         user: {
           firstname: user.value.firstName,
@@ -172,7 +174,7 @@ async function updatePassword(newPassword) {
 
   try {
     // Stap 1: Update het nieuwe wachtwoord in de database
-    await axios.put(`http://localhost:3000/api/v1/users/${userId}`, {
+    await axios.put(`${baseURL}/users/${userId}`, {
       user: {
         password: newPassword, // Stel het nieuwe wachtwoord in
       },

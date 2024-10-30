@@ -3,6 +3,12 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import Navigation from "../../components/navComponent.vue";
 
+// Bepaal de basis-URL op basis van de omgeving
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1"
+  : "http://localhost:3000/api/v1";
+
 const jwtToken = localStorage.getItem("jwtToken");
 const router = useRouter();
 
@@ -13,7 +19,7 @@ if (!jwtToken) {
 const firstname = ref<string>("");
 const lastname = ref<string>("");
 const email = ref<string>("");
-const password = ref<string>(""); // Nieuw wachtwoord veld
+const password = ref<string>("");
 const role = ref<string>("user");
 const status = ref<string>("active");
 
@@ -41,28 +47,25 @@ const addUser = async () => {
   }
 
   try {
-    const userResponse = await fetch(
-      "http://localhost:3000/api/v1/users/signup",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+    const userResponse = await fetch(`${baseURL}/users/signup`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user: {
+          firstname: firstname.value,
+          lastname: lastname.value,
+          email: email.value,
+          password: password.value,
+          role: role.value,
+          activeUnactive: status.value,
         },
-        body: JSON.stringify({
-          user: {
-            firstname: firstname.value,
-            lastname: lastname.value,
-            email: email.value,
-            password: password.value,
-            role: role.value,
-            activeUnactive: status.value,
-          },
-        }),
-      }
-    );
+      }),
+    });
 
     if (!userResponse.ok) {
-      const errorDetail = await userResponse.text(); // Of userResponse.json() als de response in JSON is
+      const errorDetail = await userResponse.text();
       throw new Error(
         `HTTP error! status: ${userResponse.status}, details: ${errorDetail}`
       );
@@ -81,16 +84,13 @@ const addUser = async () => {
       userId: userId,
     };
 
-    const houseStyleResponse = await fetch(
-      "http://localhost:3000/api/v1/housestyle",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ houseStyle }), // Gebruik de correcte casing
-      }
-    );
+    const houseStyleResponse = await fetch(`${baseURL}/housestyle`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ houseStyle }),
+    });
 
     if (!houseStyleResponse.ok) {
       const errorDetail = await houseStyleResponse.text();
@@ -98,8 +98,6 @@ const addUser = async () => {
         `HTTP error! status: ${houseStyleResponse.status}, details: ${errorDetail}`
       );
     }
-
-    const houseStyleResult = await houseStyleResponse.json();
 
     router.push("./users");
   } catch (error) {
@@ -131,13 +129,11 @@ const addUser = async () => {
           <label for="email">Email:</label>
           <input v-model="email" id="email" type="email" required />
         </div>
-
         <div class="column">
           <label for="password">Password:</label>
           <input v-model="password" id="password" type="password" required />
         </div>
       </div>
-
       <div class="row">
         <div class="column">
           <label for="role">Role:</label>
@@ -146,7 +142,6 @@ const addUser = async () => {
             <option value="admin">Admin</option>
           </select>
         </div>
-
         <div class="column">
           <label for="status">Status:</label>
           <select v-model="status" id="status">
@@ -155,7 +150,6 @@ const addUser = async () => {
           </select>
         </div>
       </div>
-
       <button type="submit" class="btn active">Add User</button>
     </form>
   </div>
