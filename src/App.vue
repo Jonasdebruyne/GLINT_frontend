@@ -2,6 +2,14 @@
 
 <template>
   <router-view />
+
+  <router-link exact to="/login" class="link">
+    <p>Admin</p>
+  </router-link>
 </template>
 
-<style scoped></style>
+<style scoped>
+.link p {
+  color: var(--white);
+}
+</style>
