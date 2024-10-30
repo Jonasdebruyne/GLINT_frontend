@@ -1,0 +1,189 @@
+<script lang="ts" setup>
+import { ref, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import Navigation from "../../components/navComponent.vue";
+
+const jwtToken = localStorage.getItem("jwtToken");
+if (!jwtToken) {
+  router.push("/login");
+}
+
+const route = useRoute();
+const router = useRouter();
+const firstname = ref<string>("");
+const lastname = ref<string>("");
+const email = ref<string>("");
+const role = ref<string>("user");
+const status = ref<string>("active");
+const userData = ref<any>(null);
+
+const userId = route.params.id;
+
+const isValidEmail = (email: string) => {
+  const re = /\S+@\S+\.\S+/;
+  return re.test(email);
+};
+
+const fetchUserData = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/v1/users?id=${userId}`
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    userData.value = data.data.users[0];
+
+    if (userData.value) {
+      firstname.value = userData.value.firstname;
+      lastname.value = userData.value.lastname;
+      email.value = userData.value.email;
+      role.value = userData.value.role;
+      status.value = userData.value.activeUnactive;
+    }
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+  }
+};
+
+onMounted(() => {
+  fetchUserData();
+});
+
+const updateUser = async () => {
+  if (
+    !firstname.value ||
+    !lastname.value ||
+    !email.value ||
+    !role.value ||
+    !status.value
+  ) {
+    alert("Vul alle velden in.");
+    return;
+  }
+
+  if (!isValidEmail(email.value)) {
+    alert("Voer een geldig e-mailadres in.");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/v1/users/${userId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user: {
+            firstname: firstname.value,
+            lastname: lastname.value,
+            email: email.value,
+            role: role.value,
+            activeUnactive: status.value,
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    router.push("/admin/users");
+  } catch (error) {
+    console.error("Error updating user:", error);
+    alert("Er is een fout opgetreden bij het bijwerken van de gebruiker.");
+  }
+};
+</script>
+
+<template>
+  <Navigation />
+  <div class="content">
+    <h1>Edit User</h1>
+    <form v-if="userData" @submit.prevent="updateUser">
+      <div class="row">
+        <div class="column">
+          <label for="firstname">First Name:</label>
+          <input v-model="firstname" id="firstname" type="text" required />
+        </div>
+        <div class="column">
+          <label for="lastname">Last Name:</label>
+          <input v-model="lastname" id="lastname" type="text" required />
+        </div>
+      </div>
+      <div class="column">
+        <label for="email">Email:</label>
+        <input v-model="email" id="email" type="email" required />
+      </div>
+      <div class="row">
+        <div class="column">
+          <label for="role">Role:</label>
+          <select v-model="role" id="role">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="column">
+          <label for="status">Status:</label>
+          <select v-model="status" id="status">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn active">Edit User</button>
+    </form>
+  </div>
+</template>
+
+<style scoped>
+.content {
+  width: 100%;
+  height: 100vh;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16px;
+  width: 100%;
+}
+
+form .row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 120px;
+  width: 100%;
+}
+
+form .column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+input,
+select {
+  padding: 8px;
+  margin-bottom: 16px;
+  border-radius: 4px;
+  border: 1px solid #333;
+  background-color: #333;
+  color: white;
+}
+
+button {
+  color: white;
+  cursor: pointer;
+}
+</style>
