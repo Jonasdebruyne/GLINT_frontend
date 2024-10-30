@@ -151,8 +151,8 @@ const filteredProducts = computed(() => {
 
       <select class="filter" v-model="selectedTypeFilter">
         <option value="All">All</option>
-        <option value="glasses">Glasses</option>
-        <option value="sunglasses">Sunglasses</option>
+        <option value="optical">Optical</option>
+        <option value="sun">Sun</option>
       </select>
     </div>
     <div class="products">

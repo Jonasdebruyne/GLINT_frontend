@@ -45,7 +45,11 @@ onMounted(() => {
       </nav>
     </div>
     <div class="product-grid">
-      <div v-for="product in products" :key="product._id" class="product-card">
+      <div
+        v-for="product in products"
+        :key="product._id"
+        :class="['product-card', product.typeOfProduct]"
+      >
         <div class="product-image-container">
           <div
             class="product-image"

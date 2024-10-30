@@ -24,7 +24,7 @@ onMounted(() => {
 });
 
 const productCode = ref<string>("");
-const typeOfProduct = ref<string>("glasses");
+const typeOfProduct = ref<string>("optical");
 const brand = ref<string>("");
 const productName = ref<string>("");
 const colors = ref<string>("");
@@ -105,8 +105,8 @@ const addProduct = async () => {
         <div class="column">
           <label for="typeOfProduct">Type Of Product:</label>
           <select v-model="typeOfProduct" id="typeOfProduct">
-            <option value="glasses">Glasses</option>
-            <option value="sunGlasses">Sun glasses</option>
+            <option value="optical">Optical</option>
+            <option value="sun">Sun</option>
           </select>
         </div>
       </div>

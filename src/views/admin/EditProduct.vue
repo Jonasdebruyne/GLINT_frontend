@@ -19,7 +19,7 @@ if (!jwtToken) {
 const route = useRoute();
 const productId = ref<string>("");
 const productCode = ref<string>("");
-const typeOfProduct = ref<string>("glasses");
+const typeOfProduct = ref<string>("optical");
 const brand = ref<string>("");
 const productName = ref<string>("");
 const colors = ref<string>("");
