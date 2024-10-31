@@ -62,6 +62,7 @@ const activeSection = ref("My profile");
 const profileEditPopup = ref(false);
 const changeEmailAddressPopup = ref(false);
 const changePasswordPopup = ref(false);
+const deleteAccountPopup = ref(false);
 
 const setActiveSection = (section) => {
   activeSection.value = section;
@@ -169,6 +170,25 @@ const updateEmailAddress = async () => {
   }
 };
 
+const handleDeleteAccount = async () => {
+  try {
+    const response = await axios.delete(`${baseURL}/users/${userId}`);
+    // Hier kun je een melding geven dat de delete succesvol is of de gebruiker navigeren
+    console.log("Account deleted successfully", response.data);
+    // Bijv. navigeren naar een andere pagina
+  } catch (error) {
+    console.error(
+      "Er ging iets mis bij het verwijderen van het account",
+      error
+    );
+    // Hier kun je een foutmelding tonen aan de gebruiker
+  } finally {
+    // Sluit de popup, ongeacht of de delete succesvol was of niet
+    localStorage.removeItem("jwtToken");
+    router.push("/login");
+  }
+};
+
 async function updatePassword(newPassword) {
   const userId = "67215000c9333e3c48f10a5d"; // Vervang dit met de daadwerkelijke userId
 
@@ -200,6 +220,10 @@ const openChangePasswordPopup = () => {
   changePasswordPopup.value = true;
 };
 
+const openDeleteAccountPopup = () => {
+  deleteAccountPopup.value = true;
+};
+
 const closeProfileEditPopup = () => {
   profileEditPopup.value = false;
 };
@@ -210,6 +234,10 @@ const closeChangeEmailAddressPopup = () => {
 
 const closeChangePasswordPopup = () => {
   changePasswordPopup.value = false;
+};
+
+const closeDeleteAccountPopup = () => {
+  deleteAccountPopup.value = false;
 };
 
 onMounted(() => {
@@ -322,9 +350,9 @@ onMounted(() => {
           <div class="column">
             <div class="row">
               <h3>Delete account</h3>
-              <router-link exact to="/deleteAccount" class="deletelink">
+              <button @click="openDeleteAccountPopup" class="deletelink">
                 <p>Delete account</p>
-              </router-link>
+              </button>
             </div>
           </div>
         </div>
@@ -437,6 +465,26 @@ onMounted(() => {
               />
             </div>
             <button @click="updatePassword" class="btn">Save</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <transition name="fade">
+      <div v-if="deleteAccountPopup" class="deletePopup">
+        <img
+          src="../../assets/icons/cross-circle.svg"
+          alt="icon"
+          @click="closeDeleteAccountPopup"
+        />
+        <div class="text">
+          <h2>Are you sure?</h2>
+          <p>Do you really want to delete your account?</p>
+          <div class="btns">
+            <button @click="closeDeleteAccountPopup">Cancel</button>
+            <button @click="handleDeleteAccount" class="btn active">
+              Delete
+            </button>
           </div>
         </div>
       </div>
@@ -727,5 +775,65 @@ textarea {
 
 button {
   background-color: transparent;
+}
+
+.deletePopup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  background-color: #1a1a1a;
+  padding: 24px 32px;
+  border-radius: 8px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+}
+
+.deletePopup img {
+  width: 64px;
+  height: 64px;
+}
+
+.deletePopup .text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.deletePopup .text .btns {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.deletePopup .text .btns button {
+  color: rgba(255, 255, 255, 0.6);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.deletePopup .text .btns .active {
+  background-color: #d34848;
+  color: var(--white);
+}
+
+.btn.display {
+  visibility: hidden;
+  border: 1px solid #d34848;
+  background-color: rgba(211, 72, 72, 0.2);
+  border-radius: 8px;
+  padding: 4px 12px;
+}
+
+.btn.display p {
+  color: #d34848;
 }
 </style>
