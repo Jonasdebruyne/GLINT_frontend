@@ -45,7 +45,7 @@ const login = () => {
         const userRole = decodedToken.role; // Haal de rol uit de gedecodeerde token
 
         // Controleer of de rol admin is
-        if (userRole === "admin") {
+        if (userRole === "admin" || userRole === "owner") {
           router.push("/admin");
         } else {
           errorMessage.value = "Geen toegang tot de admin sectie.";
