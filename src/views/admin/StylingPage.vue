@@ -34,24 +34,31 @@ const baseURL = isProduction
   : "http://localhost:3000/api/v1";
 
 const userId = ref(null);
+const userRole = ref(null);
 const houseStyleId = ref(null);
-const backgroundColor = ref("#ffffff"); // Default value
-const bodyTextColor = ref("#000000"); // Default value
-const titleColor = ref("#000000"); // Default value
-const textColor = ref("#000000"); // Default value
-const buttonColor = ref("#000000"); // Default value
-const primaryColor = ref("#000000"); // Nieuwe variabele voor primaire kleur
-const secondaryColor = ref("#000000"); // Nieuwe variabele voor secundaire kleur
-const fontFamilyBodyText = ref("DM Sans"); // Default value
-const fontFamilyTitles = ref("Syne"); // Default value
-const logoUrl = ref(""); // Default value
+const backgroundColor = ref("#ffffff");
+const bodyTextColor = ref("#000000");
+const titleColor = ref("#000000");
+const textColor = ref("#000000");
+const buttonColor = ref("#000000");
+const primaryColor = ref("#000000");
+const secondaryColor = ref("#000000");
+const fontFamilyBodyText = ref("DM Sans");
+const fontFamilyTitles = ref("Syne");
+const logoUrl = ref("");
 
 onMounted(() => {
   const tokenPayload = parseJwt(jwtToken);
   if (tokenPayload) {
     userId.value = tokenPayload.userId;
-    houseStyleId.value = userId.value; // Set house style ID here
-    fetchData(); // Fetch data immediately
+    userRole.value = tokenPayload.role;
+    houseStyleId.value = userId.value;
+
+    if (userRole.value !== "owner") {
+      router.push("/admin");
+    }
+
+    fetchData();
   } else {
     console.error("Could not parse JWT.");
   }
@@ -61,13 +68,11 @@ const fetchData = async () => {
   try {
     const token = localStorage.getItem("jwtToken");
 
-    // Controleer of houseStyleId.value een geldige waarde is
     if (!houseStyleId.value) {
       console.error("No houseStyleId available for API call.");
       return;
     }
 
-    // Maak de API-aanroep aan de hand van de juiste ID
     const apiUrl = `${baseURL}/housestyle/${houseStyleId.value}`;
 
     const response = await axios.get(apiUrl, {
@@ -78,7 +83,6 @@ const fetchData = async () => {
 
     const result = response.data;
 
-    // Set values based on fetched house style
     const houseStyle = result?.data?.houseStyles?.[0];
     if (houseStyle) {
       backgroundColor.value = houseStyle.background_color;
@@ -100,22 +104,20 @@ const saveColor = async () => {
   try {
     const token = localStorage.getItem("jwtToken");
 
-    // Zorg ervoor dat alle benodigde gegevens zijn opgenomen
     const colorData = {
       houseStyle: {
-        primary_color: titleColor.value, // Kleur van de titel
-        secondary_color: buttonColor.value, // Kleur van de knop
-        background_color: backgroundColor.value, // Achtergrondkleur
-        text_color: bodyTextColor.value, // Kleur van de tekst
-        fontFamilyBodyText: "DM Sans", // Lettertype voor de bodytekst
-        fontFamilyTitles: "Syne", // Lettertype voor titels
-        logo_url: "assets/images/logo.png", // URL van het logo
+        primary_color: titleColor.value,
+        secondary_color: buttonColor.value,
+        background_color: backgroundColor.value,
+        text_color: bodyTextColor.value,
+        fontFamilyBodyText: "DM Sans",
+        fontFamilyTitles: "Syne",
+        logo_url: "assets/images/logo.png",
       },
     };
 
-    // Zorg ervoor dat userId de juiste waarde heeft
-    const apiUrl = `${baseURL}/housestyle/${userId.value || userId}`; // Maak de API-URL
-    console.log("Verzend de volgende gegevens naar de API:", colorData); // Log de verzonden gegevens
+    const apiUrl = `${baseURL}/housestyle/${userId.value || userId}`;
+    console.log("Verzend de volgende gegevens naar de API:", colorData);
 
     const response = await axios.put(apiUrl, colorData, {
       headers: {
@@ -131,13 +133,11 @@ async function changeColor(colorType) {
   const colorPicker = document.createElement("input");
   colorPicker.type = "color";
 
-  // Stel de huidige waarde in als de kleur van de colorPicker
   colorPicker.value = colorType.value;
 
   colorPicker.addEventListener("input", async (event) => {
     const newColor = event.target.value;
 
-    // Werk de kleur bij op basis van welk type kleur er is veranderd
     if (colorType === titleColor) {
       titleColor.value = newColor;
     } else if (colorType === buttonColor) {
@@ -148,26 +148,19 @@ async function changeColor(colorType) {
       bodyTextColor.value = newColor;
     }
 
-    // Log de nieuwe kleur
     console.log("Nieuwe kleur:", newColor);
 
-    // Roep saveColor aan om de wijzigingen op te slaan in de database
     await saveColor();
   });
 
-  // Open de color picker
   colorPicker.click();
 }
 
 function hexToRgb(hex) {
-  // Remove the hash at the start if it's there
   hex = hex.replace(/^#/, "");
-
-  // Parse r, g, b values
   let r = parseInt(hex.substring(0, 2), 16);
   let g = parseInt(hex.substring(2, 4), 16);
   let b = parseInt(hex.substring(4, 6), 16);
-
   return `rgb(${r}, ${g}, ${b})`;
 }
 </script>
