@@ -44,21 +44,27 @@ onMounted(() => {
         <p>Sun</p>
       </nav>
     </div>
-    <div class="product-grid">
-      <div
-        v-for="product in products"
-        :key="product._id"
-        :class="['product-card', product.typeOfProduct]"
-      >
-        <div class="product-image-container">
-          <div
-            class="product-image"
-            :style="{ backgroundColor: product.colors[0] }"
-          ></div>
-        </div>
-        <div class="product-info">
-          <p class="product-name">{{ product.productName }}</p>
-          <p class="product-price">{{ product.productCode }}</p>
+    <div class="products">
+      <div class="row">
+        <h2>Optical</h2>
+        <p><span>13 </span>items</p>
+      </div>
+      <div class="product-grid">
+        <div
+          v-for="product in products"
+          :key="product._id"
+          :class="['product-card', product.typeOfProduct]"
+        >
+          <div class="product-image-container">
+            <div
+              class="product-image"
+              :style="{ backgroundColor: product.colors[0] }"
+            ></div>
+          </div>
+          <div class="product-info">
+            <p class="product-name">{{ product.productName }}</p>
+            <p class="product-price">{{ product.productCode }}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -84,7 +90,7 @@ onMounted(() => {
 
 .collection-nav {
   display: flex;
-  gap: 24px;
+  gap: 80px;
 }
 
 .collection-nav .active {
@@ -93,11 +99,28 @@ onMounted(() => {
   border-bottom: 1px solid var(--white);
 }
 
-.product-grid {
+.products {
   display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
+  flex-direction: column;
   justify-content: center;
+  gap: 24px;
+  width: 100%;
+  padding: 0 200px;
+}
+
+.products .row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.products .product-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  justify-content: center;
+  gap: 24px;
   width: 100%;
 }
 
@@ -109,8 +132,7 @@ onMounted(() => {
   text-align: center;
   position: relative;
   transition: transform 0.3s, box-shadow 0.3s;
-  width: calc(25% - 30px);
-  max-width: 300px;
+  width: 100%;
 }
 
 .product-card:hover {
@@ -145,15 +167,24 @@ onMounted(() => {
   color: #aa91de;
 }
 
-@media (max-width: 768px) {
-  .product-card {
-    width: calc(50% - 20px);
+@media (min-width: 800px) {
+  .products .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1200px) {
+  .products {
+    padding: 0 200px;
+  }
+
+  .products .product-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (max-width: 480px) {
-  .product-card {
-    width: calc(100% - 20px);
+@media (min-width: 2000px) {
+  .products {
+    padding: 0 600px;
   }
 }
 </style>
