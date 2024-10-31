@@ -63,7 +63,7 @@ onMounted(() => {
           </div>
           <div class="product-info">
             <p class="product-name">{{ product.productName }}</p>
-            <p class="product-price">{{ product.productCode }}</p>
+            <p class="product-price">€ {{ product.productPrice }},00</p>
           </div>
         </div>
       </div>
