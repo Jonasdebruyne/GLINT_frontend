@@ -615,9 +615,17 @@ textarea {
   font-weight: 700;
 }
 
+input,
+textarea {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
 textarea {
   background-color: transparent;
   padding: 8px;
+  height: 100px;
 }
 
 input,
