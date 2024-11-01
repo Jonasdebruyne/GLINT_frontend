@@ -15,6 +15,7 @@ const user = ref({
   password: "",
   newpassword: "",
   oldpassword: "",
+  newPasswordRepeat: "",
   country: "",
   city: "",
   postalCode: "",
@@ -172,8 +173,21 @@ const updateEmailAddress = async () => {
 
 async function updatePassword() {
   try {
-    if (!user.value.oldpassword || !user.value.newpassword) {
-      alert("Vul alstublieft zowel het oude als het nieuwe wachtwoord in.");
+    if (
+      !user.value.oldpassword ||
+      !user.value.newpassword ||
+      !user.value.newPasswordRepeat
+    ) {
+      alert(
+        "Vul alstublieft het oude wachtwoord, het nieuwe wachtwoord en de herhaling van het nieuwe wachtwoord in."
+      );
+      return;
+    }
+
+    if (user.value.newpassword !== user.value.newPasswordRepeat) {
+      alert(
+        "Het nieuwe wachtwoord en de herhaling van het nieuwe wachtwoord komen niet overeen."
+      );
       return;
     }
 
@@ -198,13 +212,11 @@ async function updatePassword() {
     closeChangePasswordPopup();
   } catch (error) {
     console.error("Error updating password:", error);
-
-    // Controleer of de foutmelding meer informatie bevat
     if (error.response && error.response.data && error.response.data.message) {
       alert(error.response.data.message); // Toon het foutbericht van de backend
     } else {
       alert(
-        "An error occurred while updating your password. Please try again."
+        "Er is een fout opgetreden bij het bijwerken van uw wachtwoord. Probeer het opnieuw."
       );
     }
   }
@@ -444,7 +456,9 @@ onMounted(() => {
       <div v-if="changeEmailAddressPopup" class="popup">
         <div class="popup-content">
           <div class="row">
-            <span class="close" @click="closeProfileEditPopup">&times;</span>
+            <span class="close" @click="closeChangeEmailAddressPopup"
+              >&times;</span
+            >
             <h2>Change Email Address</h2>
           </div>
           <div class="fields">
@@ -469,25 +483,36 @@ onMounted(() => {
             <h2>Change Password</h2>
           </div>
           <div class="fields">
-            <div class="row">
-              <label>Old Password</label>
+            <div class="column">
+              <label>Old password</label>
               <input
                 v-model="user.oldpassword"
                 type="password"
-                placeholder="Oude wachtwoord"
+                placeholder="••••••••"
               />
             </div>
-            <div class="row">
-              <label>New Password</label>
+            <div class="column">
+              <label>New password</label>
               <input
                 v-model="user.newpassword"
                 type="password"
-                placeholder="Nieuwe wachtwoord"
+                placeholder="••••••••"
+              />
+            </div>
+            <div class="column">
+              <label>Repeat new password</label>
+              <input
+                type="password"
+                v-model="user.newPasswordRepeat"
+                placeholder="••••••••"
               />
             </div>
           </div>
-          <button @click="updatePassword(user.oldpassword, user.newpassword)">
-            Update Password
+          <button
+            class="btn"
+            @click="updatePassword(user.oldpassword, user.newpassword)"
+          >
+            Save
           </button>
         </div>
       </div>
@@ -727,6 +752,7 @@ textarea {
   border-radius: 8px;
   width: 400px;
   position: relative;
+  align-items: flex-end;
 }
 
 .close {
@@ -772,6 +798,7 @@ textarea {
   flex-direction: column;
   align-items: flex-end;
   gap: 16px;
+  width: 100%;
 }
 
 .popup-content .row span {
