@@ -132,7 +132,6 @@ const updateProfile = async () => {
     await fetchUserProfile();
   } catch (error) {
     console.error("Error updating profile:", error);
-    alert("There was an error updating your profile. Please try again.");
   }
 };
 
@@ -167,7 +166,6 @@ const updateEmailAddress = async () => {
     await fetchUserProfile();
   } catch (error) {
     console.error("Error updating profile:", error);
-    alert("There was an error updating your profile. Please try again.");
   }
 };
 
@@ -178,16 +176,14 @@ async function updatePassword() {
       !user.value.newpassword ||
       !user.value.newPasswordRepeat
     ) {
-      alert(
-        "Vul alstublieft het oude wachtwoord, het nieuwe wachtwoord en de herhaling van het nieuwe wachtwoord in."
-      );
+      document.querySelector(".errorMessage").innerHTML =
+        "Please enter the old password, the new password and the repetition of the new password.";
       return;
     }
 
     if (user.value.newpassword !== user.value.newPasswordRepeat) {
-      alert(
-        "Het nieuwe wachtwoord en de herhaling van het nieuwe wachtwoord komen niet overeen."
-      );
+      document.querySelector(".errorMessage").innerHTML =
+        "The new password and the repetition of the new password do not match.";
       return;
     }
 
@@ -212,13 +208,6 @@ async function updatePassword() {
     closeChangePasswordPopup();
   } catch (error) {
     console.error("Error updating password:", error);
-    if (error.response && error.response.data && error.response.data.message) {
-      alert(error.response.data.message); // Toon het foutbericht van de backend
-    } else {
-      alert(
-        "Er is een fout opgetreden bij het bijwerken van uw wachtwoord. Probeer het opnieuw."
-      );
-    }
   }
 }
 
@@ -507,6 +496,7 @@ onMounted(() => {
                 placeholder="••••••••"
               />
             </div>
+            <p class="errorMessage"></p>
           </div>
           <button
             class="btn"
@@ -883,7 +873,8 @@ button {
   padding: 4px 12px;
 }
 
-.btn.display p {
+.btn.display p,
+.errorMessage {
   color: #d34848;
 }
 </style>
