@@ -24,6 +24,7 @@ const role = ref<string>("user");
 const status = ref<string>("active");
 const userData = ref<any>(null);
 const userId = route.params.id;
+console.log("User ID:", userId); // Toevoegen voor debug-doeleinden
 
 const isValidEmail = (email: string) => {
   const re = /\S+@\S+\.\S+/;
@@ -32,20 +33,25 @@ const isValidEmail = (email: string) => {
 
 const fetchUserData = async () => {
   try {
-    const response = await fetch(`${baseURL}/users?id=${userId}`);
+    const response = await fetch(`${baseURL}/users/${userId}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
-    userData.value = data.data.users[0];
+    const data = await response.json(); // JSON-parsing hier
+    userData.value = data.data.user; // Wijzig hier naar data.data.user om de juiste structuur te krijgen
 
+    // Vul de form velden met de ontvangen data
     if (userData.value) {
       firstname.value = userData.value.firstname;
       lastname.value = userData.value.lastname;
       email.value = userData.value.email;
       role.value = userData.value.role;
       status.value = userData.value.activeUnactive;
+      country.value = userData.value.country; // Nieuw toegevoegd
+      city.value = userData.value.city; // Nieuw toegevoegd
+      postalCode.value = userData.value.postalCode; // Nieuw toegevoegd
+      bio.value = userData.value.bio; // Nieuw toegevoegd
     }
   } catch (error) {
     console.error("Error fetching user data:", error);
@@ -106,7 +112,7 @@ const updateUser = async () => {
 <template>
   <Navigation />
   <div class="content">
-    <h1>Gebruiker Bewerken</h1>
+    <h1>Edit user</h1>
     <form v-if="userData" @submit.prevent="updateUser">
       <div class="row">
         <div class="column">
@@ -139,7 +145,7 @@ const updateUser = async () => {
           </select>
         </div>
       </div>
-      <button type="submit" class="btn active">Bewerk Gebruiker</button>
+      <button type="submit" class="btn active">Save</button>
     </form>
   </div>
 </template>

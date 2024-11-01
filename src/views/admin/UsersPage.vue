@@ -3,40 +3,31 @@ import { ref, onMounted, computed } from "vue";
 import Navigation from "../../components/navComponent.vue";
 import router from "../../router";
 
+// JWT-token controle
 const jwtToken = localStorage.getItem("jwtToken");
 if (!jwtToken) {
   router.push("/login");
 }
 
+// API-basispad configureren
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
   : "http://localhost:3000/api/v1";
 
-const data = ref(null);
+// Reactieve data-referenties
+const data = ref([]);
 const searchTerm = ref("");
 const selectedFilter = ref("All");
-const selectedUsers = ref([]);
-const isDeleteButtonVisible = computed(() => selectedUsers.value.length > 0);
+const selectedUsers = ref<string[]>([]);
+const selectedUser = ref(null); // Toegevoegd voor gedetailleerde weergave
 const isPopupVisible = ref(false);
 
-const selectAllUsers = (isSelected) => {
-  if (isSelected) {
-    selectedUsers.value = filteredUsers.value.map((user) => user._id);
-  } else {
-    selectedUsers.value = [];
-  }
-};
+// Computed properties voor UI-staat
+const isDeleteButtonVisible = computed(() => selectedUsers.value.length > 0);
+const emptyState = computed(() => data.value.length === 0);
 
-const toggleSelection = (userId) => {
-  const index = selectedUsers.value.indexOf(userId);
-  if (index === -1) {
-    selectedUsers.value.push(userId);
-  } else {
-    selectedUsers.value.splice(index, 1);
-  }
-};
-
+// Ophalen van gebruikersgegevens
 const fetchData = async () => {
   try {
     const token = localStorage.getItem("jwtToken");
@@ -45,9 +36,7 @@ const fetchData = async () => {
         Authorization: `Bearer ${token}`,
       },
     });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const result = await response.json();
     data.value = result.data.users;
   } catch (error) {
@@ -55,51 +44,8 @@ const fetchData = async () => {
   }
 };
 
-const deleteSelectedUsers = async () => {
-  if (selectedUsers.value.length === 0) return;
-
-  try {
-    // Gebruik Promise.all om alle DELETE-aanroepen tegelijk uit te voeren
-    await Promise.all(
-      selectedUsers.value.map(async (userId) => {
-        const response = await fetch(`${baseURL}/users/${userId}`, {
-          method: "DELETE",
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-      })
-    );
-
-    // Ververs de gegevens na succesvolle verwijdering
-    await fetchData();
-    selectedUsers.value = [];
-  } catch (error) {
-    console.error("Error deleting users:", error);
-  }
-};
-
-const confirmDelete = async () => {
-  await deleteSelectedUsers();
-  hidePopup();
-};
-
-const showPopup = () => {
-  isPopupVisible.value = true;
-};
-
-const hidePopup = () => {
-  isPopupVisible.value = false;
-};
-
-onMounted(() => {
-  fetchData();
-});
-
+// Filter de gebruikers op basis van zoekterm en filter
 const filteredUsers = computed(() => {
-  if (!data.value) return [];
-
   return data.value.filter((user) => {
     const matchesSearchTerm =
       user.firstname.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
@@ -113,9 +59,63 @@ const filteredUsers = computed(() => {
   });
 });
 
-const emptyState = computed(() => {
-  return data.value && data.value.length === 0;
-});
+// Selecteer alle gebruikers in de gefilterde lijst
+const selectAllUsers = (isSelected: boolean) => {
+  selectedUsers.value = isSelected
+    ? filteredUsers.value
+        .map((user) =>
+          user._id === "67215000c9333e3c48f10a5d" ? user._id : null
+        )
+        .filter((id) => id) // Hier aangepast
+    : [];
+};
+
+// Schakel selectie voor een enkele gebruiker
+const toggleSelection = (userId: string) => {
+  const index = selectedUsers.value.indexOf(userId);
+  if (index === -1) {
+    selectedUsers.value.push(userId);
+  } else {
+    selectedUsers.value.splice(index, 1);
+  }
+};
+
+// Verwijderen van geselecteerde gebruikers
+const deleteSelectedUsers = async () => {
+  if (!selectedUsers.value.length) return;
+
+  try {
+    await Promise.all(
+      selectedUsers.value.map(async (userId) => {
+        const response = await fetch(`${baseURL}/users/${userId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+          },
+        });
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
+      })
+    );
+
+    // Gegevens verversen en selectie wissen na succesvolle verwijdering
+    await fetchData();
+    selectedUsers.value = [];
+  } catch (error) {
+    console.error("Error deleting users:", error);
+  }
+};
+
+// Popup-weergavebeheer
+const showPopup = () => (isPopupVisible.value = true);
+const hidePopup = () => (isPopupVisible.value = false);
+const confirmDelete = async () => {
+  await deleteSelectedUsers();
+  hidePopup();
+};
+
+// Initialiseer component en haal data op
+onMounted(fetchData);
 </script>
 
 <template>
