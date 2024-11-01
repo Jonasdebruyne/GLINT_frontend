@@ -170,6 +170,46 @@ const updateEmailAddress = async () => {
   }
 };
 
+async function updatePassword() {
+  try {
+    if (!user.value.oldpassword || !user.value.newpassword) {
+      alert("Vul alstublieft zowel het oude als het nieuwe wachtwoord in.");
+      return;
+    }
+
+    const response = await axios.put(
+      `${baseURL}/users/${userId}`,
+      {
+        user: {
+          oldPassword: user.value.oldpassword, // Oude wachtwoord
+          newPassword: user.value.newpassword, // Nieuwe wachtwoord
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      }
+    );
+
+    console.log("Old Password:", user.value.oldpassword);
+    console.log("New Password:", user.value.newpassword);
+    console.log("Password updated successfully:", response.data);
+    closeChangePasswordPopup();
+  } catch (error) {
+    console.error("Error updating password:", error);
+
+    // Controleer of de foutmelding meer informatie bevat
+    if (error.response && error.response.data && error.response.data.message) {
+      alert(error.response.data.message); // Toon het foutbericht van de backend
+    } else {
+      alert(
+        "An error occurred while updating your password. Please try again."
+      );
+    }
+  }
+}
+
 const handleDeleteAccount = async () => {
   try {
     const response = await axios.delete(`${baseURL}/users/${userId}`);
@@ -188,25 +228,6 @@ const handleDeleteAccount = async () => {
     router.push("/login");
   }
 };
-
-async function updatePassword(newPassword) {
-  const userId = "67215000c9333e3c48f10a5d"; // Vervang dit met de daadwerkelijke userId
-
-  try {
-    // Stap 1: Update het nieuwe wachtwoord in de database
-    await axios.put(`${baseURL}/users/${userId}`, {
-      user: {
-        password: newPassword, // Stel het nieuwe wachtwoord in
-      },
-    });
-    console.log("Wachtwoord succesvol bijgewerkt");
-  } catch (error) {
-    console.error(
-      "Er is een fout opgetreden bij het bijwerken van het wachtwoord:",
-      error
-    );
-  }
-}
 
 const openEditPopup = () => {
   profileEditPopup.value = true;
@@ -448,24 +469,26 @@ onMounted(() => {
             <h2>Change Password</h2>
           </div>
           <div class="fields">
-            <div class="column">
+            <div class="row">
               <label>Old Password</label>
               <input
-                v-model="user.oldPassword"
+                v-model="user.oldpassword"
                 type="password"
-                placeholder="Old Password"
+                placeholder="Oude wachtwoord"
               />
             </div>
-            <div class="column">
+            <div class="row">
               <label>New Password</label>
               <input
-                v-model="user.newPassword"
+                v-model="user.newpassword"
                 type="password"
-                placeholder="New Password"
+                placeholder="Nieuwe wachtwoord"
               />
             </div>
-            <button @click="updatePassword" class="btn">Save</button>
           </div>
+          <button @click="updatePassword(user.oldpassword, user.newpassword)">
+            Update Password
+          </button>
         </div>
       </div>
     </transition>
