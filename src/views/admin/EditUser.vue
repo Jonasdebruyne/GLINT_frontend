@@ -24,7 +24,6 @@ const role = ref<string>("user");
 const status = ref<string>("active");
 const userData = ref<any>(null);
 const userId = route.params.id;
-console.log("User ID:", userId); // Toevoegen voor debug-doeleinden
 
 const isValidEmail = (email: string) => {
   const re = /\S+@\S+\.\S+/;

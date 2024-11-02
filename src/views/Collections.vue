@@ -13,7 +13,6 @@ const baseURL = isProduction
 const fetchProducts = async () => {
   try {
     loading.value = true; // Zet loading op true bij het starten van het fetch-proces
-    console.log("Fetching products from:", `${baseURL}/products/`);
     const response = await fetch(`${baseURL}/products/`);
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);

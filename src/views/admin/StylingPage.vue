@@ -117,7 +117,6 @@ const saveColor = async () => {
     };
 
     const apiUrl = `${baseURL}/housestyle/${userId.value || userId}`;
-    console.log("Verzend de volgende gegevens naar de API:", colorData);
 
     const response = await axios.put(apiUrl, colorData, {
       headers: {
@@ -147,8 +146,6 @@ async function changeColor(colorType) {
     } else if (colorType === bodyTextColor) {
       bodyTextColor.value = newColor;
     }
-
-    console.log("Nieuwe kleur:", newColor);
 
     await saveColor();
   });

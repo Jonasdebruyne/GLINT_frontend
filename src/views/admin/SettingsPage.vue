@@ -77,8 +77,6 @@ const fetchUserProfile = async () => {
       },
     });
 
-    console.log("User Profile Response:", response.data);
-
     if (response.data && response.data.data && response.data.data.user) {
       user.value = {
         firstName: response.data.data.user.firstname || null,
@@ -127,7 +125,6 @@ const updateProfile = async () => {
       }
     );
 
-    console.log("Profile updated successfully:", response.data);
     closeProfileEditPopup();
     await fetchUserProfile();
   } catch (error) {
@@ -161,7 +158,6 @@ const updateEmailAddress = async () => {
       }
     );
 
-    console.log("Profile updated successfully:", response.data);
     closeChangeEmailAddressPopup();
     await fetchUserProfile();
   } catch (error) {
@@ -202,9 +198,6 @@ async function updatePassword() {
       }
     );
 
-    console.log("Old Password:", user.value.oldpassword);
-    console.log("New Password:", user.value.newpassword);
-    console.log("Password updated successfully:", response.data);
     closeChangePasswordPopup();
   } catch (error) {
     console.error("Error updating password:", error);
@@ -214,9 +207,6 @@ async function updatePassword() {
 const handleDeleteAccount = async () => {
   try {
     const response = await axios.delete(`${baseURL}/users/${userId}`);
-    // Hier kun je een melding geven dat de delete succesvol is of de gebruiker navigeren
-    console.log("Account deleted successfully", response.data);
-    // Bijv. navigeren naar een andere pagina
   } catch (error) {
     console.error(
       "Er ging iets mis bij het verwijderen van het account",
