@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted } from "vue";
+import router from "../router";
 
 const products = ref([]);
 const loading = ref(false); // Voeg de loading variabele toe
@@ -20,8 +21,8 @@ const fetchProducts = async () => {
     const result = await response.json();
     products.value = result.data.products; // Dit haalt de producten uit de juiste structuur
     error.value = null; // Reset de error indien succesvol
-  } catch (error) {
-    console.error("Error fetching products:", error.message);
+  } catch (err) {
+    console.error("Error fetching products:", err.message);
     error.value = "Er is een fout opgetreden bij het ophalen van de producten."; // Zet de error bericht
   } finally {
     loading.value = false; // Zet loading terug op false nadat het fetch-proces is voltooid
@@ -43,15 +44,21 @@ onMounted(() => {
         <p>Sun</p>
       </nav>
     </div>
-    <div class="products">
+
+    <!-- Loading en error afhandeling -->
+    <div v-if="loading">Laden...</div>
+    <div v-if="error">{{ error }}</div>
+
+    <div v-if="!loading && !error" class="products">
       <div class="row">
         <h2>Optical</h2>
         <p><span>13 </span>items</p>
       </div>
       <div class="product-grid">
-        <div
+        <router-link
           v-for="product in products"
           :key="product._id"
+          :to="`/${product.productCode}`"
           :class="['product-card', product.typeOfProduct]"
         >
           <div class="product-image-container">
@@ -64,7 +71,7 @@ onMounted(() => {
             <p class="product-name">{{ product.productName }}</p>
             <p class="product-price">€ {{ product.productPrice }},00</p>
           </div>
-        </div>
+        </router-link>
       </div>
     </div>
   </div>
