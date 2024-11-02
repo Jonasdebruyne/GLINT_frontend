@@ -1,26 +1,123 @@
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import { ref, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import axios from "axios";
+
+const email = ref("");
+const verificationCode = ref("");
+const errorMessage = ref("");
+const router = useRouter();
+const route = useRoute();
+
+const isValidEmail = (email: string) => {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+};
+
+// Haal email op vanuit query parameter wanneer de component laadt
+onMounted(() => {
+  if (route.query.email) {
+    email.value = route.query.email as string;
+  }
+});
+
+// Functie om de reset e-mail te sturen
+const sendMail = async () => {
+  if (!isValidEmail(email.value)) {
+    errorMessage.value = "Voer een geldig e-mailadres in.";
+    return;
+  }
+
+  try {
+    const response = await axios.post(
+      "http://localhost:3000/api/v1/users/forgot-password",
+      { email: email.value }
+    );
+
+    if (response && response.status >= 200 && response.status < 300) {
+      errorMessage.value = ""; // Reset foutmelding
+      // Navigeer naar verificatiepagina met e-mail als query parameter
+      router.push({ path: "/verificationCode", query: { email: email.value } });
+    } else {
+      errorMessage.value = "Er is een onverwachte fout opgetreden.";
+    }
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      errorMessage.value = "Gebruiker niet gevonden.";
+    } else {
+      errorMessage.value =
+        "Er is een fout opgetreden bij het versturen van de e-mail.";
+    }
+  }
+};
+
+// Functie om de verificatiecode te verifiëren
+const verifyCode = async () => {
+  if (!verificationCode.value) {
+    errorMessage.value = "Voer de verificatiecode in.";
+    return;
+  }
+
+  try {
+    const response = await axios.post(
+      "http://localhost:3000/api/v1/users/verify-code",
+      { code: verificationCode.value, email: email.value } // Voeg het e-mailadres toe aan de payload
+    );
+
+    if (response && response.status >= 200 && response.status < 300) {
+      errorMessage.value = ""; // Reset foutmelding
+      router.push("/reset-password"); // Navigeer naar reset-password pagina
+    } else {
+      errorMessage.value = "Er is een onverwachte fout opgetreden.";
+    }
+  } catch (error) {
+    if (error.response) {
+      errorMessage.value =
+        "Er is een fout opgetreden bij het verifiëren van de code.";
+    } else {
+      errorMessage.value = "Netwerkfout.";
+    }
+  }
+};
+</script>
 
 <template>
   <div class="container">
     <div class="overlay">
       <div class="elements">
         <h1>Forgot password</h1>
-        <form>
+        <form @submit.prevent="sendMail">
           <div class="column">
             <label for="email">Email</label>
             <input
               id="email"
               v-model="email"
-              type="text"
+              type="email"
               placeholder="johndoe@gmail.com"
+              required
             />
           </div>
 
           <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
 
-          <button class="submitBtn" type="submit" @click.prevent="sendMail">
-            Send mail
-          </button>
+          <button class="submitBtn" type="submit">Send mail</button>
+        </form>
+
+        <form v-if="verificationCode" @submit.prevent="verifyCode">
+          <div class="column">
+            <label for="verificationCode">Verification code</label>
+            <input
+              id="verificationCode"
+              v-model="verificationCode"
+              type="text"
+              placeholder="HFDQ2FDQL4"
+              required
+            />
+          </div>
+
+          <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+
+          <button class="submitBtn" type="submit">Verify code</button>
         </form>
       </div>
     </div>
@@ -75,47 +172,6 @@ form {
   width: 100%;
 }
 
-.row {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.row .rememberMe {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-}
-
-.row .rememberMe i,
-.row a {
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.row a {
-  text-decoration: underline;
-}
-
-label,
-input {
-  color: var(--white);
-}
-
-input {
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  background-color: transparent;
-  padding: 4px 16px;
-  border-radius: 8px;
-  width: 100%;
-}
-
-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
-  font-weight: 400;
-}
-
 .error {
   color: #d34848;
 }
@@ -126,5 +182,9 @@ button {
   border: none;
   border-radius: 4px;
   padding: 8px;
+}
+
+input {
+  color: var(--white);
 }
 </style>

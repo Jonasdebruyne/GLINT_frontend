@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Login from "./views/LoginPage.vue";
 import ForgotPassword from "./views/ForgotPassword.vue";
+import VerificationCode from "./views/VerificationCode.vue";
+import NewPassword from "./views/NewPassword.vue";
 import Collections from "./views/Collections.vue";
 import DetailsProduct from "./views/DetailsProduct.vue";
 import Home from "./views/admin/HomePage.vue";
@@ -34,6 +36,16 @@ export default createRouter({
       path: "/forgotPassword",
       name: "ForgotPassword",
       component: ForgotPassword,
+    },
+    {
+      path: "/verificationCode",
+      name: "VerificationCode",
+      component: VerificationCode,
+    },
+    {
+      path: "/newPassword",
+      name: "NewPassword",
+      component: NewPassword,
     },
     {
       path: "/admin",
