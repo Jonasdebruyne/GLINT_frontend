@@ -3,78 +3,60 @@ import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 
-const verificationCode = ref("");
+const email = ref("");
+const newPassword = ref("");
+const repeatNewPassword = ref("");
 const errorMessage = ref("");
 const router = useRouter();
-const route = useRoute(); // Voor toegang tot routeparameters
+const route = useRoute();
 
-const email = ref(""); // Hier slaan we het emailadres op
-
-// Functie om te controleren of de code geldig is
-const isValidCode = (code: string) => {
-  return code.trim() !== ""; // Zorg ervoor dat de code niet leeg is
-};
-
-// Haal het emailadres op bij het laden van het component
 onMounted(() => {
   if (route.query.email) {
     email.value = route.query.email as string;
-    console.log("Email opgehaald van URL:", email.value);
-  } else {
-    console.log("Geen email gevonden in de URL.");
   }
 });
 
-// Functie om de verificatiecode te versturen
-const verifyCode = async () => {
-  console.log("Verificatiecode ingevoerd:", verificationCode.value);
+const updatePassword = async () => {
+  if (newPassword.value !== repeatNewPassword.value) {
+    errorMessage.value = "Wachtwoorden komen niet overeen.";
+    return;
+  }
 
-  if (!isValidCode(verificationCode.value)) {
-    errorMessage.value = "Voer een geldige verificatiecode in.";
-    console.log("Ongeldige code ingevoerd.");
+  if (newPassword.value.length < 8) {
+    errorMessage.value = "Het wachtwoord moet minimaal 8 tekens lang zijn.";
     return;
   }
 
   try {
-    console.log("Verificatiecode en email worden verzonden naar de server...");
     const response = await axios.post(
-      "http://localhost:3000/api/v1/users/verify-code",
+      "http://localhost:3000/api/v1/users/reset-password",
       {
-        code: verificationCode.value,
         email: email.value,
+        newPassword: newPassword.value,
       }
     );
 
-    console.log("Serverrespons ontvangen:", response.status);
     if (response.status === 200) {
-      console.log(
-        "Verificatiecode correct, navigeren naar nieuwe wachtwoordpagina."
-      );
-      router.push("/newPassword"); // Navigatie naar de nieuwe wachtwoordpagina
+      router.push("/login");
     } else {
-      errorMessage.value = "De verificatiecode is ongeldig.";
-      console.log("Ongeldige verificatiecode van de server ontvangen.");
+      errorMessage.value = "Er is een onverwachte fout opgetreden.";
     }
   } catch (error) {
-    console.log("Fout bij het verifiëren van de code:", error);
     if (axios.isAxiosError(error) && error.response) {
-      // Specifieke foutafhandeling op basis van de statuscode
       switch (error.response.status) {
         case 400:
-          errorMessage.value = "Ongeldige verificatiecode.";
+          errorMessage.value = "Ongeldig verzoek.";
           break;
         case 404:
-          errorMessage.value = "Verificatiecode niet gevonden.";
+          errorMessage.value = "Gebruiker niet gevonden.";
           break;
         default:
           errorMessage.value =
-            "Er is een fout opgetreden bij het verifiëren van de code.";
+            "Er is een fout opgetreden bij het instellen van het wachtwoord.";
           break;
       }
-      console.log("Serverfout:", error.response.status, error.response.data);
     } else {
-      errorMessage.value = "Er is een netwerkfout opgetreden.";
-      console.log("Netwerkfout of andere fout:", error);
+      errorMessage.value = "Netwerkfout.";
     }
   }
 };
@@ -84,22 +66,32 @@ const verifyCode = async () => {
   <div class="container">
     <div class="overlay">
       <div class="elements">
-        <h1>Forgot password</h1>
-        <form @submit.prevent="verifyCode">
+        <h1>Nieuw wachtwoord instellen</h1>
+        <form @submit.prevent="updatePassword">
           <div class="column">
-            <label for="verificationCode">Verification code</label>
+            <label for="newPassword">Nieuw wachtwoord</label>
             <input
-              id="verificationCode"
-              v-model="verificationCode"
-              type="text"
-              placeholder="HFDQ2FDQL4"
+              id="newPassword"
+              v-model="newPassword"
+              type="password"
+              placeholder="●●●●●●●●"
+              required
+            />
+          </div>
+          <div class="column">
+            <label for="repeatNewPassword">Herhaal nieuw wachtwoord</label>
+            <input
+              id="repeatNewPassword"
+              v-model="repeatNewPassword"
+              type="password"
+              placeholder="●●●●●●●●"
               required
             />
           </div>
 
           <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
 
-          <button class="submitBtn" type="submit">Verify code</button>
+          <button class="submitBtn" type="submit">Wachtwoord instellen</button>
         </form>
       </div>
     </div>

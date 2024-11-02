@@ -3,40 +3,29 @@ import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 
+const email = ref("");
 const verificationCode = ref("");
 const errorMessage = ref("");
 const router = useRouter();
-const route = useRoute(); // Voor toegang tot routeparameters
+const route = useRoute();
 
-const email = ref(""); // Hier slaan we het emailadres op
-
-// Functie om te controleren of de code geldig is
 const isValidCode = (code: string) => {
-  return code.trim() !== ""; // Zorg ervoor dat de code niet leeg is
+  return code.trim() !== "";
 };
 
-// Haal het emailadres op bij het laden van het component
 onMounted(() => {
   if (route.query.email) {
     email.value = route.query.email as string;
-    console.log("Email opgehaald van URL:", email.value);
-  } else {
-    console.log("Geen email gevonden in de URL.");
   }
 });
 
-// Functie om de verificatiecode te versturen
 const verifyCode = async () => {
-  console.log("Verificatiecode ingevoerd:", verificationCode.value);
-
   if (!isValidCode(verificationCode.value)) {
     errorMessage.value = "Voer een geldige verificatiecode in.";
-    console.log("Ongeldige code ingevoerd.");
     return;
   }
 
   try {
-    console.log("Verificatiecode en email worden verzonden naar de server...");
     const response = await axios.post(
       "http://localhost:3000/api/v1/users/verify-code",
       {
@@ -45,20 +34,13 @@ const verifyCode = async () => {
       }
     );
 
-    console.log("Serverrespons ontvangen:", response.status);
     if (response.status === 200) {
-      console.log(
-        "Verificatiecode correct, navigeren naar nieuwe wachtwoordpagina."
-      );
-      router.push("/newPassword"); // Navigatie naar de nieuwe wachtwoordpagina
+      router.push({ path: "/newPassword", query: { email: email.value } });
     } else {
       errorMessage.value = "De verificatiecode is ongeldig.";
-      console.log("Ongeldige verificatiecode van de server ontvangen.");
     }
   } catch (error) {
-    console.log("Fout bij het verifiëren van de code:", error);
     if (axios.isAxiosError(error) && error.response) {
-      // Specifieke foutafhandeling op basis van de statuscode
       switch (error.response.status) {
         case 400:
           errorMessage.value = "Ongeldige verificatiecode.";
@@ -71,10 +53,8 @@ const verifyCode = async () => {
             "Er is een fout opgetreden bij het verifiëren van de code.";
           break;
       }
-      console.log("Serverfout:", error.response.status, error.response.data);
     } else {
       errorMessage.value = "Er is een netwerkfout opgetreden.";
-      console.log("Netwerkfout of andere fout:", error);
     }
   }
 };

@@ -14,14 +14,12 @@ const isValidEmail = (email: string) => {
   return re.test(email);
 };
 
-// Haal email op vanuit query parameter wanneer de component laadt
 onMounted(() => {
   if (route.query.email) {
     email.value = route.query.email as string;
   }
 });
 
-// Functie om de reset e-mail te sturen
 const sendMail = async () => {
   if (!isValidEmail(email.value)) {
     errorMessage.value = "Voer een geldig e-mailadres in.";
@@ -35,8 +33,7 @@ const sendMail = async () => {
     );
 
     if (response && response.status >= 200 && response.status < 300) {
-      errorMessage.value = ""; // Reset foutmelding
-      // Navigeer naar verificatiepagina met e-mail als query parameter
+      errorMessage.value = "";
       router.push({ path: "/verificationCode", query: { email: email.value } });
     } else {
       errorMessage.value = "Er is een onverwachte fout opgetreden.";
@@ -51,7 +48,6 @@ const sendMail = async () => {
   }
 };
 
-// Functie om de verificatiecode te verifiëren
 const verifyCode = async () => {
   if (!verificationCode.value) {
     errorMessage.value = "Voer de verificatiecode in.";
@@ -61,12 +57,12 @@ const verifyCode = async () => {
   try {
     const response = await axios.post(
       "http://localhost:3000/api/v1/users/verify-code",
-      { code: verificationCode.value, email: email.value } // Voeg het e-mailadres toe aan de payload
+      { code: verificationCode.value, email: email.value }
     );
 
     if (response && response.status >= 200 && response.status < 300) {
-      errorMessage.value = ""; // Reset foutmelding
-      router.push("/reset-password"); // Navigeer naar reset-password pagina
+      errorMessage.value = "";
+      router.push("/reset-password");
     } else {
       errorMessage.value = "Er is een onverwachte fout opgetreden.";
     }
