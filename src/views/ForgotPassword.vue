@@ -20,6 +20,11 @@ onMounted(() => {
   }
 });
 
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1"
+  : "http://localhost:3000/api/v1";
+
 const sendMail = async () => {
   if (!isValidEmail(email.value)) {
     errorMessage.value = "Voer een geldig e-mailadres in.";
@@ -27,10 +32,9 @@ const sendMail = async () => {
   }
 
   try {
-    const response = await axios.post(
-      "http://localhost:3000/api/v1/users/forgot-password",
-      { email: email.value }
-    );
+    const response = await axios.post(`${baseURL}/users/forgot-password`, {
+      email: email.value,
+    });
 
     if (response && response.status >= 200 && response.status < 300) {
       errorMessage.value = "";
@@ -55,10 +59,10 @@ const verifyCode = async () => {
   }
 
   try {
-    const response = await axios.post(
-      "http://localhost:3000/api/v1/users/verify-code",
-      { code: verificationCode.value, email: email.value }
-    );
+    const response = await axios.post(`${baseURL}/users/verify-code`, {
+      code: verificationCode.value,
+      email: email.value,
+    });
 
     if (response && response.status >= 200 && response.status < 300) {
       errorMessage.value = "";

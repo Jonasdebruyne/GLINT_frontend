@@ -16,6 +16,11 @@ onMounted(() => {
   }
 });
 
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1"
+  : "http://localhost:3000/api/v1";
+
 const updatePassword = async () => {
   if (newPassword.value !== repeatNewPassword.value) {
     errorMessage.value = "Wachtwoorden komen niet overeen.";
@@ -28,13 +33,10 @@ const updatePassword = async () => {
   }
 
   try {
-    const response = await axios.post(
-      "http://localhost:3000/api/v1/users/reset-password",
-      {
-        email: email.value,
-        newPassword: newPassword.value,
-      }
-    );
+    const response = await axios.post(`${baseURL}/users/reset-password`, {
+      email: email.value,
+      newPassword: newPassword.value,
+    });
 
     if (response.status === 200) {
       router.push("/login");

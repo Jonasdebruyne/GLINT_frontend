@@ -19,6 +19,11 @@ onMounted(() => {
   }
 });
 
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1"
+  : "http://localhost:3000/api/v1";
+
 const verifyCode = async () => {
   if (!isValidCode(verificationCode.value)) {
     errorMessage.value = "Voer een geldige verificatiecode in.";
@@ -26,13 +31,10 @@ const verifyCode = async () => {
   }
 
   try {
-    const response = await axios.post(
-      "http://localhost:3000/api/v1/users/verify-code",
-      {
-        code: verificationCode.value,
-        email: email.value,
-      }
-    );
+    const response = await axios.post(`${baseURL}/users/verify-code`, {
+      code: verificationCode.value,
+      email: email.value,
+    });
 
     if (response.status === 200) {
       router.push({ path: "/newPassword", query: { email: email.value } });
