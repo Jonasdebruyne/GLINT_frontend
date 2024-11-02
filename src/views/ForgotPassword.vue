@@ -87,17 +87,19 @@ const verifyCode = async () => {
       <div class="elements">
         <h1>Forgot password</h1>
         <form @submit.prevent="sendMail">
-          <div class="column">
-            <label for="email">Email</label>
-            <input
-              id="email"
-              v-model="email"
-              type="email"
-              placeholder="johndoe@gmail.com"
-              required
-            />
+          <div class="alignItems">
+            <div class="column">
+              <label for="email">Email</label>
+              <input
+                id="email"
+                v-model="email"
+                type="email"
+                placeholder="johndoe@gmail.com"
+                required
+              />
+            </div>
+            <router-link exact to="./login">Back to login</router-link>
           </div>
-
           <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
 
           <button class="submitBtn" type="submit">Send mail</button>
@@ -163,6 +165,19 @@ form {
   flex-direction: column;
   gap: 24px;
   width: 100%;
+}
+
+form .alignItems {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 24px;
+  width: 100%;
+}
+
+form a {
+  color: rgba(255, 255, 255, 0.4);
+  text-decoration: underline;
 }
 
 .column {
