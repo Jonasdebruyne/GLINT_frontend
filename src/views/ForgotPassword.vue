@@ -185,6 +185,9 @@ button {
 }
 
 input {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 4px 8px;
+  border-radius: 8px;
   color: var(--white);
 }
 </style>
