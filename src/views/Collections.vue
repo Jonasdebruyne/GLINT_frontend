@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import router from "../router";
 
-const products = ref([]);
-const loading = ref(false); // Voeg de loading variabele toe
-const error = ref(null); // Voeg de error variabele toe voor foutafhandeling
+const products = ref([]); // All products
+const loading = ref(false); // Loading state
+const error = ref(null); // Error state
 
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
@@ -13,20 +13,36 @@ const baseURL = isProduction
 
 const fetchProducts = async () => {
   try {
-    loading.value = true; // Zet loading op true bij het starten van het fetch-proces
+    loading.value = true;
     const response = await fetch(`${baseURL}/products/`);
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     const result = await response.json();
-    products.value = result.data.products; // Dit haalt de producten uit de juiste structuur
-    error.value = null; // Reset de error indien succesvol
+    products.value = result.data.products;
+    error.value = null;
   } catch (err) {
     console.error("Error fetching products:", err.message);
-    error.value = "Er is een fout opgetreden bij het ophalen van de producten."; // Zet de error bericht
+    error.value = "Er is een fout opgetreden bij het ophalen van de producten.";
   } finally {
-    loading.value = false; // Zet loading terug op false nadat het fetch-proces is voltooid
+    loading.value = false;
   }
+};
+
+const activeFilter = ref("All"); // Tracks the active filter
+
+// Computed filtered products based on the active filter
+const filteredProducts = computed(() => {
+  return activeFilter.value === "All"
+    ? products.value
+    : products.value.filter(
+        (product) => product.typeOfProduct === activeFilter.value.toLowerCase()
+      );
+});
+
+// Set the active filter when a filter is clicked
+const setActiveFilter = (filter) => {
+  activeFilter.value = filter;
 };
 
 onMounted(() => {
@@ -39,24 +55,41 @@ onMounted(() => {
     <div class="top">
       <h1>Collections</h1>
       <nav class="collection-nav">
-        <p class="active">All</p>
-        <p>Optical</p>
-        <p>Sun</p>
+        <p
+          :class="{ active: activeFilter === 'All' }"
+          @click="setActiveFilter('All')"
+        >
+          All
+        </p>
+        <p
+          :class="{ active: activeFilter === 'Optical' }"
+          @click="setActiveFilter('Optical')"
+        >
+          Optical
+        </p>
+        <p
+          :class="{ active: activeFilter === 'Sun' }"
+          @click="setActiveFilter('Sun')"
+        >
+          Sun
+        </p>
       </nav>
     </div>
 
-    <!-- Loading en error afhandeling -->
+    <!-- Loading and error handling -->
     <div v-if="loading">Laden...</div>
     <div v-if="error">{{ error }}</div>
 
     <div v-if="!loading && !error" class="products">
       <div class="row">
-        <h2>Optical</h2>
-        <p><span>13 </span>items</p>
+        <h2>{{ activeFilter }}</h2>
+        <p>
+          <span>{{ filteredProducts.length }}</span> items
+        </p>
       </div>
       <div class="product-grid">
         <router-link
-          v-for="product in products"
+          v-for="product in filteredProducts"
           :key="product._id"
           :to="`/${product.productCode}`"
           :class="['product-card', product.typeOfProduct]"
@@ -97,6 +130,11 @@ onMounted(() => {
 .collection-nav {
   display: flex;
   gap: 80px;
+}
+
+.collection-nav p {
+  cursor: pointer;
+  transition: color 0.3s;
 }
 
 .collection-nav .active {
@@ -149,7 +187,7 @@ onMounted(() => {
 .product-image-container {
   position: relative;
   width: 100%;
-  height: 200px; /* Stel een hoogte in voor de afbeelding */
+  height: 200px;
   background: #333;
   padding: 20px;
 }
@@ -158,7 +196,6 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   border-bottom: 1px solid #444;
-  border-radius: 0;
 }
 
 .product-info {
@@ -178,11 +215,11 @@ onMounted(() => {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
 @media (min-width: 1200px) {
   .products {
     padding: 0 200px;
   }
-
   .products .product-grid {
     grid-template-columns: repeat(3, 1fr);
   }
