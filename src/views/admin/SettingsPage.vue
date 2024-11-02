@@ -64,6 +64,9 @@ const profileEditPopup = ref(false);
 const changeEmailAddressPopup = ref(false);
 const changePasswordPopup = ref(false);
 const deleteAccountPopup = ref(false);
+const successProfileEditPopup = ref(false);
+const succesEmailAddressPopup = ref(false);
+const succesPasswordPopup = ref(false);
 
 const setActiveSection = (section) => {
   activeSection.value = section;
@@ -126,6 +129,7 @@ const updateProfile = async () => {
     );
 
     closeProfileEditPopup();
+    opensuccessProfileEditPopup();
     await fetchUserProfile();
   } catch (error) {
     console.error("Error updating profile:", error);
@@ -159,6 +163,7 @@ const updateEmailAddress = async () => {
     );
 
     closeChangeEmailAddressPopup();
+    openSuccesChangeEmailAddressPopup();
     await fetchUserProfile();
   } catch (error) {
     console.error("Error updating profile:", error);
@@ -199,6 +204,7 @@ async function updatePassword() {
     );
 
     closeChangePasswordPopup();
+    openSuccesChangePasswordPopup();
   } catch (error) {
     console.error("Error updating password:", error);
   }
@@ -250,6 +256,30 @@ const closeChangePasswordPopup = () => {
 
 const closeDeleteAccountPopup = () => {
   deleteAccountPopup.value = false;
+};
+
+const opensuccessProfileEditPopup = () => {
+  successProfileEditPopup.value = true;
+};
+
+const openSuccesChangeEmailAddressPopup = () => {
+  succesEmailAddressPopup.value = true;
+};
+
+const openSuccesChangePasswordPopup = () => {
+  succesPasswordPopup.value = true;
+};
+
+const closeSuccessProfileEditPopup = () => {
+  successProfileEditPopup.value = false;
+};
+
+const closeSuccessEmailAddressPopup = () => {
+  succesEmailAddressPopup.value = false;
+};
+
+const closeSuccessPasswordPopup = () => {
+  succesPasswordPopup.value = false;
 };
 
 onMounted(() => {
@@ -500,11 +530,7 @@ onMounted(() => {
 
     <transition name="fade">
       <div v-if="deleteAccountPopup" class="deletePopup">
-        <img
-          src="../../assets/icons/cross-circle.svg"
-          alt="icon"
-          @click="closeDeleteAccountPopup"
-        />
+        <img src="../../assets/icons/cross-circle.svg" alt="icon" />
         <div class="text">
           <h2>Are you sure?</h2>
           <p>Do you really want to delete your account?</p>
@@ -512,6 +538,57 @@ onMounted(() => {
             <button @click="closeDeleteAccountPopup">Cancel</button>
             <button @click="handleDeleteAccount" class="btn active">
               Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <transition name="fade">
+      <div v-if="successProfileEditPopup" class="popup">
+        <div class="successpopup">
+          <img src="../../assets/icons/check-circle.svg" alt="icon" />
+          <div class="text">
+            <div>
+              <h2>Succesfully!</h2>
+              <p>Your profile has been edited successfully.</p>
+            </div>
+            <button @click="closeSuccessProfileEditPopup" class="btn active">
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <transition name="fade">
+      <div v-if="succesEmailAddressPopup" class="popup">
+        <div class="successpopup">
+          <img src="../../assets/icons/check-circle.svg" alt="icon" />
+          <div class="text">
+            <div>
+              <h2>Succesfully!</h2>
+              <p>Your e-mail address has been changed.</p>
+            </div>
+            <button @click="closeSuccessEmailAddressPopup" class="btn active">
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <transition name="fade">
+      <div v-if="succesPasswordPopup" class="popup">
+        <div class="successpopup">
+          <img src="../../assets/icons/check-circle.svg" alt="icon" />
+          <div class="text">
+            <div>
+              <h2>Succesfully!</h2>
+              <p>Your password has been changed.</p>
+            </div>
+            <button @click="closeSuccessPasswordPopup" class="btn active">
+              OK
             </button>
           </div>
         </div>
@@ -724,6 +801,35 @@ textarea {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+}
+
+.successpopup {
+  background-color: #1d1d1d;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  padding: 24px;
+  border-radius: 8px;
+}
+
+.successpopup .text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.successpopup .text .btn {
+  color: var(--white);
+}
+
+.successpopup .text div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
 
 .popup-content {
