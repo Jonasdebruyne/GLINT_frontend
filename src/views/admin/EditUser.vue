@@ -133,7 +133,7 @@ const updateUser = async () => {
           <select v-model="role" id="role">
             <option value="user">User</option>
             <option value="admin">Admin</option>
-            <option value="owner">Owner</option>
+            <option v-if="role === 'owner'" value="owner">Owner</option>
           </select>
         </div>
         <div class="column">
