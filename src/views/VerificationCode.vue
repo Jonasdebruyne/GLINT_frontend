@@ -5,9 +5,15 @@ import axios from "axios";
 
 const email = ref("");
 const verificationCode = ref("");
+const successMessage = ref("");
 const errorMessage = ref("");
 const router = useRouter();
 const route = useRoute();
+
+const isValidEmail = (email: string) => {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+};
 
 const isValidCode = (code: string) => {
   return code.trim() !== "";
@@ -23,6 +29,34 @@ const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
   : "http://localhost:3000/api/v1";
+
+const sendMail = async () => {
+  if (!isValidEmail(email.value)) {
+    errorMessage.value = "Voer een geldig e-mailadres in.";
+    return;
+  }
+
+  try {
+    const response = await axios.post(`${baseURL}/users/forgot-password`, {
+      email: email.value,
+    });
+
+    if (response && response.status >= 200 && response.status < 300) {
+      errorMessage.value = "";
+      router.push({ path: "/verificationCode", query: { email: email.value } });
+    } else {
+      errorMessage.value = "Er is een onverwachte fout opgetreden.";
+    }
+    successMessage.value = "De mail is succesvol opnieuw verstuurd.";
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      errorMessage.value = "Gebruiker niet gevonden.";
+    } else {
+      errorMessage.value =
+        "Er is een fout opgetreden bij het versturen van de e-mail.";
+    }
+  }
+};
 
 const verifyCode = async () => {
   if (!isValidCode(verificationCode.value)) {
@@ -80,8 +114,12 @@ const verifyCode = async () => {
           </div>
 
           <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+          <p v-if="successMessage" class="success">{{ successMessage }}</p>
 
-          <button class="submitBtn" type="submit">Verify code</button>
+          <button class="submitBtn" type="button" @click="sendMail">
+            Send mail again
+          </button>
+          <button class="submitBtn active" type="submit">Verify code</button>
         </form>
       </div>
     </div>
@@ -136,11 +174,23 @@ form {
   width: 100%;
 }
 
+.success {
+  color: #008000;
+}
+
 .error {
   color: #d34848;
 }
 
-button {
+.submitBtn {
+  border: 1px solid var(--white);
+  background-color: transparent;
+  color: var(--white);
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.submitBtn.active {
   background-color: #403754;
   color: var(--white);
   border: none;

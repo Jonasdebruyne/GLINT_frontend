@@ -51,34 +51,6 @@ const sendMail = async () => {
     }
   }
 };
-
-const verifyCode = async () => {
-  if (!verificationCode.value) {
-    errorMessage.value = "Voer de verificatiecode in.";
-    return;
-  }
-
-  try {
-    const response = await axios.post(`${baseURL}/users/verify-code`, {
-      code: verificationCode.value,
-      email: email.value,
-    });
-
-    if (response && response.status >= 200 && response.status < 300) {
-      errorMessage.value = "";
-      router.push("/reset-password");
-    } else {
-      errorMessage.value = "Er is een onverwachte fout opgetreden.";
-    }
-  } catch (error) {
-    if (error.response) {
-      errorMessage.value =
-        "Er is een fout opgetreden bij het verifiëren van de code.";
-    } else {
-      errorMessage.value = "Netwerkfout.";
-    }
-  }
-};
 </script>
 
 <template>
@@ -100,24 +72,7 @@ const verifyCode = async () => {
 
           <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
 
-          <button class="submitBtn" type="submit">Send mail</button>
-        </form>
-
-        <form v-if="verificationCode" @submit.prevent="verifyCode">
-          <div class="column">
-            <label for="verificationCode">Verification code</label>
-            <input
-              id="verificationCode"
-              v-model="verificationCode"
-              type="text"
-              placeholder="HFDQ2FDQL4"
-              required
-            />
-          </div>
-
-          <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-
-          <button class="submitBtn" type="submit">Verify code</button>
+          <button class="submitBtn active" type="submit">Send mail</button>
         </form>
       </div>
     </div>
@@ -176,7 +131,7 @@ form {
   color: #d34848;
 }
 
-button {
+.submitBtn {
   background-color: #403754;
   color: var(--white);
   border: none;
