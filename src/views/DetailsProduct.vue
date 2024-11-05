@@ -1,3 +1,63 @@
+<script lang="ts" setup>
+import { ref, watch } from "vue";
+import { useRoute } from "vue-router";
+
+// Verkrijg de huidige route
+const route = useRoute();
+const productCode = ref<string | undefined>(undefined);
+const productData = ref<{ productName: string; productPrice: number } | null>(
+  null
+);
+const isLoading = ref<boolean>(true);
+const error = ref<string | null>(null);
+const selectedShape = ref<string>("square"); // Houdt de geselecteerde vorm bij
+
+// Kijkt naar de `productCode` parameter in de route en laadt data op basis daarvan
+watch(
+  () => route.params.productCode,
+  (newCode) => {
+    if (newCode) {
+      productCode.value = newCode as string;
+      fetchProductData(newCode);
+    } else {
+      console.error("Product code is undefined");
+    }
+  },
+  { immediate: true }
+);
+
+// Functie om de productdata op te halen
+function fetchProductData(code: string) {
+  isLoading.value = true;
+  error.value = null;
+  fetch(`http://localhost:3000/api/v1/products/${code}`)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      productData.value = {
+        productName: data.data.product.productName,
+        productPrice: data.data.product.productPrice,
+      };
+    })
+    .catch((err) => {
+      console.error("Er is een fout opgetreden:", err);
+      error.value = "Kan productinformatie niet ophalen.";
+    })
+    .finally(() => {
+      isLoading.value = false;
+    });
+}
+
+// Functie om de geselecteerde vorm in te stellen
+function selectShape(shape: string) {
+  selectedShape.value = shape;
+}
+</script>
+
 <template>
   <div class="container">
     <header>
@@ -19,24 +79,40 @@
         </div>
         <div>
           <p>Redo</p>
-          <img src="../assets/icons/redo.svg" alt="Undo" />
+          <img src="../assets/icons/redo.svg" alt="Redo" />
         </div>
       </div>
       <div class="image-container"></div>
       <div class="shape-options">
-        <div class="shape-option selected">
+        <div
+          class="shape-option"
+          :class="{ selected: selectedShape === 'square' }"
+          @click="selectShape('square')"
+        >
           <p class="square"></p>
-          <p>Sqaure</p>
+          <p>Square</p>
         </div>
-        <div class="shape-option">
+        <div
+          class="shape-option"
+          :class="{ selected: selectedShape === 'rectangle' }"
+          @click="selectShape('rectangle')"
+        >
           <p class="rectangle"></p>
           <p>Rectangle</p>
         </div>
-        <div class="shape-option">
+        <div
+          class="shape-option"
+          :class="{ selected: selectedShape === 'oval' }"
+          @click="selectShape('oval')"
+        >
           <p class="oval"></p>
           <p>Oval</p>
         </div>
-        <div class="shape-option">
+        <div
+          class="shape-option"
+          :class="{ selected: selectedShape === 'circle' }"
+          @click="selectShape('circle')"
+        >
           <p class="circle"></p>
           <p>Circle</p>
         </div>
@@ -47,13 +123,20 @@
       <div class="product-details">
         <div>
           <p>Product name</p>
-          <h2 style="color: #aa91de" class="product-name">Bertha B602</h2>
+          <h2 v-if="productData" style="color: #aa91de" class="product-name">
+            {{ productData.productName }}
+          </h2>
+          <p v-else>Loading...</p>
         </div>
         <div>
           <p>Total</p>
-          <h3 style="color: #aa91de" class="product-price">&euro; 209,99</h3>
+          <h3 v-if="productData" style="color: #aa91de" class="product-price">
+            &euro; {{ productData.productPrice.toFixed(2) }}
+          </h3>
+          <p v-else>Loading...</p>
         </div>
       </div>
+      <p v-if="error" class="error">{{ error }}</p>
     </footer>
   </div>
 </template>

@@ -23,7 +23,7 @@ export default createRouter({
       component: Collections,
     },
     {
-      path: "/:id",
+      path: "/:productCode",
       name: "DetailsProduct",
       component: DetailsProduct,
     },
