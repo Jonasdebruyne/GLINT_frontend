@@ -87,6 +87,10 @@ const logout = () => {
           <img src="../assets/icons/package.svg" alt="icon" />
           <p>Products</p>
         </router-link>
+        <router-link to="/admin/orders" exact-active-class="active">
+          <img src="../assets/icons/paintbrush.svg" alt="icon" />
+          <p>Orders</p>
+        </router-link>
         <router-link
           v-if="user.role === 'owner'"
           to="/admin/styling"

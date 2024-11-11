@@ -8,6 +8,8 @@ import DetailsProduct from "./views/DetailsProduct.vue";
 import Home from "./views/admin/HomePage.vue";
 import AddNewProduct from "./views/admin/AddNewProductPage.vue";
 import EditProduct from "./views/admin/EditProduct.vue";
+import Orders from "./views/admin/OrdersPage.vue";
+import EditOrder from "./views/admin/EditOrder.vue";
 import Styling from "./views/admin/StylingPage.vue";
 import Users from "./views/admin/UsersPage.vue";
 import AddNewUser from "./views/admin/AddNewUserPage.vue";
@@ -61,6 +63,16 @@ export default createRouter({
       path: "/admin/edit-product/:id",
       name: "EditProduct",
       component: EditProduct,
+    },
+    {
+      path: "/admin/orders",
+      name: "Orders",
+      component: Orders,
+    },
+    {
+      path: "/admin/edit-order/:id",
+      name: "EditOrder",
+      component: EditOrder,
     },
     {
       path: "/admin/styling",
