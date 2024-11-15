@@ -96,8 +96,9 @@ onMounted(() => {
         >
           <div class="product-image-container">
             <div
+              v-if="product.images && product.images.length > 0"
               class="product-image"
-              :style="{ backgroundColor: product.colors[0] }"
+              :style="{ backgroundImage: 'url(' + product.images[0] + ')' }"
             ></div>
           </div>
           <div class="product-info">
@@ -195,6 +196,8 @@ onMounted(() => {
 .product-image {
   width: 100%;
   height: 100%;
+  background-size: cover;
+  background-position: center;
   border-bottom: 1px solid #444;
 }
 
