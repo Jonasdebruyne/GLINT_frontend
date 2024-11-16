@@ -7,7 +7,9 @@ import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 const route = useRoute();
 const productCode = ref<string | undefined>(undefined);
-const productData = ref<{ productName: string; productPrice: number } | null>(null);
+const productData = ref<{ productName: string; productPrice: number } | null>(
+  null
+);
 const isLoading = ref<boolean>(true);
 const error = ref<string | null>(null);
 const selectedShape = ref<string>("square");
@@ -91,7 +93,7 @@ onMounted(() => {
   gltfLoader.setDRACOLoader(dracoLoader);
 
   gltfLoader.load(
-    "/models/Shoe_compressed.glb", 
+    "/models/Shoe_compressed.glb",
     (gltf) => {
       gltf.scene.scale.set(50, 50, 50);
       gltf.scene.position.set(0, 0, 0);
@@ -124,7 +126,7 @@ onMounted(() => {
     renderer.render(scene, camera);
   }
 
-  window.addEventListener('resize', () => {
+  window.addEventListener("resize", () => {
     renderer.setSize(container.offsetWidth, container.offsetHeight);
     camera.aspect = container.offsetWidth / container.offsetHeight;
     camera.updateProjectionMatrix();
@@ -143,22 +145,26 @@ onMounted(() => {
           class="menu-item"
           :class="{ active: activeMenu === 'shape' }"
           @click="selectMenu('shape')"
-        >1. SHAPE</span>
+          >1. SHAPE</span
+        >
         <span
           class="menu-item"
           :class="{ active: activeMenu === 'material' }"
           @click="selectMenu('material')"
-        >2. MATERIAL</span>
+          >2. MATERIAL</span
+        >
         <span
           class="menu-item"
           :class="{ active: activeMenu === 'colour' }"
           @click="selectMenu('colour')"
-        >3. COLOUR</span>
+          >3. COLOUR</span
+        >
         <span
           class="menu-item"
           :class="{ active: activeMenu === 'overview' }"
           @click="selectMenu('overview')"
-        >4. OVERVIEW</span>
+          >4. OVERVIEW</span
+        >
       </nav>
     </header>
 
@@ -216,7 +222,9 @@ onMounted(() => {
       <div class="product-details">
         <div>
           <p>Product name</p>
-          <h2 v-if="productData" class="product-name">{{ productData.productName }}</h2>
+          <h2 v-if="productData" class="product-name">
+            {{ productData.productName }}
+          </h2>
           <p v-else>Loading...</p>
         </div>
         <div>
@@ -395,13 +403,10 @@ header h1 {
   font-size: 1rem;
 }
 
-.product-name {
-  color: #fff;
-}
-
+.product-name,
 .product-price {
   color: #aa91de;
-  font-size: 2.5rem;
+  font-size: 1.5rem;
 }
 
 .primaryAndSecondaryMaterials,

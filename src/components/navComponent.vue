@@ -89,7 +89,7 @@ const logout = () => {
           ,
         </router-link>
         <router-link to="/admin/orders" exact-active-class="active">
-          <img src="../assets/icons/paintbrush.svg" alt="icon" />
+          <img src="../assets/icons/order.svg" alt="icon" />
           <p>Orders</p>
         </router-link>
         <router-link
