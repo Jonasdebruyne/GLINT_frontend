@@ -3,6 +3,7 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import Navigation from "../../components/navComponent.vue";
 
+// Router en JWT token ophalen
 const router = useRouter();
 const jwtToken = localStorage.getItem("jwtToken");
 const errorMessage = ref<string>("");
@@ -13,6 +14,7 @@ const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
   : "http://localhost:3000/api/v1";
 
+// Functie om te controleren of de gebruiker is ingelogd
 const checkToken = () => {
   if (!jwtToken) {
     router.push("/login");
@@ -23,6 +25,7 @@ onMounted(() => {
   checkToken();
 });
 
+// Product-informatie refs
 const productCode = ref<string>("");
 const typeOfProduct = ref<string>("optical");
 const productName = ref<string>("");
@@ -33,14 +36,29 @@ const productPrice = ref<number | null>(null);
 const status = ref<string>("active");
 const description = ref<string>("");
 
+// Afbeeldingen initialiseren als een lege array
+const images = ref<string[]>([]); // Zorg ervoor dat dit een lege array is
+
+// Functie voor het instellen van de glazenkleur
 const setglassColor = (color: string) => {
   glassColor.value = color;
 };
 
+// Functie voor het instellen van de kleur
 const setColor = (color: string) => {
   colors.value = color;
 };
 
+// Functie voor het toevoegen van afbeeldingen (uploaden van bestanden)
+const handleImageUpload = (event: Event) => {
+  const files = (event.target as HTMLInputElement).files;
+  if (files && files.length > 0) {
+    // Converteer bestanden naar een array van URL's (of upload naar een server en haal URL's terug)
+    images.value = Array.from(files).map((file) => URL.createObjectURL(file));
+  }
+};
+
+// Functie om het product toe te voegen
 const addProduct = async () => {
   if (
     !productCode.value ||
@@ -51,13 +69,15 @@ const addProduct = async () => {
     !glassColor.value ||
     !productPrice.value ||
     !status.value ||
-    !description.value
+    !description.value ||
+    images.value.length === 0 // Controleer of er afbeeldingen zijn toegevoegd
   ) {
     errorMessage.value = "Vul alle velden in.";
     return;
   }
 
   try {
+    // Verstuur het product naar de backend via een POST request
     const response = await fetch(`${baseURL}/products`, {
       method: "POST",
       headers: {
@@ -74,6 +94,7 @@ const addProduct = async () => {
           productPrice: productPrice.value,
           activeUnactive: status.value,
           description: description.value,
+          images: images.value, // Stuur de lijst met afbeeldingen
         },
       }),
     });
@@ -85,6 +106,7 @@ const addProduct = async () => {
       return;
     }
 
+    // Redirect naar de admin-pagina na succesvolle toevoeging
     await response.json();
     router.push("/admin");
   } catch (error) {
@@ -180,10 +202,30 @@ const addProduct = async () => {
           </select>
         </div>
       </div>
-      <div class="column">
-        <label for="description">Description:</label>
-        <textarea v-model="description" id="description" required></textarea>
+
+      <div class="row">
+        <div class="column">
+          <label for="description">Description:</label>
+          <textarea v-model="description" id="description" required></textarea>
+        </div>
+        <div class="column">
+          <label for="images">Images:</label>
+          <input
+            id="images"
+            type="file"
+            accept="image/*"
+            multiple
+            @change="handleImageUpload"
+          />
+          <div v-if="images.value && images.value.length > 0">
+            <p>Images Preview:</p>
+            <div v-for="(image, index) in images.value" :key="index">
+              <img :src="image" alt="Image preview" width="100" />
+            </div>
+          </div>
+        </div>
       </div>
+
       <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
 
       <button type="submit" class="btn active">Add Product</button>
