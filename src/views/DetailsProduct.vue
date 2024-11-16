@@ -70,6 +70,10 @@ onMounted(() => {
   light.position.set(10, 10, 10);
   scene.add(light);
 
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);  // Intensievere verlichting
+  directionalLight.position.set(10, 20, 10); // Zet de lichtbron boven het object
+  scene.add(directionalLight);
+
   const ambientLight = new THREE.AmbientLight(0x404040); 
   scene.add(ambientLight);
 
@@ -100,8 +104,17 @@ onMounted(() => {
     }
     renderer.render(scene, camera);
   }
+
+  // Resize the renderer when the window is resized
+  window.addEventListener('resize', () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  });
+
   animate();
 });
+
 
 </script>
 
@@ -215,6 +228,8 @@ onMounted(() => {
   box-sizing: border-box;
   font-family: "Arial, sans-serif";
 }
+
+
 
 header {
   display: flex;
