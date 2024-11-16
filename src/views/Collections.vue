@@ -196,7 +196,8 @@ onMounted(() => {
 .product-image {
   width: 100%;
   height: 100%;
-  background-size: cover;
+  background-size: contain;
+  background-repeat: no-repeat;
   background-position: center;
   border-bottom: 1px solid #444;
 }
