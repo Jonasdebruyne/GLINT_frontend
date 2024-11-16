@@ -1,18 +1,18 @@
 <script lang="ts" setup>
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 
-// Verkrijg de huidige route
 const route = useRoute();
 const productCode = ref<string | undefined>(undefined);
-const productData = ref<{ productName: string; productPrice: number } | null>(
-  null
-);
+const productData = ref<{ productName: string; productPrice: number } | null>(null);
 const isLoading = ref<boolean>(true);
 const error = ref<string | null>(null);
-const selectedShape = ref<string>("square"); // Houdt de geselecteerde vorm bij
+const selectedShape = ref<string>("square");
+const activeMenu = ref<string>("shape");
 
-// Kijkt naar de `productCode` parameter in de route en laadt data op basis daarvan
 watch(
   () => route.params.productCode,
   (newCode) => {
@@ -26,15 +26,12 @@ watch(
   { immediate: true }
 );
 
-// Functie om de productdata op te halen
 function fetchProductData(code: string) {
   isLoading.value = true;
   error.value = null;
   fetch(`http://localhost:3000/api/v1/products/${code}`)
     .then((response) => {
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
+      if (!response.ok) throw new Error("Network response was not ok");
       return response.json();
     })
     .then((data) => {
@@ -44,17 +41,14 @@ function fetchProductData(code: string) {
       };
     })
     .catch((err) => {
-      console.error("Er is een fout opgetreden:", err);
-      error.value = "Kan productinformatie niet ophalen.";
+      console.error("Error occurred:", err);
+      error.value = "Unable to fetch product information.";
     })
     .finally(() => {
       isLoading.value = false;
     });
 }
 
-const activeMenu = ref<string>("shape"); // Houdt het actieve menu bij
-
-// Functie om het actieve menu te selecteren
 function selectMenu(menu: string) {
   activeMenu.value = menu;
 }
@@ -62,6 +56,53 @@ function selectMenu(menu: string) {
 function selectShape(shape: string) {
   selectedShape.value = shape;
 }
+
+onMounted(() => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.z = 10;
+
+  const renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.querySelector(".image-container")?.appendChild(renderer.domElement);
+
+  const light = new THREE.PointLight(0xffffff, 1, 100);
+  light.position.set(10, 10, 10);
+  scene.add(light);
+
+  const ambientLight = new THREE.AmbientLight(0x404040); 
+  scene.add(ambientLight);
+
+  const gltfLoader = new GLTFLoader();
+  const dracoLoader = new DRACOLoader();
+  dracoLoader.setDecoderPath("/node_modules/three/examples/jsm/libs/draco/");
+  gltfLoader.setDRACOLoader(dracoLoader);
+
+  gltfLoader.load(
+    "/models/Shoe_compressed.glb", 
+    (gltf) => {
+      gltf.scene.scale.set(15, 15, 15);
+      gltf.scene.position.set(-7, 4, 0); 
+      scene.add(gltf.scene);
+      animate();
+    },
+    undefined,
+    (error) => {
+      console.error("Error loading GLB file:", error);
+    }
+  );
+
+  function animate() {
+    requestAnimationFrame(animate);
+    if (scene.children.length > 0) {
+      const model = scene.children[0];
+      model.rotation.y += 0.01;
+    }
+    renderer.render(scene, camera);
+  }
+  animate();
+});
+
 </script>
 
 <template>
@@ -73,29 +114,23 @@ function selectShape(shape: string) {
           class="menu-item"
           :class="{ active: activeMenu === 'shape' }"
           @click="selectMenu('shape')"
-          >1. SHAPE</span
-        >
+        >1. SHAPE</span>
         <span
           class="menu-item"
           :class="{ active: activeMenu === 'material' }"
           @click="selectMenu('material')"
-          >2. MATERIAL</span
-        >
+        >2. MATERIAL</span>
         <span
           class="menu-item"
           :class="{ active: activeMenu === 'colour' }"
           @click="selectMenu('colour')"
-          >3. COLOUR</span
-        >
+        >3. COLOUR</span>
         <span
           class="menu-item"
           :class="{ active: activeMenu === 'overview' }"
           @click="selectMenu('overview')"
-          >4. OVERVIEW</span
-        >
+        >4. OVERVIEW</span>
       </nav>
-
-      <h1 style="visibility: hidden">GLINT</h1>
     </header>
 
     <div class="content">
@@ -109,7 +144,9 @@ function selectShape(shape: string) {
           <img src="../assets/icons/redo.svg" alt="Redo" />
         </div>
       </div>
+
       <div class="image-container"></div>
+
       <div class="shape-options" v-if="activeMenu === 'shape'">
         <div
           class="shape-option"
@@ -144,133 +181,18 @@ function selectShape(shape: string) {
           <p>Circle</p>
         </div>
       </div>
-      <div
-        class="primaryAndSecondaryMaterials"
-        v-if="activeMenu === 'material'"
-      >
-        <div class="primary">
-          <h3>Primary material</h3>
-          <div class="colors">
-            <div class="color">
-              <div class="selected">
-                <div></div>
-              </div>
-              <p>Gold</p>
-            </div>
-            <div class="color">
-              <div></div>
-              <p>Brown</p>
-            </div>
-            <div class="color">
-              <div></div>
-              <p>Gray</p>
-            </div>
-          </div>
-        </div>
-        <div class="secondary">
-          <h3>Secondary material</h3>
-          <div class="colors">
-            <div class="color">
-              <div class="selected"></div>
-              <p>Stainless steel</p>
-            </div>
-            <div class="color">
-              <div></div>
-              <p>Brown</p>
-            </div>
-            <div class="color">
-              <div></div>
-              <p>Gray</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="primaryAndSecondaryColors" v-if="activeMenu === 'colour'">
-        <div class="primary">
-          <h3>Primary color</h3>
-          <div class="colors">
-            <div class="color">
-              <div class="selected">
-                <div></div>
-              </div>
-              <p>Green</p>
-            </div>
-            <div class="color">
-              <div></div>
-              <p>Gray</p>
-            </div>
-            <div class="color">
-              <div></div>
-              <p>Red</p>
-            </div>
-          </div>
-        </div>
-        <div class="secondary">
-          <h3>Secondary color</h3>
-          <div class="colors">
-            <div class="color">
-              <div class="selected"></div>
-              <p>Gold</p>
-            </div>
-            <div class="color">
-              <div></div>
-              <p>Green</p>
-            </div>
-            <div class="color">
-              <div></div>
-              <p>White</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="overview" v-if="activeMenu === 'overview'">
-        <div class="column">
-          <h3>Shape</h3>
-          <p>Rectangle</p>
-        </div>
-        <div class="column">
-          <h3>Primary material</h3>
-          <div class="color">
-            <div></div>
-            <p>Gray</p>
-          </div>
-        </div>
-        <div class="column">
-          <h3>Secondary material</h3>
-          <div class="color">
-            <div></div>
-            <p>Gray</p>
-          </div>
-        </div>
-        <div class="column">
-          <h3>Primary color</h3>
-          <div class="color">
-            <div></div>
-            <p>Gray</p>
-          </div>
-        </div>
-        <div class="column">
-          <h3>Secondary color</h3>
-          <div class="color">
-            <div></div>
-            <p>Gray</p>
-          </div>
-        </div>
-      </div>
     </div>
 
     <footer class="product-info">
       <div class="product-details">
         <div>
           <p>Product name</p>
-          <h2 v-if="productData" style="color: #aa91de" class="product-name">
-            {{ productData.productName }}
-          </h2>
+          <h2 v-if="productData" class="product-name">{{ productData.productName }}</h2>
           <p v-else>Loading...</p>
         </div>
         <div>
           <p>Total</p>
-          <h3 v-if="productData" style="color: #aa91de" class="product-price">
+          <h3 v-if="productData" class="product-price">
             &euro; {{ productData.productPrice.toFixed(2) }}
           </h3>
           <p v-else>Loading...</p>
@@ -296,8 +218,6 @@ function selectShape(shape: string) {
 
 header {
   display: flex;
-  flex-direction: row;
-  align-items: center;
   justify-content: space-between;
   padding: 0 40px;
   margin-bottom: 40px;
@@ -357,7 +277,6 @@ header h1 {
 }
 
 .image-container {
-  background-image: url("../assets/images/testGlasses.png");
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
@@ -509,9 +428,9 @@ header h1 {
 .primaryAndSecondaryColors .primary .colors .color div.selected,
 .primaryAndSecondaryColors .secondary .colors .color div.selected,
 .overview .color div.selected {
-  position: relative; /* Nodig voor absolute positionering van de pseudo-elementen */
-  border-radius: 50%; /* Zorgt voor een ronde vorm */
-  overflow: hidden; /* Zorgt ervoor dat de achtergrondkleur binnen de rand blijft */
+  position: relative;
+  border-radius: 50%;
+  overflow: hidden;
 }
 
 .primaryAndSecondaryMaterials .primary .colors .color div.selected::after,
@@ -521,13 +440,13 @@ header h1 {
 .overview .color div.selected::after {
   content: "";
   position: absolute;
-  top: 3px; /* Binnenste witte rand */
-  left: 3px; /* Binnenste witte rand */
-  right: 3px; /* Binnenste witte rand */
-  bottom: 3px; /* Binnenste witte rand */
-  border: 1px solid var(--white); /* Binnenste witte rand */
-  border-radius: 50%; /* Ronde vorm voor de binnenste rand */
-  background-color: yellow; /* Achtergrondkleur geel */
+  top: 3px;
+  left: 3px;
+  right: 3px;
+  bottom: 3px;
+  border: 1px solid var(--white);
+  border-radius: 50%;
+  background-color: yellow;
 }
 
 .colors .color p {
