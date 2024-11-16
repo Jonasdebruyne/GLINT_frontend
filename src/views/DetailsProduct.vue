@@ -4,7 +4,7 @@ import { useRoute } from "vue-router";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
-
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 const route = useRoute();
 const productCode = ref<string | undefined>(undefined);
 const productData = ref<{ productName: string; productPrice: number } | null>(null);
@@ -59,22 +59,30 @@ function selectShape(shape: string) {
 
 onMounted(() => {
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.z = 10;
+
+  const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+  );
+  camera.position.set(0, 5, 15);
+  camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.querySelector(".image-container")?.appendChild(renderer.domElement);
+  const container = document.querySelector(".image-container") as HTMLElement;
+  renderer.setSize(container.offsetWidth, container.offsetHeight);
+  container.appendChild(renderer.domElement);
 
   const light = new THREE.PointLight(0xffffff, 1, 100);
   light.position.set(10, 10, 10);
   scene.add(light);
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);  // Intensievere verlichting
-  directionalLight.position.set(10, 20, 10); // Zet de lichtbron boven het object
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
+  directionalLight.position.set(10, 20, 10);
   scene.add(directionalLight);
 
-  const ambientLight = new THREE.AmbientLight(0x404040); 
+  const ambientLight = new THREE.AmbientLight(0x404040);
   scene.add(ambientLight);
 
   const gltfLoader = new GLTFLoader();
@@ -85,9 +93,18 @@ onMounted(() => {
   gltfLoader.load(
     "/models/Shoe_compressed.glb", 
     (gltf) => {
-      gltf.scene.scale.set(15, 15, 15);
-      gltf.scene.position.set(-7, 4, 0); 
+      gltf.scene.scale.set(50, 50, 50);
+      gltf.scene.position.set(0, 0, 0);
       scene.add(gltf.scene);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.25;
+      controls.enableZoom = true;
+      controls.target.set(0, 0, 0);
+
+      controls.update();
+
       animate();
     },
     undefined,
@@ -98,24 +115,23 @@ onMounted(() => {
 
   function animate() {
     requestAnimationFrame(animate);
+
     if (scene.children.length > 0) {
       const model = scene.children[0];
       model.rotation.y += 0.01;
     }
+
     renderer.render(scene, camera);
   }
 
-  // Resize the renderer when the window is resized
   window.addEventListener('resize', () => {
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.aspect = window.innerWidth / window.innerHeight;
+    renderer.setSize(container.offsetWidth, container.offsetHeight);
+    camera.aspect = container.offsetWidth / container.offsetHeight;
     camera.updateProjectionMatrix();
   });
 
   animate();
 });
-
-
 </script>
 
 <template>
@@ -229,8 +245,6 @@ onMounted(() => {
   font-family: "Arial, sans-serif";
 }
 
-
-
 header {
   display: flex;
   justify-content: space-between;
@@ -295,8 +309,14 @@ header h1 {
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
-  width: 50%;
-  height: 300px;
+  width: 80vh;
+  height: 60vh;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  border: 1px solid #ddd;
 }
 
 .display {
