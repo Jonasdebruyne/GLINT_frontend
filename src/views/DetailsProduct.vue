@@ -1,10 +1,12 @@
-<script lang="ts" setup>
+  <script lang="ts" setup>
 import { ref, watch, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { GUI } from "dat.gui";
+
 const route = useRoute();
 const productCode = ref<string | undefined>(undefined);
 const productData = ref<{ productName: string; productPrice: number } | null>(
@@ -76,6 +78,18 @@ onMounted(() => {
   renderer.setSize(container.offsetWidth, container.offsetHeight);
   container.appendChild(renderer.domElement);
 
+
+  const cubeTextureLoader = new THREE.CubeTextureLoader();
+  const environmentMap = cubeTextureLoader.load([
+    "/textures/px.png", 
+    "/textures/nx.png", 
+    "/textures/py.png",
+    "/textures/ny.png",
+    "/textures/pz.png",
+    "/textures/nz.png", 
+  ]);
+  scene.background = environmentMap;
+
   const light = new THREE.PointLight(0xffffff, 1, 100);
   light.position.set(10, 10, 10);
   scene.add(light);
@@ -97,6 +111,14 @@ onMounted(() => {
     (gltf) => {
       gltf.scene.scale.set(50, 50, 50);
       gltf.scene.position.set(0, 0, 0);
+
+      gltf.scene.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
+          child.material.envMap = environmentMap;
+          child.material.needsUpdate = true;
+        }
+      });
+
       scene.add(gltf.scene);
 
       const controls = new OrbitControls(camera, renderer.domElement);
@@ -133,8 +155,27 @@ onMounted(() => {
   });
 
   animate();
+  
+  const gui = new GUI();
+  gui.domElement.style.position = 'absolute';
+  gui.domElement.style.top = '10px';
+  gui.domElement.style.right = '10px';
+  document.body.appendChild(gui.domElement);
+
+  const params = {
+    lightIntensity: light.intensity,
+    ambientLightIntensity: ambientLight.intensity,
+  };
+
+  gui.add(params, "lightIntensity", 0, 2).onChange((value) => {
+    light.intensity = value;
+  });
+  gui.add(params, "ambientLightIntensity", 0, 1).onChange((value) => {
+    ambientLight.intensity = value;
+  });
 });
-</script>
+
+  </script>
 
 <template>
   <div class="container">
@@ -284,6 +325,7 @@ header h1 {
 .menu-item.active {
   color: #aa91de;
 }
+
 
 .content {
   display: flex;
