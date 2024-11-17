@@ -244,12 +244,16 @@ onMounted(() => {
     <div class="config-wrapper">
       <div class="links">
         <a href="#" class="overviewButton visibility">
-          <p>Overview</p>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 320 512"
+            style="transform: rotate(180deg)"
+          >
             <path
               d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
             ></path>
           </svg>
+          <p>Overview</p>
         </a>
         <a href="#" class="summaryButton">
           <p>Summary</p>
@@ -332,15 +336,20 @@ onMounted(() => {
             <p>Color of the sole</p>
             <p class="fontWeight"></p>
           </div>
+          <button class="btn active">Checkout</button>
         </div>
         <div class="links">
           <a href="#" class="backButton" style="visibility: hidden">
-            <p>Back</p>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 320 512"
+              style="transform: rotate(180deg)"
+            >
               <path
                 d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
               ></path>
             </svg>
+            <p>Back</p>
           </a>
 
           <a href="#" class="nextButton" style="visibility: visible">
@@ -408,6 +417,7 @@ onMounted(() => {
 }
 
 .config-wrapper a p {
+  font-size: 0.8em;
   text-transform: uppercase;
   color: var(--white);
 }
@@ -496,6 +506,10 @@ li svg {
   visibility: hidden;
 }
 
+.btn {
+  color: var(--white);
+}
+
 @media (min-width: 1200px) {
   .container {
     flex-direction: row;
@@ -505,7 +519,7 @@ li svg {
   }
 
   .model {
-    width: 100%;
+    width: 75%;
     height: 100%;
   }
 
@@ -513,7 +527,7 @@ li svg {
     padding: 48px;
     gap: 48px;
     top: 0;
-    width: 400px;
+    width: 25%;
     height: 100%;
     right: 0;
     position: absolute;
