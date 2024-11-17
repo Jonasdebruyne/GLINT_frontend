@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { GUI } from "dat.gui";
 
 const lacesColors = ref<string[]>([]);
 const solesColors = ref<string[]>([]);
@@ -46,6 +47,19 @@ onMounted(() => {
   renderer.setSize(container.offsetWidth, container.offsetHeight);
   container.appendChild(renderer.domElement);
 
+  // Add an environment map
+  const envTextureLoader = new THREE.CubeTextureLoader();
+  const environmentMap = envTextureLoader.load([
+    "/textures/px.png",
+    "/textures/nx.png",
+    "/textures/py.png",
+    "/textures/ny.png",
+    "/textures/pz.png",
+    "/textures/nz.png",
+  ]);
+  scene.background = environmentMap;
+  scene.environment = environmentMap;
+
   const light = new THREE.PointLight(0xffffff, 1, 100);
   light.position.set(10, 10, 10);
   scene.add(light);
@@ -65,14 +79,12 @@ onMounted(() => {
   gltfLoader.load(
     "/models/Shoe_compressed.glb",
     (gltf) => {
-      // Log de gehele scene van het GLB model
       console.log("Loaded GLB model scene:", gltf.scene);
 
       gltf.scene.scale.set(50, 50, 50);
       gltf.scene.position.set(0, 0, 0);
       scene.add(gltf.scene);
 
-      // Log alle kinderen van de scène (mogelijk de verschillende lagen of objecten)
       console.log("Children in GLB scene:", gltf.scene.children);
 
       const controls = new OrbitControls(camera, renderer.domElement);
@@ -82,6 +94,16 @@ onMounted(() => {
       controls.target.set(0, 0, 0);
 
       controls.update();
+
+      // Integrate dat.GUI for interactive debugging and model properties
+      const gui = new GUI();
+      const modelFolder = gui.addFolder("Model Controls");
+      modelFolder.add(gltf.scene.rotation, "y", 0, Math.PI * 2, 0.01).name("Rotation Y");
+      modelFolder.add(gltf.scene.scale, "x", 1, 100).name("Scale X");
+      modelFolder.add(gltf.scene.scale, "y", 1, 100).name("Scale Y");
+      modelFolder.add(gltf.scene.scale, "z", 1, 100).name("Scale Z");
+      modelFolder.open();
+
       animate();
     },
     undefined,
@@ -126,7 +148,6 @@ async function fetchProductData(code: string) {
       productPrice: data.data.product.productPrice,
     };
 
-    // Veters en zolen kleuren ophalen van de API
     lacesColors.value = data.data.product.lacesColor || [];
     solesColors.value = data.data.product.soleColor || [];
   } catch (err) {
@@ -246,6 +267,7 @@ onMounted(() => {
 
   updateButtonVisibility();
 });
+
 </script>
 
 <template>
