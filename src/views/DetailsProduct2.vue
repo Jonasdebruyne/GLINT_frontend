@@ -6,6 +6,9 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
+const lacesColors = ref<string[]>([]); // Kleuren voor de veters
+const solesColors = ref<string[]>([]); // Kleuren voor de zolen
+
 const route = useRoute();
 const productCode = ref<string | undefined>(undefined);
 const productData = ref<{ productName: string; productPrice: number } | null>(
@@ -13,8 +16,6 @@ const productData = ref<{ productName: string; productPrice: number } | null>(
 );
 const isLoading = ref<boolean>(true);
 const error = ref<string | null>(null);
-const showBackButton = ref<boolean>(false);
-const showNextButton = ref<boolean>(true);
 
 watch(
   () => route.params.productCode,
@@ -28,29 +29,6 @@ watch(
   },
   { immediate: true }
 );
-
-async function fetchProductData(code: string) {
-  isLoading.value = true;
-  error.value = null;
-
-  try {
-    const response = await fetch(
-      `http://localhost:3000/api/v1/products/${code}`
-    );
-    if (!response.ok) throw new Error("Network response was not ok");
-
-    const data = await response.json();
-    productData.value = {
-      productName: data.data.product.productName,
-      productPrice: data.data.product.productPrice,
-    };
-  } catch (err) {
-    console.error("Error occurred:", err);
-    error.value = "Unable to fetch product information.";
-  } finally {
-    isLoading.value = false;
-  }
-}
 
 onMounted(() => {
   const scene = new THREE.Scene();
@@ -125,6 +103,33 @@ onMounted(() => {
 
   animate();
 });
+
+async function fetchProductData(code: string) {
+  isLoading.value = true;
+  error.value = null;
+
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/v1/products/${code}`
+    );
+    if (!response.ok) throw new Error("Network response was not ok");
+
+    const data = await response.json();
+    productData.value = {
+      productName: data.data.product.productName,
+      productPrice: data.data.product.productPrice,
+    };
+
+    // Veters en zolen kleuren ophalen van de API
+    lacesColors.value = data.data.product.lacesColor || [];
+    solesColors.value = data.data.product.soleColor || [];
+  } catch (err) {
+    console.error("Error occurred:", err);
+    error.value = "Unable to fetch product information.";
+  } finally {
+    isLoading.value = false;
+  }
+}
 
 onMounted(() => {
   const listItems = document.querySelectorAll(".overview ul li");
@@ -289,40 +294,26 @@ onMounted(() => {
         <div class="config-ui__page page1 colorsItem display">
           <h2>Choose the color of the laces</h2>
           <div class="row">
-            <div style="background-color: #000">
-              <p>#000</p>
-            </div>
-            <div style="background-color: #000">
-              <p>#000</p>
-            </div>
-            <div style="background-color: #000">
-              <p>#000</p>
-            </div>
-            <div style="background-color: #000">
-              <p>#000</p>
-            </div>
-            <div style="background-color: #000">
-              <p>#000</p>
+            <div
+              v-for="(color, index) in lacesColors"
+              :key="index"
+              :style="{ backgroundColor: color }"
+              class="color"
+            >
+              <p>{{ color }}</p>
             </div>
           </div>
         </div>
-        <div class="config-ui__page page2 colorsItem display">
+        <div class="config-ui__page page2 colorsItem">
           <h2>Choose the color of the sole</h2>
           <div class="row">
-            <div style="background-color: #000">
-              <p>#000</p>
-            </div>
-            <div style="background-color: #000">
-              <p>#000</p>
-            </div>
-            <div style="background-color: #000">
-              <p>#000</p>
-            </div>
-            <div style="background-color: #000">
-              <p>#000</p>
-            </div>
-            <div style="background-color: #000">
-              <p>#000</p>
+            <div
+              v-for="(color, index) in solesColors"
+              :key="index"
+              :style="{ backgroundColor: color }"
+              class="color"
+            >
+              <p>{{ color }}</p>
             </div>
           </div>
         </div>
@@ -534,6 +525,10 @@ li svg {
     overflow-y: auto;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
+  }
+
+  .config-wrapper h2 {
+    text-align: left;
   }
 }
 </style>
