@@ -10,6 +10,27 @@ import { GUI } from "dat.gui";
 const lacesColors = ref<string[]>([]);
 const solesColors = ref<string[]>([]);
 
+const selectedColor = ref<string | null>(null);
+
+function selectColorForLaces(color: string) {
+  selectedColor.value = color;
+
+  // Als Three.js laces object is geladen
+  if (window.laces) {
+    window.laces.material.color.set(color);
+  }
+}
+
+function selectColorForSole(color: string) {
+  selectedColor.value = color;
+
+  if (window.sole && window.sole.material) {
+    window.sole.material.color.set(color);
+  } else {
+    console.error("Sole object or its material not found");
+  }
+}
+
 const route = useRoute();
 const productCode = ref<string | undefined>(undefined);
 const productData = ref<{ productName: string; productPrice: number } | null>(
@@ -85,36 +106,38 @@ onMounted(() => {
       gltf.scene.position.set(0, 0, 0);
       scene.add(gltf.scene);
 
-//       gltf.scene.traverse((child) => {
-//   if (child.name === "laces") {
-//     console.log("Found laces", child);
+      gltf.scene.traverse((child) => {
+        if (child.name === "laces") {
+          console.log("Found laces", child);
 
-//     window.laces = child;
-//   }
-//   if (child.name === "sole_bottom") {
-//     console.log("Found soles", child);
+          window.laces = child;
+        }
+        if (child.name === "sole_bottom") {
+          console.log("Found soles", child);
 
-//     window.soles = child;
-//   }
-// });
+          window.sole = child;
+        }
+      });
 
+      function changeLacesColor(color) {
+        if (window.laces) {
+          window.laces.material.color.set(color);
+        }
+      }
 
-// function changeLacesColor(color) {
-//   if (window.laces) {
-//     window.laces.material.color.set(color);
-//   }
-// }
+      document
+        .getElementById("blackLacesBtn")
+        .addEventListener("click", function () {
+          console.log("Changing laces to black");
+          changeLacesColor(0x000000);
+        });
 
-
-// document.getElementById("blackLacesBtn").addEventListener("click", function() {
-//   console.log("Changing laces to black");
-//   changeLacesColor(0x000000); 
-// });
-
-// document.getElementById("whiteLacesBtn").addEventListener("click", function() {
-//   console.log("Changing laces to white");
-//   changeLacesColor(0xffffff); 
-// });
+      document
+        .getElementById("whiteLacesBtn")
+        .addEventListener("click", function () {
+          console.log("Changing laces to white");
+          changeLacesColor(0xffffff);
+        });
 
       console.log("Children in GLB scene:", gltf.scene.children);
 
@@ -401,26 +424,24 @@ onMounted(() => {
           <h2>Choose the color of the laces</h2>
           <div class="row">
             <div
-              v-for="(color, index) in lacesColors"
-              :key="index"
+              v-for="color in lacesColors"
+              :key="color"
+              :class="{ active: selectedColor === color }"
+              @click="selectColorForLaces(color)"
               :style="{ backgroundColor: color }"
-              class="color"
-            >
-              <p>{{ color }}</p>
-            </div>
+            ></div>
           </div>
         </div>
         <div class="config-ui__page page2 colorsItem">
           <h2>Choose the color of the sole</h2>
           <div class="row">
             <div
-              v-for="(color, index) in solesColors"
-              :key="index"
+              v-for="color in solesColors"
+              :key="color"
+              :class="{ active: selectedColor === color }"
+              @click="selectColorForSole(color)"
               :style="{ backgroundColor: color }"
-              class="color"
-            >
-              <p>{{ color }}</p>
-            </div>
+            ></div>
           </div>
         </div>
         <div class="summary display">
@@ -666,6 +687,10 @@ li svg {
   width: 64px;
   height: 64px;
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.colorsItem .row div.active {
+  border: 3px solid var(--purple);
 }
 
 .colorsItem .row div p {
