@@ -85,6 +85,37 @@ onMounted(() => {
       gltf.scene.position.set(0, 0, 0);
       scene.add(gltf.scene);
 
+//       gltf.scene.traverse((child) => {
+//   if (child.name === "laces") {
+//     console.log("Found laces", child);
+
+//     window.laces = child;
+//   }
+//   if (child.name === "sole_bottom") {
+//     console.log("Found soles", child);
+
+//     window.soles = child;
+//   }
+// });
+
+
+// function changeLacesColor(color) {
+//   if (window.laces) {
+//     window.laces.material.color.set(color);
+//   }
+// }
+
+
+// document.getElementById("blackLacesBtn").addEventListener("click", function() {
+//   console.log("Changing laces to black");
+//   changeLacesColor(0x000000); 
+// });
+
+// document.getElementById("whiteLacesBtn").addEventListener("click", function() {
+//   console.log("Changing laces to white");
+//   changeLacesColor(0xffffff); 
+// });
+
       console.log("Children in GLB scene:", gltf.scene.children);
 
       const controls = new OrbitControls(camera, renderer.domElement);
