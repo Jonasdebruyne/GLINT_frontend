@@ -13,11 +13,14 @@ const insideColors = ref<string[]>([]);
 const outsideColors = ref<string[]>([]);
 
 const selectedColor = ref<string | null>(null);
+const selectedLacesColor = ref<string | null>(null);
+const selectedSoleColor = ref<string | null>(null);
+const selectedInsideColor = ref<string | null>(null);
+const selectedOutsideColor = ref<string | null>(null);
 
 function selectColorForLaces(color: string) {
   selectedColor.value = color;
-
-  // Als Three.js laces object is geladen
+  selectedLacesColor.value = color; // Bewaar de geselecteerde kleur
   if (window.laces) {
     window.laces.material.color.set(color);
   }
@@ -25,18 +28,17 @@ function selectColorForLaces(color: string) {
 
 function selectColorForSole(color: string) {
   selectedColor.value = color;
-
-  // Verander de kleur van de zool (sole)
+  selectedSoleColor.value = color; // Bewaar de geselecteerde kleur
   if (window.sole && window.sole.material) {
     window.sole.material.color.set(color);
   } else {
-    console.error("Sole object of its material not found");
+    console.error("Sole object or its material not found");
   }
 }
 
 function selectColorForInside(color: string) {
   selectedColor.value = color;
-
+  selectedInsideColor.value = color; // Bewaar de geselecteerde kleur
   if (window.inside && window.inside.material) {
     window.inside.material.color.set(color);
   } else {
@@ -46,8 +48,7 @@ function selectColorForInside(color: string) {
 
 function selectColorForOutside(color: string) {
   selectedColor.value = color;
-
-  // Verander de kleur van de buitenkant (outside)
+  selectedOutsideColor.value = color; // Bewaar de geselecteerde kleur
   if (window.outside && window.outside.material) {
     window.outside.material.color.set(color);
   } else {
@@ -150,20 +151,6 @@ onMounted(() => {
           window.laces.material.color.set(color);
         }
       }
-
-      document
-        .getElementById("blackLacesBtn")
-        .addEventListener("click", function () {
-          console.log("Changing laces to black");
-          changeLacesColor(0x000000);
-        });
-
-      document
-        .getElementById("whiteLacesBtn")
-        .addEventListener("click", function () {
-          console.log("Changing laces to white");
-          changeLacesColor(0xffffff);
-        });
 
       console.log("Children in GLB scene:", gltf.scene.children);
 
@@ -351,6 +338,67 @@ onMounted(() => {
 
   updateButtonVisibility();
 });
+
+function validateColors(): boolean {
+  return (
+    selectedLacesColor.value &&
+    selectedSoleColor.value &&
+    selectedInsideColor.value &&
+    selectedOutsideColor.value
+  );
+}
+
+async function submitOrder() {
+  if (!validateColors()) {
+    const errorMessageElement = document.querySelector(".errorMessage");
+    if (errorMessageElement) {
+      errorMessageElement.innerHTML = "Please select a color for every part!";
+    }
+    return;
+  }
+
+  const orderData = {
+    productCode: productCode.value,
+    lacesColor: selectedLacesColor.value,
+    soleColor: selectedSoleColor.value,
+    insideColor: selectedInsideColor.value,
+    outsideColor: selectedOutsideColor.value,
+  };
+
+  console.log("Submitting order data:", orderData);
+
+  try {
+    const response = await fetch("http://localhost:3000/api/v1/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(orderData),
+    });
+
+    if (!response.ok) {
+      const errorResponse = await response.json();
+      console.error("Server error response:", errorResponse);
+      throw new Error(errorResponse.message || "Failed to submit the order");
+    }
+
+    const result = await response.json();
+    console.log("Order submitted successfully:", result);
+
+    document.querySelector(".errorMessage").innerHTML = "";
+
+    document.querySelector(".successMessage").innerHTML =
+      "Order submitted successfully!";
+  } catch (error) {
+    console.error("Error submitting order:", error);
+
+    const errorMessageElement = document.querySelector(".errorMessage");
+    if (errorMessageElement) {
+      errorMessageElement.innerHTML =
+        "There was an error submitting your order. Please try again.";
+    }
+  }
+}
 </script>
 
 <template>
@@ -516,13 +564,32 @@ onMounted(() => {
           <h2>Summary</h2>
           <div>
             <p>Color of the laces</p>
-            <p class="fontWeight"></p>
+            <p class="fontweight">
+              {{ selectedLacesColor || "Not selected" }}
+            </p>
           </div>
           <div>
             <p>Color of the sole</p>
-            <p class="fontWeight"></p>
+            <p class="fontweight">
+              {{ selectedSoleColor || "Not selected" }}
+            </p>
           </div>
-          <button class="btn active">Checkout</button>
+          <div>
+            <p>Color of the inside of your shoe</p>
+            <p class="fontweight">
+              {{ selectedInsideColor || "Not selected" }}
+            </p>
+          </div>
+          <div>
+            <p>Color of the outside of your shoe</p>
+            <p class="fontweight">
+              {{ selectedOutsideColor || "Not selected" }}
+            </p>
+          </div>
+
+          <button @click="submitOrder" class="btn active">Checkout</button>
+          <p class="errorMessage"></p>
+          <p class="successMessage"></p>
         </div>
         <div class="links">
           <a href="#" class="backButton" style="visibility: hidden">
@@ -723,6 +790,10 @@ li svg {
   display: none;
 }
 
+.config-wrapper .summary .fontweight {
+  color: var(--white);
+}
+
 .config-wrapper h2 {
   text-align: center;
 }
@@ -775,6 +846,15 @@ li svg {
 
 .btn {
   color: var(--white);
+  margin-top: 1rem;
+}
+
+.errorMessage {
+  color: red;
+}
+
+.successMessage {
+  color: green;
 }
 
 @media (min-width: 1200px) {
