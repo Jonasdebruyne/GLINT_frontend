@@ -26,10 +26,11 @@ function selectColorForLaces(color: string) {
 function selectColorForSole(color: string) {
   selectedColor.value = color;
 
+  // Verander de kleur van de zool (sole)
   if (window.sole && window.sole.material) {
     window.sole.material.color.set(color);
   } else {
-    console.error("Sole object or its material not found");
+    console.error("Sole object of its material not found");
   }
 }
 
@@ -39,17 +40,18 @@ function selectColorForInside(color: string) {
   if (window.inside && window.inside.material) {
     window.inside.material.color.set(color);
   } else {
-    console.error("Sole object or its material not found");
+    console.error("Inside object or its material not found");
   }
 }
 
 function selectColorForOutside(color: string) {
   selectedColor.value = color;
 
+  // Verander de kleur van de buitenkant (outside)
   if (window.outside && window.outside.material) {
     window.outside.material.color.set(color);
   } else {
-    console.error("Sole object or its material not found");
+    console.error("Outside object or its material not found");
   }
 }
 
@@ -130,14 +132,16 @@ onMounted(() => {
 
       gltf.scene.traverse((child) => {
         if (child.name === "laces") {
-          console.log("Found laces", child);
-
           window.laces = child;
         }
         if (child.name === "sole_bottom") {
-          console.log("Found soles", child);
-
           window.sole = child;
+        }
+        if (child.name === "inside") {
+          window.inside = child;
+        }
+        if (child.name === "outside_1") {
+          window.outside = child;
         }
       });
 
@@ -479,7 +483,7 @@ onMounted(() => {
               v-for="color in solesColors"
               :key="color"
               :class="{ active: selectedColor === color }"
-              @click="selectColorForInside(color)"
+              @click="selectColorForSole(color)"
               :style="{ backgroundColor: color }"
             ></div>
           </div>
@@ -491,7 +495,7 @@ onMounted(() => {
               v-for="color in insideColors"
               :key="color"
               :class="{ active: selectedColor === color }"
-              @click="selectColorForOutside(color)"
+              @click="selectColorForInside(color)"
               :style="{ backgroundColor: color }"
             ></div>
           </div>
@@ -503,7 +507,7 @@ onMounted(() => {
               v-for="color in outsideColors"
               :key="color"
               :class="{ active: selectedColor === color }"
-              @click="selectColorForSole(color)"
+              @click="selectColorForOutside(color)"
               :style="{ backgroundColor: color }"
             ></div>
           </div>
