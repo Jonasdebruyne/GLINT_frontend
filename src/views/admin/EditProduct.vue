@@ -24,21 +24,30 @@ const brand = ref<string>("");
 const productName = ref<string>("");
 const colors = ref<string>("");
 const description = ref<string>("");
-const glassColour = ref<string>(""); // Let op de spelling hier
+const glassColour = ref<string>("");
 const activeUnactive = ref<string>("active");
+const productPrice = ref<number | null>(null);
+const sizeOptions = ref<string[]>([]);
+const material = ref<string>("");
+const inStock = ref<boolean>(true);
+const lacesColor = ref<string[]>([]);
+const soleColor = ref<string[]>([]);
+const insideColor = ref<string[]>([]);
+const outsideColor = ref<string[]>([]);
+
 const productData = ref<any>(null);
 
 const fetchProductData = async () => {
   const id = route.params.id;
   productId.value = id;
   try {
-    const response = await fetch(`${baseURL}/products?id=${id}`);
+    const response = await fetch(`${baseURL}/products/${id}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
-    productData.value = data.data.products[0];
+    productData.value = data.data.product;
 
     if (productData.value) {
       productCode.value = productData.value.productCode;
@@ -47,8 +56,16 @@ const fetchProductData = async () => {
       productName.value = productData.value.productName;
       colors.value = productData.value.colors;
       description.value = productData.value.description;
-      glassColour.value = productData.value.glassColour; // Zorg ervoor dat dit consistent is met de API
+      glassColour.value = productData.value.glassColour;
       activeUnactive.value = productData.value.activeUnactive;
+      productPrice.value = productData.value.productPrice;
+      sizeOptions.value = productData.value.sizeOptions;
+      material.value = productData.value.material;
+      inStock.value = productData.value.inStock;
+      lacesColor.value = productData.value.lacesColor;
+      soleColor.value = productData.value.soleColor;
+      insideColor.value = productData.value.insideColor;
+      outsideColor.value = productData.value.outsideColor;
     }
   } catch (error) {
     console.error("Error fetching product data:", error);
@@ -65,11 +82,38 @@ const updateProduct = async () => {
     !productCode.value ||
     !brand.value ||
     !productName.value ||
-    !activeUnactive.value
+    !activeUnactive.value ||
+    !productPrice.value ||
+    !sizeOptions.value ||
+    !material.value ||
+    !inStock.value ||
+    !lacesColor.value ||
+    !soleColor.value ||
+    !insideColor.value ||
+    !outsideColor.value
   ) {
     alert("Vul alstublieft alle vereiste velden in.");
     return;
   }
+
+  const productDataToSend = {
+    productCode: productCode.value,
+    typeOfProduct: typeOfProduct.value,
+    brand: brand.value,
+    productName: productName.value,
+    colors: colors.value,
+    description: description.value,
+    glassColour: glassColour.value,
+    activeUnactive: activeUnactive.value,
+    productPrice: productPrice.value,
+    sizeOptions: sizeOptions.value,
+    material: material.value,
+    inStock: inStock.value,
+    lacesColor: lacesColor.value,
+    soleColor: soleColor.value,
+    insideColor: insideColor.value,
+    outsideColor: outsideColor.value,
+  };
 
   try {
     const response = await fetch(`${baseURL}/products/${productId.value}`, {
@@ -77,18 +121,7 @@ const updateProduct = async () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        product: {
-          productCode: productCode.value,
-          typeOfProduct: typeOfProduct.value,
-          brand: brand.value,
-          productName: productName.value,
-          colors: colors.value,
-          description: description.value,
-          glassColour: glassColour.value, // Wees consistent
-          activeUnactive: activeUnactive.value,
-        },
-      }),
+      body: JSON.stringify({ product: productDataToSend }),
     });
 
     if (!response.ok) {
