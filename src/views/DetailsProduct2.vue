@@ -98,7 +98,9 @@ onMounted(() => {
       // Integrate dat.GUI for interactive debugging and model properties
       const gui = new GUI();
       const modelFolder = gui.addFolder("Model Controls");
-      modelFolder.add(gltf.scene.rotation, "y", 0, Math.PI * 2, 0.01).name("Rotation Y");
+      modelFolder
+        .add(gltf.scene.rotation, "y", 0, Math.PI * 2, 0.01)
+        .name("Rotation Y");
       modelFolder.add(gltf.scene.scale, "x", 1, 100).name("Scale X");
       modelFolder.add(gltf.scene.scale, "y", 1, 100).name("Scale Y");
       modelFolder.add(gltf.scene.scale, "z", 1, 100).name("Scale Z");
@@ -267,7 +269,6 @@ onMounted(() => {
 
   updateButtonVisibility();
 });
-
 </script>
 
 <template>
