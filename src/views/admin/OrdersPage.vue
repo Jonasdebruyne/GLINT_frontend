@@ -32,7 +32,12 @@ const fetchOrders = async () => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const result = await response.json();
-    orders.value = result.data.orders;
+    console.log("Orders fetched:", result); // Controleer de gehele response
+    if (result && result.data && result.data.orders) {
+      orders.value = result.data.orders;
+    } else {
+      console.error("No orders found in the response.");
+    }
   } catch (error) {
     console.error("Error fetching orders:", error);
   }
@@ -89,34 +94,33 @@ const hidePopup = () => {
   isPopupVisible.value = false;
 };
 
-onMounted(() => {
-  fetchOrders();
-});
-
 const totalOrdersCount = computed(() => orders.value.length);
-onMounted(() => {
-  fetchOrders();
-  setInterval(() => {
-    fetchOrders();
-  }, 5000); // Haal elke 5 seconden de laatste bestellingen op
-});
 
 const filteredOrders = computed(() => {
   if (!orders.value) return [];
-
+  console.log("All orders:", orders.value); // Bekijk alle orders voor de filter
   const filteredBySearch = orders.value.filter((order) => {
     return Object.values(order).some((value) =>
       String(value).toLowerCase().includes(searchTerm.value.toLowerCase())
     );
   });
+  console.log("Filtered by search:", filteredBySearch); // Bekijk orders na search filter
 
   const filteredByType = filteredBySearch.filter(
     (order) =>
       selectedFilter.value === "All" ||
       order.orderStatus === selectedFilter.value
   );
+  console.log("Filtered by type:", filteredByType); // Bekijk orders na status filter
 
   return filteredByType;
+});
+
+onMounted(() => {
+  fetchOrders();
+  setInterval(() => {
+    fetchOrders();
+  }, 5000);
 });
 </script>
 
@@ -172,9 +176,12 @@ const filteredOrders = computed(() => {
           "
         />
         <p>Order ID</p>
+        <p>ProductCode</p>
+        <p>LacesColor</p>
+        <p>SoleColor</p>
+        <p>InsideColor</p>
+        <p>OutsideColor</p>
         <p>Status</p>
-        <p>Shipping Address</p>
-        <p>Total Price</p>
       </div>
 
       <div class="table-container">
@@ -187,9 +194,12 @@ const filteredOrders = computed(() => {
             />
             <router-link :to="{ name: 'EditOrder', params: { id: order._id } }">
               <p>{{ order._id }}</p>
+              <p>{{ order.productCode }}</p>
+              <p>{{ order.lacesColor }}</p>
+              <p>{{ order.soleColor }}</p>
+              <p>{{ order.insideColor }}</p>
+              <p>{{ order.outsideColor }}</p>
               <p>{{ order.orderStatus }}</p>
-              <p>{{ order.shippingAddress.city }}</p>
-              <p>${{ order.totalPrice }}</p>
             </router-link>
           </li>
         </ul>
@@ -232,6 +242,33 @@ const filteredOrders = computed(() => {
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 1000;
+}
+
+.popup .text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.popup .text .btns {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.popup .text .btns button {
+  color: rgba(255, 255, 255, 0.6);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.popup .text .btns .active {
+  background-color: #d34848;
+  color: var(--white);
 }
 
 .popup img {
@@ -294,7 +331,7 @@ select {
 
 .orders .top {
   display: grid;
-  grid-template-columns: 200px 150px 180px 150px 1fr; /* Specificeer breedtes voor 5 kolommen */
+  grid-template-columns: repeat(8, 1fr);
   gap: 40px;
   padding: 4px 16px;
   background-color: #1d1d1d;
@@ -311,7 +348,7 @@ select {
 
 .orders .list li {
   display: grid;
-  grid-template-columns: 200px 150px 180px 150px 1fr; /* Zorg ervoor dat de kolombreedtes consistent blijven */
+  grid-template-columns: repeat(8, 1fr);
   gap: 40px;
   align-items: center;
 }
