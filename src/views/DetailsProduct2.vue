@@ -9,6 +9,8 @@ import { GUI } from "dat.gui";
 
 const lacesColors = ref<string[]>([]);
 const solesColors = ref<string[]>([]);
+const insideColors = ref<string[]>([]);
+const outsideColors = ref<string[]>([]);
 
 const selectedColor = ref<string | null>(null);
 
@@ -26,6 +28,26 @@ function selectColorForSole(color: string) {
 
   if (window.sole && window.sole.material) {
     window.sole.material.color.set(color);
+  } else {
+    console.error("Sole object or its material not found");
+  }
+}
+
+function selectColorForInside(color: string) {
+  selectedColor.value = color;
+
+  if (window.inside && window.inside.material) {
+    window.inside.material.color.set(color);
+  } else {
+    console.error("Sole object or its material not found");
+  }
+}
+
+function selectColorForOutside(color: string) {
+  selectedColor.value = color;
+
+  if (window.outside && window.outside.material) {
+    window.outside.material.color.set(color);
   } else {
     console.error("Sole object or its material not found");
   }
@@ -206,6 +228,8 @@ async function fetchProductData(code: string) {
 
     lacesColors.value = data.data.product.lacesColor || [];
     solesColors.value = data.data.product.soleColor || [];
+    insideColors.value = data.data.product.insideColor || [];
+    outsideColors.value = data.data.product.outsideColor || [];
   } catch (err) {
     console.error("Error occurred:", err);
     error.value = "Unable to fetch product information.";
@@ -418,6 +442,22 @@ onMounted(() => {
                 ></path>
               </svg>
             </li>
+            <li>
+              <p>3. Choose the color of the inside of your shoe</p>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                <path
+                  d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
+                ></path>
+              </svg>
+            </li>
+            <li>
+              <p>4. Choose the color of the outside of your shoe</p>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                <path
+                  d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
+                ></path>
+              </svg>
+            </li>
           </ul>
         </div>
         <div class="config-ui__page page1 colorsItem display">
@@ -437,6 +477,30 @@ onMounted(() => {
           <div class="row">
             <div
               v-for="color in solesColors"
+              :key="color"
+              :class="{ active: selectedColor === color }"
+              @click="selectColorForInside(color)"
+              :style="{ backgroundColor: color }"
+            ></div>
+          </div>
+        </div>
+        <div class="config-ui__page page3 colorsItem">
+          <h2>Choose the color of the inside of your shoe</h2>
+          <div class="row">
+            <div
+              v-for="color in insideColors"
+              :key="color"
+              :class="{ active: selectedColor === color }"
+              @click="selectColorForOutside(color)"
+              :style="{ backgroundColor: color }"
+            ></div>
+          </div>
+        </div>
+        <div class="config-ui__page page4 colorsItem">
+          <h2>Choose the color of the outside of your shoe</h2>
+          <div class="row">
+            <div
+              v-for="color in outsideColors"
               :key="color"
               :class="{ active: selectedColor === color }"
               @click="selectColorForSole(color)"
