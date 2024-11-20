@@ -32,7 +32,6 @@ const fetchOrders = async () => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const result = await response.json();
-    console.log("Orders fetched:", result); // Controleer de gehele response
     if (result && result.data && result.data.orders) {
       orders.value = result.data.orders;
     } else {
@@ -98,20 +97,17 @@ const totalOrdersCount = computed(() => orders.value.length);
 
 const filteredOrders = computed(() => {
   if (!orders.value) return [];
-  console.log("All orders:", orders.value); // Bekijk alle orders voor de filter
   const filteredBySearch = orders.value.filter((order) => {
     return Object.values(order).some((value) =>
       String(value).toLowerCase().includes(searchTerm.value.toLowerCase())
     );
   });
-  console.log("Filtered by search:", filteredBySearch); // Bekijk orders na search filter
 
   const filteredByType = filteredBySearch.filter(
     (order) =>
       selectedFilter.value === "All" ||
       order.orderStatus === selectedFilter.value
   );
-  console.log("Filtered by type:", filteredByType); // Bekijk orders na status filter
 
   return filteredByType;
 });
