@@ -348,6 +348,11 @@ function validateColors(): boolean {
   );
 }
 
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1"
+  : "http://localhost:3000/api/v1";
+
 async function submitOrder() {
   if (!validateColors()) {
     const errorMessageElement = document.querySelector(".errorMessage");
@@ -368,7 +373,7 @@ async function submitOrder() {
   console.log("Submitting order data:", orderData);
 
   try {
-    const response = await fetch("http://localhost:3000/api/v1/orders", {
+    const response = await fetch(`${baseURL}/products`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
