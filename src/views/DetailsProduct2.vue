@@ -127,45 +127,55 @@ onMounted(() => {
     (gltf) => {
       console.log("Loaded GLB model scene:", gltf.scene);
 
-      // Het model laden zoals je al deed
       gltf.scene.scale.set(50, 50, 50);
       gltf.scene.position.set(0, 0, 0);
       scene.add(gltf.scene);
 
-      // Traverse door het model en zoek specifieke onderdelen
       gltf.scene.traverse((child) => {
-        switch (child.name) {
-          case "laces":
-            window.laces = child;
-            break;
-          case "sole_bottom":
-            window.sole = child;
-            break;
-          case "inside":
-            window.inside = child;
-            break;
-          case "outside_1":
-            window.outside = child;
-            break;
+        if (child.name === "laces") {
+          window.laces = child;
+        }
+        if (child.name === "sole_bottom") {
+          window.sole = child;
+        }
+        if (child.name === "inside") {
+          window.inside = child;
+        }
+        if (child.name === "outside_1") {
+          window.outside = child;
         }
       });
 
+      function changeLacesColor(color) {
+        if (window.laces) {
+          window.laces.material.color.set(color);
+        }
+      }
+
       console.log("Children in GLB scene:", gltf.scene.children);
 
-      // Setup OrbitControls en GUI zoals eerder
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.25;
+      controls.enableZoom = true;
+      controls.target.set(0, 0, 0);
+
+      controls.update();
+
+      // Integrate dat.GUI for interactive debugging and model properties
+      const gui = new GUI();
+      const modelFolder = gui.addFolder("Model Controls");
+      modelFolder
+        .add(gltf.scene.rotation, "y", 0, Math.PI * 2, 0.01)
+        .name("Rotation Y");
+      modelFolder.add(gltf.scene.scale, "x", 1, 100).name("Scale X");
+      modelFolder.add(gltf.scene.scale, "y", 1, 100).name("Scale Y");
+      modelFolder.add(gltf.scene.scale, "z", 1, 100).name("Scale Z");
+      modelFolder.open();
 
       animate();
     },
-    // Voortgangsfunctie
-    (xhr) => {
-      const progress = (xhr.loaded / xhr.total) * 100;
-      if (xhr.total !== 0) {
-        console.log(`Model geladen: ${progress.toFixed(2)}%`);
-      } else {
-        console.log("Model geladen (onbekende voortgang)");
-      }
-    },
-    // Foutmelding bij het laden
+    undefined,
     (error) => {
       console.error("Error loading GLB file:", error);
     }
@@ -338,11 +348,6 @@ function validateColors(): boolean {
   );
 }
 
-const isProduction = window.location.hostname !== "localhost";
-const baseURL = isProduction
-  ? "https://glint-backend-admin.onrender.com/api/v1"
-  : "http://localhost:3000/api/v1";
-
 async function submitOrder() {
   if (!validateColors()) {
     const errorMessageElement = document.querySelector(".errorMessage");
@@ -363,7 +368,7 @@ async function submitOrder() {
   console.log("Submitting order data:", orderData);
 
   try {
-    const response = await fetch(`${baseURL}/products`, {
+    const response = await fetch("http://localhost:3000/api/v1/orders", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
