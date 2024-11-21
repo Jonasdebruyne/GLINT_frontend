@@ -140,7 +140,7 @@ onMounted(() => {
 
   const gltfLoader = new GLTFLoader();
   const dracoLoader = new DRACOLoader();
-  dracoLoader.setDecoderPath("/node_modules/three/examples/jsm/libs/draco/");
+  dracoLoader.setDecoderPath("/assets/draco/");
   gltfLoader.setDRACOLoader(dracoLoader);
 
   gltfLoader.load(
