@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://nodeles2.onrender.com",
+        target: "https://glint-backend-admin.onrender.com",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, "/api/v1"),
       },
