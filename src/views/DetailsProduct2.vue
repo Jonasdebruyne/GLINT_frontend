@@ -122,31 +122,37 @@ onMounted(() => {
   dracoLoader.setDecoderPath("/node_modules/three/examples/jsm/libs/draco/");
   gltfLoader.setDRACOLoader(dracoLoader);
 
+  // Laad het GLB-model
   gltfLoader.load(
-    "../../public/models/Shoe_compressed.glb",
+    "/models/Shoe_compressed.glb", // Gebruik het juiste pad naar het model
     (gltf) => {
       console.log("Loaded GLB model scene:", gltf.scene);
 
+      // Schaal en positie van het model instellen
       gltf.scene.scale.set(50, 50, 50);
       gltf.scene.position.set(0, 0, 0);
       scene.add(gltf.scene);
 
+      // Traverse door het model en zoek specifieke onderdelen
       gltf.scene.traverse((child) => {
-        if (child.name === "laces") {
-          window.laces = child;
-        }
-        if (child.name === "sole_bottom") {
-          window.sole = child;
-        }
-        if (child.name === "inside") {
-          window.inside = child;
-        }
-        if (child.name === "outside_1") {
-          window.outside = child;
+        switch (child.name) {
+          case "laces":
+            window.laces = child;
+            break;
+          case "sole_bottom":
+            window.sole = child;
+            break;
+          case "inside":
+            window.inside = child;
+            break;
+          case "outside_1":
+            window.outside = child;
+            break;
         }
       });
 
-      function changeLacesColor(color) {
+      // Functie om de kleur van de veters te veranderen
+      function changeLacesColor(color: string) {
         if (window.laces) {
           window.laces.material.color.set(color);
         }
@@ -154,15 +160,15 @@ onMounted(() => {
 
       console.log("Children in GLB scene:", gltf.scene.children);
 
+      // Setup voor de OrbitControls (de camera besturing)
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.25;
       controls.enableZoom = true;
       controls.target.set(0, 0, 0);
-
       controls.update();
 
-      // Integrate dat.GUI for interactive debugging and model properties
+      // Instellingen voor de GUI (voor interactief debuggen)
       const gui = new GUI();
       const modelFolder = gui.addFolder("Model Controls");
       modelFolder
@@ -173,13 +179,40 @@ onMounted(() => {
       modelFolder.add(gltf.scene.scale, "z", 1, 100).name("Scale Z");
       modelFolder.open();
 
+      // Start de animatie van het model
       animate();
     },
-    undefined,
+    // Fallback voor voortgangsrapportage
+    (xhr) => {
+      const progress = (xhr.loaded / xhr.total) * 100;
+      console.log(`Model geladen: ${progress.toFixed(2)}%`);
+    },
+    // Foutmelding bij het laden van het model
     (error) => {
       console.error("Error loading GLB file:", error);
     }
   );
+
+  // Functie voor animatie (roterend model)
+  function animate() {
+    requestAnimationFrame(animate);
+
+    // Roteer het model (indien geladen)
+    if (scene.children.length > 0) {
+      const model = scene.children[0];
+      model.rotation.y += 0.01;
+    }
+
+    // Render het model in de scene
+    renderer.render(scene, camera);
+  }
+
+  // Zorg ervoor dat de canvas grootte wordt aangepast bij het veranderen van de venstergrootte
+  window.addEventListener("resize", () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  });
 
   function animate() {
     requestAnimationFrame(animate);
