@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup>
 import { ref, onMounted, computed } from "vue";
 import Navigation from "../../components/navComponent.vue";
 import router from "../../router";

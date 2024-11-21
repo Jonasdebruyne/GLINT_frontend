@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup>
 import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
@@ -9,14 +9,25 @@ const errorMessage = ref("");
 const router = useRouter();
 const route = useRoute();
 
-const isValidEmail = (email: string) => {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(email);
+const isValidEmail = (email) => {
+  // Controleer eerst of het emailadres leeg is
+  if (!email || typeof email !== "string") {
+    return false;
+  }
+
+  // Reguliere expressie voor e-mailvalidatie
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // Test de e-mail tegen de reguliere expressie
+  return emailPattern.test(email);
 };
 
-onMounted(() => {
-  if (route.query.email) {
-    email.value = route.query.email as string;
+document.addEventListener("DOMContentLoaded", () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const email = urlParams.get("email"); // Haal de waarde van de 'email' queryparameter op
+
+  if (email) {
+    console.log(email); // Doe iets met de email, bijvoorbeeld opslaan of gebruiken
   }
 });
 

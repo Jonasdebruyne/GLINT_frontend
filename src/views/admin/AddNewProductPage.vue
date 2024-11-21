@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup>
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import Navigation from "../../components/navComponent.vue";
@@ -6,7 +6,7 @@ import Navigation from "../../components/navComponent.vue";
 // Router en JWT token ophalen
 const router = useRouter();
 const jwtToken = localStorage.getItem("jwtToken");
-const errorMessage = ref<string>("");
+const errorMessage = ref < string > "";
 
 // Basis-URL bepalen afhankelijk van de omgeving
 const isProduction = window.location.hostname !== "localhost";
@@ -26,24 +26,24 @@ onMounted(() => {
 });
 
 // Product-informatie refs
-const productCode = ref<string>("");
-const typeOfProduct = ref<string>("sneaker");
-const productName = ref<string>("");
-const brand = ref<string>("");
-const productPrice = ref<number | null>(null);
-const description = ref<string>("");
-const colors = ref<string[]>([]); // Zorg ervoor dat kleuren altijd een array zijn
-const sizeOptions = ref<string[]>([]); // Zorg ervoor dat maatopties altijd een array zijn
-const lacesColor = ref<string[]>([]); // Zorg ervoor dat de schoenveterskleur altijd een array is
-const soleColor = ref<string[]>([]); // Zorg ervoor dat de zoolkleur altijd een array is
-const insideColor = ref<string[]>([]); // Zorg ervoor dat de binnenkleur altijd een array is
-const outsideColor = ref<string[]>([]); // Zorg ervoor dat de buitenkleur altijd een array is
+const productCode = ref < string > "";
+const typeOfProduct = ref < string > "sneaker";
+const productName = ref < string > "";
+const brand = ref < string > "";
+const productPrice = (ref < number) | (null > null);
+const description = ref < string > "";
+const colors = ref([]);
+const sizeOptions = ref([]);
+const lacesColor = ref([]);
+const soleColor = ref([]);
+const insideColor = ref([]);
+const outsideColor = ref([]);
 
 // Afbeeldingen initialiseren als een lege array
-const images = ref<File[]>([]); // Dit zal de geüploade bestanden als File objecten opslaan
+const images = ref([]); // Dit zal de geüploade bestanden als File objecten opslaan
 
 // Functie voor het verwerken van afbeelding upload naar Cloudinary
-const uploadImageToCloudinary = async (file: File) => {
+const uploadImageToCloudinary = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", "ycy4zvmj"); // Vul hier je upload preset in
@@ -78,20 +78,26 @@ const uploadImageToCloudinary = async (file: File) => {
 };
 
 // Functie voor het verwerken van bestandsevents
-const handleImageUpload = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  if (input.files) {
-    images.value = Array.from(input.files); // Voeg de bestanden toe aan de array
-    console.log("Selected images:", images.value); // Log de geselecteerde bestanden
+const handleImageUpload = (event) => {
+  const input = event.target;
+  if (input.files && input.files.length > 0) {
+    const filesArray = Array.from(input.files);
+    images = [...filesArray]; // Create a shallow copy of the array
+    console.log("Selected images:", images);
+  } else {
+    console.log("No files selected.");
   }
 };
 
 // Functie om de invoer van kleurvelden om te zetten naar arrays
-const parseColors = (input: string | string[]): string[] => {
+const parseColors = (input) => {
   if (Array.isArray(input)) {
-    return input; // Als het al een array is, doe verder niets
+    return input; // If it's already an array, return it as is
   }
-  return input.split(",").map((color) => color.trim());
+  return input
+    .split(",")
+    .map((color) => color.trim())
+    .filter(Boolean); // Remove empty values
 };
 
 // Functie om het product toe te voegen

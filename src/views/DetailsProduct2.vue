@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup>
 import { ref, watch, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import * as THREE from "three";
@@ -7,26 +7,39 @@ import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GUI } from "dat.gui";
 
-const lacesColors = ref<string[]>([]);
-const solesColors = ref<string[]>([]);
-const insideColors = ref<string[]>([]);
-const outsideColors = ref<string[]>([]);
+const lacesColors = ref([]);
+const solesColors = ref([]);
+const insideColors = ref([]);
+const outsideColors = ref([]);
 
-const selectedColor = ref<string | null>(null);
-const selectedLacesColor = ref<string | null>(null);
-const selectedSoleColor = ref<string | null>(null);
-const selectedInsideColor = ref<string | null>(null);
-const selectedOutsideColor = ref<string | null>(null);
+const selectedColor = ref(null);
+const selectedLacesColor = ref(null);
+const selectedSoleColor = ref(null);
+const selectedInsideColor = ref(null);
+const selectedOutsideColor = ref(null);
 
-function selectColorForLaces(color: string) {
+function selectColorForLaces(color) {
+  if (!color) {
+    console.error("Color is invalid");
+    return; // Stop de functie als de kleur ongeldig is
+  }
+
   selectedColor.value = color;
   selectedLacesColor.value = color; // Bewaar de geselecteerde kleur
-  if (window.laces) {
-    window.laces.material.color.set(color);
+
+  // Controleer of window.laces en window.laces.material.color beschikbaar zijn
+  if (window.laces && window.laces.material && window.laces.material.color) {
+    try {
+      window.laces.material.color.set(color);
+    } catch (error) {
+      console.error("Error applying color to laces:", error);
+    }
+  } else {
+    console.warn("Laces object or material is not available");
   }
 }
 
-function selectColorForSole(color: string) {
+function selectColorForSole(color) {
   selectedColor.value = color;
   selectedSoleColor.value = color; // Bewaar de geselecteerde kleur
   if (window.sole && window.sole.material) {
@@ -36,7 +49,7 @@ function selectColorForSole(color: string) {
   }
 }
 
-function selectColorForInside(color: string) {
+function selectColorForInside(color) {
   selectedColor.value = color;
   selectedInsideColor.value = color; // Bewaar de geselecteerde kleur
   if (window.inside && window.inside.material) {
@@ -46,7 +59,7 @@ function selectColorForInside(color: string) {
   }
 }
 
-function selectColorForOutside(color: string) {
+function selectColorForOutside(color) {
   selectedColor.value = color;
   selectedOutsideColor.value = color; // Bewaar de geselecteerde kleur
   if (window.outside && window.outside.material) {
@@ -57,21 +70,21 @@ function selectColorForOutside(color: string) {
 }
 
 const route = useRoute();
-const productCode = ref<string | undefined>(undefined);
-const productData = ref<{ productName: string; productPrice: number } | null>(
-  null
-);
-const isLoading = ref<boolean>(true);
-const error = ref<string | null>(null);
+const productCode = ref(null);
+const productData = ref({ productName: "", productPrice: 0 });
+
+const isLoading = ref(true);
+const error = ref(null);
 
 watch(
   () => route.params.productCode,
   (newCode) => {
     if (newCode) {
-      productCode.value = newCode as string;
+      productCode.value = newCode;
       fetchProductData(newCode);
     } else {
-      console.error("Product code is undefined");
+      console.warn("Product code is missing or undefined");
+      // Je kunt hier extra acties toevoegen, zoals redirectie of default waarde instellen
     }
   },
   { immediate: true }
@@ -89,7 +102,15 @@ onMounted(() => {
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer();
-  const container = document.querySelector(".model") as HTMLElement;
+  const container = document.querySelector(".model");
+
+  if (container) {
+    // Safely work with the container element
+    console.log(container);
+  } else {
+    console.log("Element not found.");
+  }
+
   renderer.setSize(container.offsetWidth, container.offsetHeight);
   container.appendChild(renderer.domElement);
 
@@ -201,7 +222,7 @@ onMounted(() => {
   animate();
 });
 
-async function fetchProductData(code: string) {
+async function fetchProductData(code) {
   isLoading.value = true;
   error.value = null;
 
@@ -339,13 +360,15 @@ onMounted(() => {
   updateButtonVisibility();
 });
 
-function validateColors(): boolean {
-  return (
-    selectedLacesColor.value &&
-    selectedSoleColor.value &&
-    selectedInsideColor.value &&
-    selectedOutsideColor.value
-  );
+function validateColors() {
+  const colors = [
+    selectedLacesColor.value,
+    selectedSoleColor.value,
+    selectedInsideColor.value,
+    selectedOutsideColor.value,
+  ];
+
+  return colors.every((color) => color); // Controleer of elke kleur aanwezig is
 }
 
 async function submitOrder() {

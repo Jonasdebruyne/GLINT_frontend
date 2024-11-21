@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup>
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Navigation from "../../components/navComponent.vue";
@@ -17,25 +17,25 @@ if (!jwtToken) {
 }
 
 const route = useRoute();
-const productId = ref<string>("");
-const productCode = ref<string>("");
-const typeOfProduct = ref<string>("optical");
-const brand = ref<string>("");
-const productName = ref<string>("");
-const colors = ref<string>("");
-const description = ref<string>("");
-const glassColour = ref<string>("");
-const activeUnactive = ref<string>("active");
-const productPrice = ref<number | null>(null);
-const sizeOptions = ref<string[]>([]);
-const material = ref<string>("");
-const inStock = ref<boolean>(true);
-const lacesColor = ref<string[]>([]);
-const soleColor = ref<string[]>([]);
-const insideColor = ref<string[]>([]);
-const outsideColor = ref<string[]>([]);
+const productId = ref < string > "";
+const productCode = ref < string > "";
+const typeOfProduct = ref < string > "optical";
+const brand = ref < string > "";
+const productName = ref < string > "";
+const colors = ref < string > "";
+const description = ref < string > "";
+const glassColour = ref < string > "";
+const activeUnactive = ref < string > "active";
+const productPrice = (ref < number) | (null > null);
+const sizeOptions = ref([]);
+const material = ref < string > "";
+const inStock = ref < boolean > true;
+const lacesColor = ref([]);
+const soleColor = ref([]);
+const insideColor = ref([]);
+const outsideColor = ref([]);
 
-const productData = ref<any>(null);
+const productData = ref < any > null;
 
 const fetchProductData = async () => {
   const id = route.params.id;

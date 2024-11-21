@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup>
 import { ref, onMounted, computed } from "vue";
 import Navigation from "../../components/navComponent.vue";
 import router from "../../router";
@@ -42,16 +42,16 @@ const fetchOrders = async () => {
   }
 };
 
-const toggleSelection = (orderId: string) => {
-  const index = selectedOrders.value.indexOf(orderId);
+const toggleSelection = (orderId) => {
+  const index = selectedOrders.indexOf(orderId);
   if (index === -1) {
-    selectedOrders.value.push(orderId);
+    selectedOrders.push(orderId);
   } else {
-    selectedOrders.value.splice(index, 1);
+    selectedOrders.splice(index, 1);
   }
 };
 
-const toggleSelectAll = (event: any) => {
+const toggleSelectAll = (event) => {
   selectedOrders.value = event.target.checked
     ? orders.value.map((order) => order._id)
     : [];

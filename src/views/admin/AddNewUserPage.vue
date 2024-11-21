@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import Navigation from "../../components/navComponent.vue";
@@ -16,16 +16,24 @@ if (!jwtToken) {
   router.push("/login");
 }
 
-const firstname = ref<string>("");
-const lastname = ref<string>("");
-const email = ref<string>("");
-const password = ref<string>("");
-const role = ref<string>("user");
-const status = ref<string>("active");
+const firstname = ref < string > "";
+const lastname = ref < string > "";
+const email = ref < string > "";
+const password = ref < string > "";
+const role = ref < string > "user";
+const status = ref < string > "active";
 
-const isValidEmail = (email: string) => {
-  const re = /\S+@\S+\.\S+/;
-  return re.test(email);
+const isValidEmail = (email) => {
+  // Controleer eerst of het emailadres leeg is
+  if (!email || typeof email !== "string") {
+    return false;
+  }
+
+  // Reguliere expressie voor e-mailvalidatie
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // Test de e-mail tegen de reguliere expressie
+  return emailPattern.test(email);
 };
 
 const addUser = async () => {

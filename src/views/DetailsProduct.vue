@@ -1,4 +1,4 @@
-  <script lang="ts" setup>
+<script setup>
 import { ref, watch, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import * as THREE from "three";
@@ -8,29 +8,33 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GUI } from "dat.gui";
 
 const route = useRoute();
-const productCode = ref<string | undefined>(undefined);
-const productData = ref<{ productName: string; productPrice: number } | null>(
-  null
-);
-const isLoading = ref<boolean>(true);
-const error = ref<string | null>(null);
-const selectedShape = ref<string>("square");
-const activeMenu = ref<string>("shape");
+const productCode = (ref < string) | (undefined > undefined);
+let productData = {
+  productName: "",
+  productPrice: 0,
+};
+
+const isLoading = ref < boolean > true;
+const error = (ref < string) | (null > null);
+const selectedShape = ref < string > "square";
+const activeMenu = ref < string > "shape";
 
 watch(
   () => route.params.productCode,
   (newCode) => {
-    if (newCode) {
-      productCode.value = newCode as string;
+    if (typeof newCode === "string" && newCode.trim()) {
+      productCode.value = newCode;
       fetchProductData(newCode);
+    } else if (newCode === undefined || newCode === null) {
+      console.error("Product code is undefined or null.");
     } else {
-      console.error("Product code is undefined");
+      console.warn("Invalid product code type:", newCode);
     }
   },
   { immediate: true }
 );
 
-function fetchProductData(code: string) {
+function fetchProductData(code) {
   isLoading.value = true;
   error.value = null;
   fetch(`http://localhost:3000/api/v1/products/${code}`)
@@ -53,11 +57,11 @@ function fetchProductData(code: string) {
     });
 }
 
-function selectMenu(menu: string) {
+function selectMenu(menu) {
   activeMenu.value = menu;
 }
 
-function selectShape(shape: string) {
+function selectShape(shape) {
   selectedShape.value = shape;
 }
 
@@ -74,19 +78,24 @@ onMounted(() => {
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer();
-  const container = document.querySelector(".image-container") as HTMLElement;
+  const container = document.querySelector(".image-container");
+
+  if (!(container instanceof HTMLElement)) {
+    throw new Error(
+      "Element with class 'image-container' not found or is not an HTMLElement."
+    );
+  }
   renderer.setSize(container.offsetWidth, container.offsetHeight);
   container.appendChild(renderer.domElement);
 
-
   const cubeTextureLoader = new THREE.CubeTextureLoader();
   const environmentMap = cubeTextureLoader.load([
-    "/textures/px.png", 
-    "/textures/nx.png", 
+    "/textures/px.png",
+    "/textures/nx.png",
     "/textures/py.png",
     "/textures/ny.png",
     "/textures/pz.png",
-    "/textures/nz.png", 
+    "/textures/nz.png",
   ]);
   scene.background = environmentMap;
 
@@ -113,7 +122,10 @@ onMounted(() => {
       gltf.scene.position.set(0, 0, 0);
 
       gltf.scene.traverse((child) => {
-        if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
+        if (
+          child instanceof THREE.Mesh &&
+          child.material instanceof THREE.MeshStandardMaterial
+        ) {
           child.material.envMap = environmentMap;
           child.material.needsUpdate = true;
         }
@@ -155,11 +167,11 @@ onMounted(() => {
   });
 
   animate();
-  
+
   const gui = new GUI();
-  gui.domElement.style.position = 'absolute';
-  gui.domElement.style.top = '10px';
-  gui.domElement.style.right = '10px';
+  gui.domElement.style.position = "absolute";
+  gui.domElement.style.top = "10px";
+  gui.domElement.style.right = "10px";
   document.body.appendChild(gui.domElement);
 
   const params = {
@@ -174,8 +186,7 @@ onMounted(() => {
     ambientLight.intensity = value;
   });
 });
-
-  </script>
+</script>
 
 <template>
   <div class="container">
@@ -325,7 +336,6 @@ header h1 {
 .menu-item.active {
   color: #aa91de;
 }
-
 
 .content {
   display: flex;

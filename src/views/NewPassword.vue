@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup>
 import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
@@ -11,8 +11,14 @@ const router = useRouter();
 const route = useRoute();
 
 onMounted(() => {
-  if (route.query.email) {
-    email.value = route.query.email as string;
+  const emailQuery = route.query.email;
+
+  if (typeof emailQuery === "string") {
+    email.value = emailQuery;
+  } else if (emailQuery) {
+    console.warn("Email query parameter is not a string:", emailQuery);
+  } else {
+    console.info("No email query parameter provided.");
   }
 });
 

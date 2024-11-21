@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup>
 import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
@@ -10,18 +10,36 @@ const errorMessage = ref("");
 const router = useRouter();
 const route = useRoute();
 
-const isValidEmail = (email: string) => {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(email);
+const isValidEmail = (email) => {
+  // Controleer eerst of het emailadres leeg is
+  if (!email || typeof email !== "string") {
+    return false;
+  }
+
+  // Reguliere expressie voor e-mailvalidatie
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // Test de e-mail tegen de reguliere expressie
+  return emailPattern.test(email);
 };
 
-const isValidCode = (code: string) => {
-  return code.trim() !== "";
+const isValidCode = (code) => {
+  // Controleer of de code een geldige string is
+  if (typeof code !== "string") {
+    return false;
+  }
+
+  // Trim de string en controleer of deze niet leeg is
+  return code.trim().length > 0;
 };
 
 onMounted(() => {
-  if (route.query.email) {
-    email.value = route.query.email as string;
+  const emailQuery = route.query.email;
+
+  if (typeof emailQuery === "string") {
+    email.value = emailQuery;
+  } else if (emailQuery) {
+    console.warn("Unexpected email query type:", typeof emailQuery);
   }
 });
 

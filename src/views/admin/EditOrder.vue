@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup>
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Navigation from "../../components/navComponent.vue";
@@ -19,11 +19,11 @@ if (!jwtToken) {
 }
 
 // Verkrijg de productCode uit de routeparameter
-const productCode = ref(route.params.id as string);
+let productCode = route.params.id;
 
 // Orderdata en andere variabelen
-const orderData = ref<any>(null);
-const orderStatus = ref<string>("");
+const orderData = ref < any > null;
+const orderStatus = ref < string > "";
 
 const fetchOrderData = async () => {
   if (!productCode.value) {

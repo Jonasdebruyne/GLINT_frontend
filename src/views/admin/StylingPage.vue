@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup>
 import Navigation from "../../components/navComponent.vue";
 import { ref, onMounted } from "vue";
 import axios from "axios";

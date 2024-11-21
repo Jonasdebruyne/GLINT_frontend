@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup>
 import { ref, onMounted, computed } from "vue";
 import Navigation from "../../components/navComponent.vue";
 import router from "../../router";
@@ -19,7 +19,7 @@ const baseURL = isProduction
 const data = ref([]);
 const searchTerm = ref("");
 const selectedFilter = ref("All");
-const selectedUsers = ref<string[]>([]);
+let selectedUsers = [];
 const selectedUser = ref(null); // Toegevoegd voor gedetailleerde weergave
 const isPopupVisible = ref(false);
 
@@ -59,26 +59,25 @@ const filteredUsers = computed(() => {
   });
 });
 
-// Selecteer alle gebruikers in de gefilterde lijst
-const selectAllUsers = (isSelected: boolean) => {
-  selectedUsers.value = isSelected
-    ? filteredUsers.value
+function selectAllUsers(isSelected) {
+  selectedUsers = isSelected
+    ? filteredUsers
         .map((user) =>
           user._id === "67215000c9333e3c48f10a5d" ? user._id : null
         )
-        .filter((id) => id) // Hier aangepast
+        .filter((id) => id) // Verwijdert de `null` waarden
     : [];
-};
+}
 
 // Schakel selectie voor een enkele gebruiker
-const toggleSelection = (userId: string) => {
-  const index = selectedUsers.value.indexOf(userId);
+function toggleSelection(userId) {
+  const index = selectedUsers.indexOf(userId);
   if (index === -1) {
-    selectedUsers.value.push(userId);
+    selectedUsers.push(userId);
   } else {
-    selectedUsers.value.splice(index, 1);
+    selectedUsers.splice(index, 1);
   }
-};
+}
 
 // Verwijderen van geselecteerde gebruikers
 const deleteSelectedUsers = async () => {
