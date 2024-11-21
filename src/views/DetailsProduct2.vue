@@ -222,14 +222,18 @@ onMounted(() => {
   animate();
 });
 
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1"
+  : "http://localhost:3000/api/v1";
+
 async function fetchProductData(code) {
   isLoading.value = true;
   error.value = null;
 
   try {
-    const response = await fetch(
-      `http://localhost:3000/api/v1/products/${code}`
-    );
+    const response = await fetch(`${baseURL}/products/${code}`);
+
     if (!response.ok) throw new Error("Network response was not ok");
 
     const data = await response.json();
