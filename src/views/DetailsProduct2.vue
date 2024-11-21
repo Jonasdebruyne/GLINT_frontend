@@ -123,7 +123,7 @@ onMounted(() => {
   gltfLoader.setDRACOLoader(dracoLoader);
 
   gltfLoader.load(
-    "/models/Shoe_compressed.glb",
+    "./models/Shoe_compressed.glb",
     (gltf) => {
       console.log("Loaded GLB model scene:", gltf.scene);
 
