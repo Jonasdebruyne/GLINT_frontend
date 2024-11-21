@@ -76,6 +76,38 @@ const productData = ref({ productName: "", productPrice: 0 });
 const isLoading = ref(true);
 const error = ref(null);
 
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1"
+  : "http://localhost:3000/api/v1";
+
+async function fetchProductData(code) {
+  isLoading.value = true;
+  error.value = null;
+
+  try {
+    const response = await fetch(`${baseURL}/products/${code}`);
+
+    if (!response.ok) throw new Error("Network response was not ok");
+
+    const data = await response.json();
+    productData.value = {
+      productName: data.data.product.productName,
+      productPrice: data.data.product.productPrice,
+    };
+
+    lacesColors.value = data.data.product.lacesColor || [];
+    solesColors.value = data.data.product.soleColor || [];
+    insideColors.value = data.data.product.insideColor || [];
+    outsideColors.value = data.data.product.outsideColor || [];
+  } catch (err) {
+    console.error("Error occurred:", err);
+    error.value = "Unable to fetch product information.";
+  } finally {
+    isLoading.value = false;
+  }
+}
+
 watch(
   () => route.params.productCode,
   (newCode) => {
@@ -221,38 +253,6 @@ onMounted(() => {
 
   animate();
 });
-
-const isProduction = window.location.hostname !== "localhost";
-const baseURL = isProduction
-  ? "https://glint-backend-admin.onrender.com/api/v1"
-  : "http://localhost:3000/api/v1";
-
-async function fetchProductData(code) {
-  isLoading.value = true;
-  error.value = null;
-
-  try {
-    const response = await fetch(`${baseURL}/products/${code}`);
-
-    if (!response.ok) throw new Error("Network response was not ok");
-
-    const data = await response.json();
-    productData.value = {
-      productName: data.data.product.productName,
-      productPrice: data.data.product.productPrice,
-    };
-
-    lacesColors.value = data.data.product.lacesColor || [];
-    solesColors.value = data.data.product.soleColor || [];
-    insideColors.value = data.data.product.insideColor || [];
-    outsideColors.value = data.data.product.outsideColor || [];
-  } catch (err) {
-    console.error("Error occurred:", err);
-    error.value = "Unable to fetch product information.";
-  } finally {
-    isLoading.value = false;
-  }
-}
 
 onMounted(() => {
   const listItems = document.querySelectorAll(".overview ul li");
