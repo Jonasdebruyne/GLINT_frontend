@@ -3,11 +3,23 @@ import { ref, onMounted, computed } from "vue";
 import Navigation from "../../components/navComponent.vue";
 import router from "../../router";
 
+// Functie om het JWT-token te decoderen en de payload te extraheren
+const decodeToken = (token) => {
+  if (!token) return null;
+  const base64Payload = token.split(".")[1];
+  const decodedPayload = JSON.parse(atob(base64Payload));
+  return decodedPayload; // Dit bevat de payload, inclusief de partner-id
+};
+
 // JWT-token controle
 const jwtToken = localStorage.getItem("jwtToken");
 if (!jwtToken) {
   router.push("/login");
 }
+
+const decodedToken = decodeToken(jwtToken);
+const userPartnerId = decodedToken?.companyId; // Haal de partner-id van de ingelogde gebruiker
+console.log("Partner ID from token:", userPartnerId);
 
 // API-basispad configureren
 const isProduction = window.location.hostname !== "localhost";
@@ -16,11 +28,10 @@ const baseURL = isProduction
   : "http://localhost:3000/api/v1";
 
 // Reactieve data-referenties
-const data = ref([]);
+const data = ref([]); // Zorg ervoor dat data altijd een lege array is
 const searchTerm = ref("");
 const selectedFilter = ref("All");
-let selectedUsers = [];
-const selectedUser = ref(null); // Toegevoegd voor gedetailleerde weergave
+const selectedUsers = ref([]); // Dit is een ref voor de geselecteerde gebruikers
 const isPopupVisible = ref(false);
 
 // Computed properties voor UI-staat
@@ -38,7 +49,19 @@ const fetchData = async () => {
     });
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const result = await response.json();
-    data.value = result.data.users;
+
+    // Haal de rol van de ingelogde gebruiker
+    const userRole = decodedToken?.role;
+
+    // Als de gebruiker een platform_admin is, toon dan alle gebruikers
+    if (userRole === "platform_admin") {
+      data.value = result.data.users;
+    } else {
+      // Filter de gebruikers die bij de partner-id van de ingelogde gebruiker horen
+      data.value = result.data.users.filter(
+        (user) => user.partnerId === userPartnerId // Alleen gebruikers met dezelfde partnerId
+      );
+    }
   } catch (error) {
     console.error("Error fetching data:", error);
   }
@@ -46,6 +69,9 @@ const fetchData = async () => {
 
 // Filter de gebruikers op basis van zoekterm en filter
 const filteredUsers = computed(() => {
+  // Controleer eerst of data.value gedefinieerd is
+  if (!data.value) return [];
+
   return data.value.filter((user) => {
     const matchesSearchTerm =
       user.firstname.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
@@ -59,25 +85,22 @@ const filteredUsers = computed(() => {
   });
 });
 
-function selectAllUsers(isSelected) {
-  selectedUsers = isSelected
-    ? filteredUsers
-        .map((user) =>
-          user._id === "67215000c9333e3c48f10a5d" ? user._id : null
-        )
-        .filter((id) => id) // Verwijdert de `null` waarden
-    : [];
-}
+// Filter de gebruikers op basis van zoekterm en filter
+const selectAllUsers = (isSelected) => {
+  selectedUsers.value = isSelected
+    ? filteredUsers.value.map((user) => user._id)
+    : []; // Wijzig de geselecteerde gebruikers als een lege array
+};
 
 // Schakel selectie voor een enkele gebruiker
-function toggleSelection(userId) {
-  const index = selectedUsers.indexOf(userId);
+const toggleSelection = (userId) => {
+  const index = selectedUsers.value.indexOf(userId);
   if (index === -1) {
-    selectedUsers.push(userId);
+    selectedUsers.value.push(userId);
   } else {
-    selectedUsers.splice(index, 1);
+    selectedUsers.value.splice(index, 1);
   }
-}
+};
 
 // Verwijderen van geselecteerde gebruikers
 const deleteSelectedUsers = async () => {

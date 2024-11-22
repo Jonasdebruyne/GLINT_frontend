@@ -54,7 +54,7 @@ onMounted(() => {
     userRole.value = tokenPayload.role;
     houseStyleId.value = userId.value;
 
-    if (userRole.value !== "owner") {
+    if (userRole.value !== "partner_owner") {
       router.push("/admin");
     }
 

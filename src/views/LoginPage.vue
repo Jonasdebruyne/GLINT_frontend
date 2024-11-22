@@ -36,16 +36,16 @@ const login = () => {
       return response.json();
     })
     .then((data) => {
+      console.log("API Response:", data); // Voeg deze regel toe om de volledige response te bekijken
       if (data.status === "success") {
-        // Sla de ontvangen token op in localStorage
         localStorage.setItem("jwtToken", data.data.token);
-
-        // Decodeer de token om de rol te controleren
         const decodedToken = JSON.parse(atob(data.data.token.split(".")[1]));
-        const userRole = decodedToken.role; // Haal de rol uit de gedecodeerde token
-
-        // Controleer of de rol admin is
-        if (userRole === "admin" || userRole === "owner") {
+        const userRole = decodedToken.role;
+        if (
+          userRole === "partner_admin" ||
+          userRole === "partner_owner" ||
+          userRole === "platform_admin"
+        ) {
           router.push("/admin");
         } else {
           errorMessage.value = "Geen toegang tot de admin sectie.";

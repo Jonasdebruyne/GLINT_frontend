@@ -93,7 +93,7 @@ const logout = () => {
           <p>Orders</p>
         </router-link>
         <router-link
-          v-if="user.role === 'owner'"
+          v-if="user.role === 'partner_owner'"
           to="/admin/styling"
           exact-active-class="active"
         >
