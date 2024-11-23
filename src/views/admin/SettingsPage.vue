@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
+import Navigation from "../../components/navComponent.vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
 
@@ -69,20 +70,19 @@ const profileEditPopup = ref(false);
 const changeEmailAddressPopup = ref(false);
 const changePasswordPopup = ref(false);
 const changeSubscriptionPopup = ref(false);
-const selectedPackage = ref(null); // Bind to dropdown for package
+const selectedPackage = ref(null);
 const deleteAccountPopup = ref(false);
 const successProfileEditPopup = ref(false);
 const succesEmailAddressPopup = ref(false);
 const succesPasswordPopup = ref(false);
 
-const partnerPackage = ref(null); // Holds the partner's package
-const partnerName = ref(""); // Voeg deze variabele toe om de partnernaam op te slaan
+const partnerPackage = ref(null);
+const partnerName = ref("");
 
 const setActiveSection = (section) => {
   activeSection.value = section;
 };
 
-// Fetch user profile data
 const fetchUserProfile = async () => {
   try {
     const response = await axios.get(`${baseURL}/users/${userId}`, {
@@ -113,8 +113,6 @@ const fetchUserProfile = async () => {
   }
 };
 
-// Fetch partner data and initialize selectedPackage
-// Fetch partner data and initialize selectedPackage
 const fetchPartnerData = async () => {
   try {
     const response = await axios.get(`${baseURL}/partners/${partnerId}`, {
@@ -123,22 +121,15 @@ const fetchPartnerData = async () => {
       },
     });
 
-    console.log("Partner Data Response:", response.data);
-
     const partner = response.data?.data?.partner;
 
     if (partner) {
       const packageName = partner.package;
 
-      // Log the package and update the reactive state
-      console.log("Partner Package:", packageName);
+      partnerName.value = partner.name;
 
-      // Set partnerName dynamically from fetched data
-      partnerName.value = partner.name; // Set the partner name
-
-      // If package is available, set it; otherwise, use a fallback
       partnerPackage.value = packageName || "No package available";
-      selectedPackage.value = packageName || null; // Initialize selectedPackage with partner's package
+      selectedPackage.value = packageName || null;
 
       if (!packageName) {
         console.error("Package is not available in the partner data");
@@ -146,51 +137,33 @@ const fetchPartnerData = async () => {
     } else {
       console.error("Partner data not found in response");
       partnerPackage.value = "No partner data available";
-      selectedPackage.value = null; // Update selectedPackage with fallback
+      selectedPackage.value = null;
     }
   } catch (error) {
     console.error("Error fetching partner data:", error.response || error);
     partnerPackage.value = "Error loading partner data";
-    selectedPackage.value = null; // Fallback if error occurs
+    selectedPackage.value = null;
   }
 };
 
-// Watch for changes in selectedPackage to ensure it's reflected in the template
-watch(selectedPackage, (newValue) => {
-  console.log("Selected package updated:", newValue);
-});
-
-// Update subscription with selected package
 const updateSubscription = async () => {
   try {
-    console.log("Sending update request with data:", {
-      name: partnerName.value, // Naam van de partner
-      package: selectedPackage.value, // De geselecteerde package
-    });
-
     const response = await axios.put(
       `${baseURL}/partners/${partnerId}`,
       {
-        name: partnerName.value, // Naam van de partner
-        package: selectedPackage.value, // De geselecteerde package
+        name: partnerName.value,
+        package: selectedPackage.value,
       },
       {
         headers: {
           Authorization: `Bearer ${jwtToken}`,
-          "Content-Type": "application/json", // Zorg dat de juiste header wordt verzonden
+          "Content-Type": "application/json",
         },
       }
     );
 
-    // Succeslog
-    console.log("Subscription updated:", response.data);
-
-    // Werk partnerPackage bij zonder de pagina te herladen
     partnerPackage.value = response.data.data.partner.package;
-
-    // Hier kun je eventueel een succesmelding of andere UI-updates doen
   } catch (error) {
-    // Foutlog
     console.error(
       "Error updating subscription:",
       error.response ? error.response.data : error.message
@@ -198,7 +171,6 @@ const updateSubscription = async () => {
   }
 };
 
-// Delete user account
 const handleDeleteAccount = async () => {
   try {
     await axios.delete(`${baseURL}/users/${userId}`, {
@@ -214,7 +186,6 @@ const handleDeleteAccount = async () => {
   }
 };
 
-// Handle popup visibility
 const openEditPopup = () => {
   profileEditPopup.value = true;
 };
@@ -283,10 +254,9 @@ const closeSuccessSubscriptionPopup = () => {
   succesPasswordPopup.value = false;
 };
 
-// Fetch data on component mount
 onMounted(async () => {
   await fetchUserProfile();
-  await fetchPartnerData(); // Fetch partner data when the page is loaded
+  await fetchPartnerData();
 });
 </script>
 
@@ -436,7 +406,6 @@ onMounted(async () => {
       </div>
     </div>
 
-    <!-- Popup voor het bewerken van het profiel -->
     <transition name="fade">
       <div v-if="profileEditPopup" class="popup">
         <div class="popup-content">
