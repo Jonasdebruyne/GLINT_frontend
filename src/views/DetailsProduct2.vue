@@ -70,7 +70,7 @@ function selectColorForOutside(color) {
 }
 
 const route = useRoute();
-const productCode = ref(null);
+const productId = ref(null);
 const productData = ref({ productName: "", productPrice: 0 });
 
 const isLoading = ref(true);
@@ -87,7 +87,6 @@ async function fetchProductData(code) {
 
   try {
     const response = await fetch(`${baseURL}/products/${code}`);
-
     if (!response.ok) throw new Error("Network response was not ok");
 
     const data = await response.json();
@@ -109,14 +108,11 @@ async function fetchProductData(code) {
 }
 
 watch(
-  () => route.params.productCode,
+  () => route.params.productId,
   (newCode) => {
-    if (newCode) {
-      productCode.value = newCode;
+    if (newCode && newCode !== productId.value) {
+      productId.value = newCode;
       fetchProductData(newCode);
-    } else {
-      console.warn("Product code is missing or undefined");
-      // Je kunt hier extra acties toevoegen, zoals redirectie of default waarde instellen
     }
   },
   { immediate: true }
@@ -135,13 +131,6 @@ onMounted(() => {
 
   const renderer = new THREE.WebGLRenderer();
   const container = document.querySelector(".model");
-
-  if (container) {
-    // Safely work with the container element
-    console.log(container);
-  } else {
-    console.log("Element not found.");
-  }
 
   renderer.setSize(container.offsetWidth, container.offsetHeight);
   container.appendChild(renderer.domElement);
@@ -165,8 +154,6 @@ onMounted(() => {
   gltfLoader.load(
     "/models/Shoe_compressed.glb",
     (gltf) => {
-      console.log("Loaded GLB model scene:", gltf.scene);
-
       gltf.scene.scale.set(50, 50, 50);
       gltf.scene.position.set(0, 0, 0);
       scene.add(gltf.scene);
@@ -191,8 +178,6 @@ onMounted(() => {
           window.laces.material.color.set(color);
         }
       }
-
-      console.log("Children in GLB scene:", gltf.scene.children);
 
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
@@ -372,14 +357,12 @@ async function submitOrder() {
   }
 
   const orderData = {
-    productCode: productCode.value,
+    productId: productId.value,
     lacesColor: selectedLacesColor.value,
     soleColor: selectedSoleColor.value,
     insideColor: selectedInsideColor.value,
     outsideColor: selectedOutsideColor.value,
   };
-
-  console.log("Submitting order data:", orderData);
 
   try {
     const response = await fetch("http://localhost:3000/api/v1/orders", {
@@ -397,7 +380,6 @@ async function submitOrder() {
     }
 
     const result = await response.json();
-    console.log("Order submitted successfully:", result);
 
     document.querySelector(".errorMessage").innerHTML = "";
 

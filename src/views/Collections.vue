@@ -5,48 +5,63 @@ import router from "../router";
 const products = ref([]); // All products
 const loading = ref(false); // Loading state
 const error = ref(null); // Error state
+const activeFilter = ref("All"); // Active filter state
 
+// Determine base URL based on environment
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
   : "http://localhost:3000/api/v1";
 
+// Fetch products from API
 const fetchProducts = async () => {
   try {
     loading.value = true;
-    const response = await fetch(`${baseURL}/products/`);
+
+    const response = await fetch(`${baseURL}/products/`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
+
     const result = await response.json();
-    products.value = result.data.products;
-    error.value = null;
+
+    // Ensure that images are initialized as an array for each product
+    products.value = result.data.products.map((product) => ({
+      ...product,
+      images: product.images || [], // Set empty array if images is undefined
+    }));
+
+    error.value = null; // Reset error
   } catch (err) {
     console.error("Error fetching products:", err.message);
     error.value = "Er is een fout opgetreden bij het ophalen van de producten.";
   } finally {
-    loading.value = false;
+    loading.value = false; // Stop loading indicator
   }
 };
 
-const activeFilter = ref("All"); // Tracks the active filter
-
-// Computed filtered products based on the active filter
+// Filter products based on the active filter
 const filteredProducts = computed(() => {
   return activeFilter.value === "All"
-    ? products.value
+    ? products.value // Return all products if "All" is selected
     : products.value.filter(
         (product) => product.typeOfProduct === activeFilter.value.toLowerCase()
       );
 });
 
-// Set the active filter when a filter is clicked
+// Set active filter when a filter is clicked
 const setActiveFilter = (filter) => {
   activeFilter.value = filter;
 };
 
 onMounted(() => {
-  fetchProducts();
+  fetchProducts(); // Fetch products on component mount
 });
 </script>
 
@@ -80,6 +95,7 @@ onMounted(() => {
     <div v-if="loading">Laden...</div>
     <div v-if="error">{{ error }}</div>
 
+    <!-- Display products -->
     <div v-if="!loading && !error" class="products">
       <div class="row">
         <h2>{{ activeFilter }}</h2>
@@ -88,15 +104,17 @@ onMounted(() => {
         </p>
       </div>
       <div class="product-grid">
+        <!-- Render products -->
         <router-link
           v-for="product in filteredProducts"
           :key="product._id"
-          :to="`/${product.productCode}`"
+          :to="`/product/${product._id}`"
           :class="['product-card', product.typeOfProduct]"
         >
           <div class="product-image-container">
+            <!-- Show product image if available -->
             <div
-              v-if="product.images && product.images.length > 0"
+              v-if="product.images.length > 0"
               class="product-image"
               :style="{ backgroundImage: 'url(' + product.images[0] + ')' }"
             ></div>
