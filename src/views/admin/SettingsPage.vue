@@ -1,6 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import Navigation from "../../components/navComponent.vue";
+import { ref, onMounted, watch } from "vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
 
@@ -53,6 +52,12 @@ if (!tokenPayload || !tokenPayload.userId) {
   router.push("/login");
 }
 
+const partnerId = tokenPayload.companyId;
+if (!partnerId) {
+  console.error("Partner ID (companyId) is not available in the token.");
+  router.push("/login");
+}
+
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
@@ -63,15 +68,21 @@ const activeSection = ref("My profile");
 const profileEditPopup = ref(false);
 const changeEmailAddressPopup = ref(false);
 const changePasswordPopup = ref(false);
+const changeSubscriptionPopup = ref(false);
+const selectedPackage = ref(null); // Bind to dropdown for package
 const deleteAccountPopup = ref(false);
 const successProfileEditPopup = ref(false);
 const succesEmailAddressPopup = ref(false);
 const succesPasswordPopup = ref(false);
 
+const partnerPackage = ref(null); // Holds the partner's package
+const partnerName = ref(""); // Voeg deze variabele toe om de partnernaam op te slaan
+
 const setActiveSection = (section) => {
   activeSection.value = section;
 };
 
+// Fetch user profile data
 const fetchUserProfile = async () => {
   try {
     const response = await axios.get(`${baseURL}/users/${userId}`, {
@@ -102,130 +113,108 @@ const fetchUserProfile = async () => {
   }
 };
 
-const updateProfile = async () => {
+// Fetch partner data and initialize selectedPackage
+// Fetch partner data and initialize selectedPackage
+const fetchPartnerData = async () => {
   try {
-    const response = await axios.put(
-      `${baseURL}/users/${userId}`,
-      {
-        user: {
-          firstname: user.value.firstName,
-          lastname: user.value.lastName,
-          email: user.value.email,
-          password: user.value.email,
-          role: user.value.role,
-          activeUnactive: user.value.activeUnactive,
-          country: user.value.country,
-          city: user.value.city,
-          postalCode: user.value.postalCode,
-          profileImage: user.value.profilePicture,
-          bio: user.value.bio,
-        },
+    const response = await axios.get(`${baseURL}/partners/${partnerId}`, {
+      headers: {
+        Authorization: `Bearer ${jwtToken}`,
       },
-      {
-        headers: {
-          Authorization: `Bearer ${jwtToken}`,
-        },
-      }
-    );
+    });
 
-    closeProfileEditPopup();
-    opensuccessProfileEditPopup();
-    await fetchUserProfile();
+    console.log("Partner Data Response:", response.data);
+
+    const partner = response.data?.data?.partner;
+
+    if (partner) {
+      const packageName = partner.package;
+
+      // Log the package and update the reactive state
+      console.log("Partner Package:", packageName);
+
+      // Set partnerName dynamically from fetched data
+      partnerName.value = partner.name; // Set the partner name
+
+      // If package is available, set it; otherwise, use a fallback
+      partnerPackage.value = packageName || "No package available";
+      selectedPackage.value = packageName || null; // Initialize selectedPackage with partner's package
+
+      if (!packageName) {
+        console.error("Package is not available in the partner data");
+      }
+    } else {
+      console.error("Partner data not found in response");
+      partnerPackage.value = "No partner data available";
+      selectedPackage.value = null; // Update selectedPackage with fallback
+    }
   } catch (error) {
-    console.error("Error updating profile:", error);
+    console.error("Error fetching partner data:", error.response || error);
+    partnerPackage.value = "Error loading partner data";
+    selectedPackage.value = null; // Fallback if error occurs
   }
 };
 
-const updateEmailAddress = async () => {
+// Watch for changes in selectedPackage to ensure it's reflected in the template
+watch(selectedPackage, (newValue) => {
+  console.log("Selected package updated:", newValue);
+});
+
+// Update subscription with selected package
+const updateSubscription = async () => {
   try {
+    console.log("Sending update request with data:", {
+      name: partnerName.value, // Naam van de partner
+      package: selectedPackage.value, // De geselecteerde package
+    });
+
     const response = await axios.put(
-      `${baseURL}/users/${userId}`,
+      `${baseURL}/partners/${partnerId}`,
       {
-        user: {
-          firstname: user.value.firstName,
-          lastname: user.value.lastName,
-          email: user.value.newEmail,
-          password: user.value.email,
-          role: user.value.role,
-          activeUnactive: user.value.activeUnactive,
-          country: user.value.country,
-          city: user.value.city,
-          postalCode: user.value.postalCode,
-          profileImage: user.value.profilePicture,
-          bio: user.value.bio,
-        },
+        name: partnerName.value, // Naam van de partner
+        package: selectedPackage.value, // De geselecteerde package
       },
       {
         headers: {
           Authorization: `Bearer ${jwtToken}`,
+          "Content-Type": "application/json", // Zorg dat de juiste header wordt verzonden
         },
       }
     );
 
-    closeChangeEmailAddressPopup();
-    openSuccesChangeEmailAddressPopup();
-    await fetchUserProfile();
+    // Succeslog
+    console.log("Subscription updated:", response.data);
+
+    // Werk partnerPackage bij zonder de pagina te herladen
+    partnerPackage.value = response.data.data.partner.package;
+
+    // Hier kun je eventueel een succesmelding of andere UI-updates doen
   } catch (error) {
-    console.error("Error updating profile:", error);
+    // Foutlog
+    console.error(
+      "Error updating subscription:",
+      error.response ? error.response.data : error.message
+    );
   }
 };
 
-async function updatePassword() {
-  try {
-    if (
-      !user.value.oldpassword ||
-      !user.value.newpassword ||
-      !user.value.newPasswordRepeat
-    ) {
-      document.querySelector(".errorMessage").innerHTML =
-        "Please enter the old password, the new password and the repetition of the new password.";
-      return;
-    }
-
-    if (user.value.newpassword !== user.value.newPasswordRepeat) {
-      document.querySelector(".errorMessage").innerHTML =
-        "The new password and the repetition of the new password do not match.";
-      return;
-    }
-
-    const response = await axios.put(
-      `${baseURL}/users/${userId}`,
-      {
-        user: {
-          oldPassword: user.value.oldpassword, // Oude wachtwoord
-          newPassword: user.value.newpassword, // Nieuwe wachtwoord
-        },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${jwtToken}`,
-        },
-      }
-    );
-
-    closeChangePasswordPopup();
-    openSuccesChangePasswordPopup();
-  } catch (error) {
-    console.error("Error updating password:", error);
-  }
-}
-
+// Delete user account
 const handleDeleteAccount = async () => {
   try {
-    const response = await axios.delete(`${baseURL}/users/${userId}`);
+    await axios.delete(`${baseURL}/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${jwtToken}`,
+      },
+    });
   } catch (error) {
-    console.error(
-      "Er ging iets mis bij het verwijderen van het account",
-      error
-    );
-    // Hier kun je een foutmelding tonen aan de gebruiker
+    console.error("Error deleting account:", error);
   } finally {
-    // Sluit de popup, ongeacht of de delete succesvol was of niet
     localStorage.removeItem("jwtToken");
     router.push("/login");
   }
 };
 
+// Handle popup visibility
 const openEditPopup = () => {
   profileEditPopup.value = true;
 };
@@ -236,6 +225,10 @@ const openChangeEmailAddressPopup = () => {
 
 const openChangePasswordPopup = () => {
   changePasswordPopup.value = true;
+};
+
+const openChangeSubscriptionPopup = () => {
+  changeSubscriptionPopup.value = true;
 };
 
 const openDeleteAccountPopup = () => {
@@ -252,6 +245,10 @@ const closeChangeEmailAddressPopup = () => {
 
 const closeChangePasswordPopup = () => {
   changePasswordPopup.value = false;
+};
+
+const closeChangeSubscriptionPopup = () => {
+  changeSubscriptionPopup.value = false;
 };
 
 const closeDeleteAccountPopup = () => {
@@ -282,8 +279,14 @@ const closeSuccessPasswordPopup = () => {
   succesPasswordPopup.value = false;
 };
 
-onMounted(() => {
-  fetchUserProfile();
+const closeSuccessSubscriptionPopup = () => {
+  succesPasswordPopup.value = false;
+};
+
+// Fetch data on component mount
+onMounted(async () => {
+  await fetchUserProfile();
+  await fetchPartnerData(); // Fetch partner data when the page is loaded
 });
 </script>
 
@@ -310,6 +313,15 @@ onMounted(() => {
           @click="setActiveSection('Field names')"
         >
           Field names
+        </p>
+        <p
+          v-if="user.role === 'partner_admin' && partnerPackage"
+          :class="{ active: activeSection === 'Subscription' }"
+          @click="setActiveSection('Subscription')"
+          role="button"
+          tabindex="0"
+        >
+          Subscription
         </p>
       </div>
 
@@ -403,6 +415,24 @@ onMounted(() => {
       <div v-if="activeSection === 'Field names'" class="fieldNames">
         <h2 class="border">Field names</h2>
         <p>Dit zijn de velden van de database.</p>
+      </div>
+
+      <div
+        v-if="activeSection === 'Subscription' && user.role === 'partner_admin'"
+        class="subscription"
+      >
+        <h2 class="border">Subscription</h2>
+        <div class="subscriptionElements">
+          <div class="column" v-if="partnerPackage">
+            <h3>Package</h3>
+            <div class="row">
+              <p>{{ partnerPackage }}</p>
+              <button @click="openChangeSubscriptionPopup" class="link">
+                <p>Change subscription</p>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -524,6 +554,37 @@ onMounted(() => {
           >
             Save
           </button>
+        </div>
+      </div>
+    </transition>
+
+    <transition name="fade">
+      <div v-if="changeSubscriptionPopup" class="popup">
+        <div class="popup-content">
+          <div class="row">
+            <span class="close" @click="closeChangeSubscriptionPopup"
+              >&times;</span
+            >
+            <h2>Change Subscription</h2>
+          </div>
+          <div class="fields">
+            <div class="column">
+              <label>Package</label>
+              <select v-model="selectedPackage">
+                <option
+                  value="standard"
+                  :selected="selectedPackage === 'standard'"
+                >
+                  Standard
+                </option>
+                <option value="pro" :selected="selectedPackage === 'pro'">
+                  Pro
+                </option>
+              </select>
+            </div>
+            <p class="errorMessage">{{ errorMessage }}</p>
+          </div>
+          <button class="btn" @click="updateSubscription">Save</button>
         </div>
       </div>
     </transition>
@@ -696,38 +757,45 @@ onMounted(() => {
 }
 
 .fieldNames,
-.account {
+.account,
+.subscription {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
 }
 
-.account .accountElements {
+.account .accountElements,
+.subscription .subscriptionElements {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
-.account .accountElements .column {
+.account .accountElements .column,
+.subscription .subscriptionElements .column {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.account .accountElements .column .row {
+.account .accountElements .column .row,
+.subscription .subscriptionElements .column .row {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
 }
 
-.account .accountElements .column .row .link {
+.account .accountElements .column .row .link,
+.subscription .subscriptionElements .column .row .link {
   background-color: var(--gray);
   border-radius: 8px;
   padding: 4px 12px;
 }
 
-.account .accountElements .column .row .link p {
+.account .accountElements .column .row .link p,
+.subscription .subscriptionElements .column .row .link p {
   color: var(--black);
   font-weight: 400;
 }
