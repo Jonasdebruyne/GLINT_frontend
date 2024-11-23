@@ -12,27 +12,26 @@ const baseURL = isProduction
 const jwtToken = localStorage.getItem("jwtToken");
 const router = useRouter();
 
+// Redirect naar login als er geen token is
 if (!jwtToken) {
   router.push("/login");
 }
 
-const firstname = ref < string > "";
-const lastname = ref < string > "";
-const email = ref < string > "";
-const password = ref < string > "";
-const role = ref < string > "user";
-const status = ref < string > "active";
+const firstname = ref("");
+const lastname = ref("");
+const email = ref("");
+const password = ref("");
+const role = ref("customer"); // Standaardwaarde aangepast
+const status = ref("active");
+const company = ref("");
+const country = ref("");
+const city = ref("");
+const postalCode = ref("");
+const profileImage = ref("");
+const bio = ref("");
 
 const isValidEmail = (email) => {
-  // Controleer eerst of het emailadres leeg is
-  if (!email || typeof email !== "string") {
-    return false;
-  }
-
-  // Reguliere expressie voor e-mailvalidatie
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  // Test de e-mail tegen de reguliere expressie
   return emailPattern.test(email);
 };
 
@@ -55,63 +54,85 @@ const addUser = async () => {
   }
 
   try {
+    const userPayload = {
+      user: {
+        firstname: firstname.value,
+        lastname: lastname.value,
+        email: email.value,
+        password: password.value,
+        role: role.value,
+        activeUnactive: status.value, // activeUnactive wordt gebruikt i.p.v. status
+      },
+    };
+
+    // Voeg alleen optionele velden toe als ze niet leeg zijn
+    if (company.value) userPayload.user.company = company.value;
+    if (country.value) userPayload.user.country = country.value;
+    if (city.value) userPayload.user.city = city.value;
+    if (postalCode.value) userPayload.user.postalCode = postalCode.value;
+    if (profileImage.value) userPayload.user.profileImage = profileImage.value;
+    if (bio.value) userPayload.user.bio = bio.value;
+
+    console.log("Gebruiker payload:", JSON.stringify(userPayload, null, 2)); // Voeg dit toe om te zien wat je verzendt
+
     const userResponse = await fetch(`${baseURL}/users/signup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${jwtToken}`,
       },
-      body: JSON.stringify({
-        user: {
-          firstname: firstname.value,
-          lastname: lastname.value,
-          email: email.value,
-          password: password.value,
-          role: role.value,
-          activeUnactive: status.value,
-        },
-      }),
+      body: JSON.stringify(userPayload),
     });
 
     if (!userResponse.ok) {
-      const errorDetail = await userResponse.text();
+      const errorDetail = await userResponse.json();
       throw new Error(
-        `HTTP error! status: ${userResponse.status}, details: ${errorDetail}`
+        `Fout bij het toevoegen van de gebruiker: ${errorDetail.message}`
       );
     }
 
     const userResult = await userResponse.json();
-    const userId = userResult.data.user.id; // Zorg ervoor dat deze structuur klopt
-    const houseStyle = {
-      primary_color: "#0071e3",
-      secondary_color: "#9747ff",
-      background_color: "#e5e5e5",
-      text_color: "#000000",
-      fontFamilyBodyText: "DM Sans",
-      fontFamilyTitles: "Syne",
-      logo_url: "assets/images/logo.png",
-      userId: userId,
+    console.log("Gebruiker succesvol aangemaakt:", userResult);
+
+    // Huisstijl toevoegen (optioneel)
+    const userId = userResult.data.user.id;
+
+    // Plaats de houseStyle gegevens binnen de 'houseStyle' sleutel
+    const houseStylePayload = {
+      houseStyle: {
+        primary_color: "#0071e3",
+        secondary_color: "#9747ff",
+        background_color: "#e5e5e5",
+        text_color: "#000000",
+        fontFamilyBodyText: "DM Sans",
+        fontFamilyTitles: "Syne",
+        logo_url: "assets/images/logo.png",
+        userId: userId,
+      },
     };
 
     const houseStyleResponse = await fetch(`${baseURL}/housestyle`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${jwtToken}`,
       },
-      body: JSON.stringify({ houseStyle }),
+      body: JSON.stringify(houseStylePayload), // Verzend de gegevens binnen 'houseStyle' sleutel
     });
 
     if (!houseStyleResponse.ok) {
-      const errorDetail = await houseStyleResponse.text();
+      const errorDetail = await houseStyleResponse.json();
       throw new Error(
-        `HTTP error! status: ${houseStyleResponse.status}, details: ${errorDetail}`
+        `Fout bij het toevoegen van de huisstijl: ${errorDetail.message}`
       );
     }
 
-    router.push("./users");
+    // Navigeer naar gebruikerspagina
+    router.push("/admin/users");
   } catch (error) {
-    console.error("Error adding user or creating house style:", error);
+    console.error("Error adding user or creating house style:", error.message);
     alert(
-      "Er is een fout opgetreden bij het toevoegen van de gebruiker of het aanmaken van de huisstijl."
+      "Er is een fout opgetreden bij het toevoegen van de gebruiker of het aanmaken van de huisstijl. Controleer de console voor details."
     );
   }
 };
@@ -122,6 +143,7 @@ const addUser = async () => {
   <div class="content">
     <h1>Add New User</h1>
     <form @submit.prevent="addUser">
+      <!-- Vereiste velden -->
       <div class="row">
         <div class="column">
           <label for="firstname">First Name:</label>
@@ -145,22 +167,55 @@ const addUser = async () => {
       <div class="row">
         <div class="column">
           <label for="role">Role:</label>
-          <select v-model="role" id="role">
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-            <option v-if="role === 'partner_owner'" value="partner_owner">
-              Partner_owner
-            </option>
+          <select v-model="role" id="role" required>
+            <option value="customer">Customer</option>
+            <option value="partner_admin">Partner Admin</option>
+            <option value="partner_owner">Partner Owner</option>
+            <option value="platform_admin">Platform Admin</option>
           </select>
         </div>
         <div class="column">
           <label for="status">Status:</label>
-          <select v-model="status" id="status">
+          <select v-model="status" id="status" required>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
         </div>
       </div>
+
+      <!-- Optionele velden -->
+      <div class="row">
+        <div class="column">
+          <label for="company">Company (optioneel):</label>
+          <input v-model="company" id="company" type="text" />
+        </div>
+        <div class="column">
+          <label for="country">Country (optioneel):</label>
+          <input v-model="country" id="country" type="text" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="column">
+          <label for="city">City (optioneel):</label>
+          <input v-model="city" id="city" type="text" />
+        </div>
+        <div class="column">
+          <label for="postalCode">Postal Code (optioneel):</label>
+          <input v-model="postalCode" id="postalCode" type="text" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="column">
+          <label for="profileImage">Profile Image URL (optioneel):</label>
+          <input v-model="profileImage" id="profileImage" type="text" />
+        </div>
+        <div class="column">
+          <label for="bio">Bio (optioneel):</label>
+          <textarea v-model="bio" id="bio" rows="4"></textarea>
+        </div>
+      </div>
+
+      <!-- Submit button -->
       <button type="submit" class="btn active">Add User</button>
     </form>
   </div>

@@ -17,12 +17,26 @@ if (!jwtToken) {
   router.push("/login");
 }
 
-const firstname = ref < string > "";
-const lastname = ref < string > "";
-const email = ref < string > "";
-const role = ref < string > "user";
-const status = ref < string > "active";
-const userData = ref < any > null;
+const firstname = ref("");
+const lastname = ref("");
+const email = ref("");
+const password = ref("");
+const role = ref("customer");
+const status = ref("active");
+const company = ref(""); // Bedrijf
+const bio = ref(""); // Bio
+const country = ref(""); // Land
+const city = ref(""); // Stad
+const postalCode = ref(""); // Postcode
+const profileImage = ref(null); // Dit blijft hetzelfde
+
+// Functie voor bestandshantering
+const handleFileChange = (event) => {
+  const file = event.target.files[0]; // Haal het eerste bestand op
+  profileImage.value = file; // Sla het bestand op in de profileImage variabele
+};
+
+const userData = ref(null);
 const userId = route.params.id;
 
 const isValidEmail = (email) => {
@@ -46,7 +60,7 @@ const fetchUserData = async () => {
     }
 
     const data = await response.json(); // JSON-parsing hier
-    userData.value = data.data.user; // Wijzig hier naar data.data.user om de juiste structuur te krijgen
+    userData.value = data.data.user; // Wijzig hier naar 'userData.value' i.p.v. 'userData'
 
     // Vul de form velden met de ontvangen data
     if (userData.value) {
@@ -58,6 +72,7 @@ const fetchUserData = async () => {
       country.value = userData.value.country; // Nieuw toegevoegd
       city.value = userData.value.city; // Nieuw toegevoegd
       postalCode.value = userData.value.postalCode; // Nieuw toegevoegd
+      profileImage.value = userData.value.profileImage; // Nieuw toegevoegd
       bio.value = userData.value.bio; // Nieuw toegevoegd
     }
   } catch (error) {
@@ -87,20 +102,29 @@ const updateUser = async () => {
   }
 
   try {
+    const payload = {
+      user: {
+        firstname: firstname.value,
+        lastname: lastname.value,
+        email: email.value,
+        password: password.value, // Voeg hier de password toe als je het wilt bijwerken
+        role: role.value,
+        activeUnactive: status.value,
+        company: company.value,
+        bio: bio.value,
+        country: country.value,
+        city: city.value,
+        postalCode: postalCode.value,
+      },
+    };
+
     const response = await fetch(`${baseURL}/users/${userId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${jwtToken}`, // Als je token nodig hebt voor authenticatie
       },
-      body: JSON.stringify({
-        user: {
-          firstname: firstname.value,
-          lastname: lastname.value,
-          email: email.value,
-          role: role.value,
-          activeUnactive: status.value,
-        },
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -139,11 +163,10 @@ const updateUser = async () => {
         <div class="column">
           <label for="role">Rol:</label>
           <select v-model="role" id="role">
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-            <option v-if="role === 'partner_owner'" value="partner_owner">
-              Partner_owner
-            </option>
+            <option value="customer">Customer</option>
+            <option value="partner_admin">Partner Admin</option>
+            <option value="partner_owner">Partner Owner</option>
+            <option value="platform_admin">Platform Admin</option>
           </select>
         </div>
         <div class="column">
@@ -154,6 +177,37 @@ const updateUser = async () => {
           </select>
         </div>
       </div>
+
+      <!-- Nieuwe velden toegevoegd -->
+      <div class="column">
+        <label for="company">Bedrijf:</label>
+        <input v-model="company" id="company" type="text" />
+      </div>
+      <div class="column">
+        <label for="bio">Bio:</label>
+        <textarea v-model="bio" id="bio" rows="4"></textarea>
+      </div>
+      <div class="row">
+        <div class="column">
+          <label for="country">Land:</label>
+          <input v-model="country" id="country" type="text" />
+        </div>
+        <div class="column">
+          <label for="city">Stad:</label>
+          <input v-model="city" id="city" type="text" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="column">
+          <label for="postalCode">Postcode:</label>
+          <input v-model="postalCode" id="postalCode" type="text" />
+        </div>
+        <div class="column">
+          <label for="profileImage">Profielafbeelding:</label>
+          <input type="file" id="profileImage" @change="handleFileChange" />
+        </div>
+      </div>
+
       <button type="submit" class="btn active">Save</button>
     </form>
   </div>
