@@ -146,18 +146,7 @@ onMounted(() => {
   renderer.setSize(container.offsetWidth, container.offsetHeight);
   container.appendChild(renderer.domElement);
 
-  // Add an environment map
-  const envTextureLoader = new THREE.CubeTextureLoader();
-  const environmentMap = envTextureLoader.load([
-    "/textures/px.png",
-    "/textures/nx.png",
-    "/textures/py.png",
-    "/textures/ny.png",
-    "/textures/pz.png",
-    "/textures/nz.png",
-  ]);
-  scene.background = environmentMap;
-  scene.environment = environmentMap;
+
 
   const light = new THREE.PointLight(0xffffff, 1, 100);
   light.position.set(10, 10, 10);
