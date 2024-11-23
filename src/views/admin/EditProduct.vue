@@ -17,25 +17,22 @@ if (!jwtToken) {
 }
 
 const route = useRoute();
-const productId = ref < string > "";
-const productCode = ref < string > "";
-const typeOfProduct = ref < string > "optical";
-const brand = ref < string > "";
-const productName = ref < string > "";
-const colors = ref < string > "";
-const description = ref < string > "";
-const glassColour = ref < string > "";
-const activeUnactive = ref < string > "active";
-const productPrice = (ref < number) | (null > null);
+const productId = ref(""); // Opslaan van de product ID
+const productCode = ref("");
+const productName = ref("");
+const productPrice = ref(null);
+const typeOfProduct = ref("sneaker");
+const description = ref("");
+const brand = ref("");
+const colors = ref("");
 const sizeOptions = ref([]);
-const material = ref < string > "";
-const inStock = ref < boolean > true;
+const images = ref([]); // Voeg images toe
 const lacesColor = ref([]);
 const soleColor = ref([]);
 const insideColor = ref([]);
 const outsideColor = ref([]);
 
-const productData = ref < any > null;
+const productData = ref(null);
 
 const fetchProductData = async () => {
   const id = route.params.id;
@@ -51,17 +48,14 @@ const fetchProductData = async () => {
 
     if (productData.value) {
       productCode.value = productData.value.productCode;
-      typeOfProduct.value = productData.value.typeOfProduct;
-      brand.value = productData.value.brand;
       productName.value = productData.value.productName;
-      colors.value = productData.value.colors;
-      description.value = productData.value.description;
-      glassColour.value = productData.value.glassColour;
-      activeUnactive.value = productData.value.activeUnactive;
       productPrice.value = productData.value.productPrice;
+      typeOfProduct.value = productData.value.typeOfProduct;
+      description.value = productData.value.description;
+      brand.value = productData.value.brand;
+      colors.value = productData.value.colors;
       sizeOptions.value = productData.value.sizeOptions;
-      material.value = productData.value.material;
-      inStock.value = productData.value.inStock;
+      images.value = productData.value.images;
       lacesColor.value = productData.value.lacesColor;
       soleColor.value = productData.value.soleColor;
       insideColor.value = productData.value.insideColor;
@@ -77,16 +71,20 @@ onMounted(() => {
   fetchProductData();
 });
 
+const handleFileChange = (event) => {
+  // Verkrijg de geselecteerde bestanden
+  images.value = Array.from(event.target.files);
+};
+
 const updateProduct = async () => {
   if (
     !productCode.value ||
-    !brand.value ||
     !productName.value ||
-    !activeUnactive.value ||
     !productPrice.value ||
+    !description.value ||
+    !brand.value ||
+    !colors.value ||
     !sizeOptions.value ||
-    !material.value ||
-    !inStock.value ||
     !lacesColor.value ||
     !soleColor.value ||
     !insideColor.value ||
@@ -98,17 +96,14 @@ const updateProduct = async () => {
 
   const productDataToSend = {
     productCode: productCode.value,
-    typeOfProduct: typeOfProduct.value,
-    brand: brand.value,
     productName: productName.value,
-    colors: colors.value,
-    description: description.value,
-    glassColour: glassColour.value,
-    activeUnactive: activeUnactive.value,
     productPrice: productPrice.value,
+    typeOfProduct: typeOfProduct.value,
+    description: description.value,
+    brand: brand.value,
+    colors: colors.value,
     sizeOptions: sizeOptions.value,
-    material: material.value,
-    inStock: inStock.value,
+    images: images.value, // Voeg images toe aan de request
     lacesColor: lacesColor.value,
     soleColor: soleColor.value,
     insideColor: insideColor.value,
@@ -148,20 +143,58 @@ const updateProduct = async () => {
           <input v-model="productCode" id="productCode" type="text" required />
         </div>
         <div class="column">
-          <label for="brand">Merk:</label>
-          <input v-model="brand" id="brand" type="text" required />
+          <label for="productName">Productnaam:</label>
+          <input v-model="productName" id="productName" type="text" required />
         </div>
       </div>
       <div class="column">
-        <label for="productName">Productnaam:</label>
-        <input v-model="productName" id="productName" type="text" required />
+        <label for="productPrice">Prijs:</label>
+        <input
+          v-model="productPrice"
+          id="productPrice"
+          type="number"
+          required
+        />
       </div>
       <div class="column">
-        <label for="activeUnactive">Status:</label>
-        <select v-model="activeUnactive" id="activeUnactive">
-          <option value="active">Actief</option>
-          <option value="inactive">Inactief</option>
-        </select>
+        <label for="typeOfProduct">Type:</label>
+        <input v-model="typeOfProduct" id="typeOfProduct" type="text" />
+      </div>
+      <div class="column">
+        <label for="description">Beschrijving:</label>
+        <input v-model="description" id="description" type="text" required />
+      </div>
+      <div class="column">
+        <label for="brand">Merk:</label>
+        <input v-model="brand" id="brand" type="text" required />
+      </div>
+      <div class="column">
+        <label for="colors">Kleur:</label>
+        <input v-model="colors" id="colors" type="text" />
+      </div>
+      <div class="column">
+        <label for="sizeOptions">Maatopties:</label>
+        <input v-model="sizeOptions" id="sizeOptions" type="text" />
+      </div>
+      <div class="column">
+        <label for="lacesColor">Kleur Veters:</label>
+        <input v-model="lacesColor" id="lacesColor" type="text" />
+      </div>
+      <div class="column">
+        <label for="soleColor">Kleur Zool:</label>
+        <input v-model="soleColor" id="soleColor" type="text" />
+      </div>
+      <div class="column">
+        <label for="insideColor">Kleur Binnenkant:</label>
+        <input v-model="insideColor" id="insideColor" type="text" />
+      </div>
+      <div class="column">
+        <label for="outsideColor">Kleur Buitenkant:</label>
+        <input v-model="outsideColor" id="outsideColor" type="text" />
+      </div>
+      <div class="column">
+        <label for="images">Afbeeldingen:</label>
+        <input @change="handleFileChange" id="images" type="file" multiple />
       </div>
       <button type="submit" class="btn active">Bewerk Product</button>
     </form>

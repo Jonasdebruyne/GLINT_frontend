@@ -69,58 +69,58 @@ const logout = () => {
 
 <template>
   <nav>
-    <div class="logo"></div>
-    <div class="elements">
-      <div class="profile">
-        <div class="profilePicture"></div>
-        <div>
-          <h3 v-if="user.firstname && user.lastname">
-            {{ user.firstname }} {{ user.lastname }}
-          </h3>
-          <p v-if="user.role">
-            {{ user.role }}
-          </p>
-        </div>
+    <div class="logo">
+      <h3>REBILT</h3>
+    </div>
+    <div class="profile">
+      <div class="profilePicture"></div>
+      <div>
+        <h3 v-if="user.firstname && user.lastname">
+          {{ user.firstname }} {{ user.lastname }}
+        </h3>
+        <p v-if="user.role">
+          {{ user.role }}
+        </p>
       </div>
-      <div class="menu">
-        <router-link to="/admin" exact-active-class="active">
-          <img src="../assets/icons/package.svg" alt="icon" />
-          <p>Products</p>
-          ,
-        </router-link>
-        <router-link to="/admin/orders" exact-active-class="active">
-          <img src="../assets/icons/order.svg" alt="icon" />
-          <p>Orders</p>
-        </router-link>
-        <router-link
-          v-if="user.role === 'partner_owner'"
-          to="/admin/styling"
-          exact-active-class="active"
-        >
-          <img src="../assets/icons/paintbrush.svg" alt="icon" />
-          <p>Styling</p>
-        </router-link>
-        <router-link
-          v-if="user.role === 'platform_admin'"
-          to="/admin/partners"
-          exact-active-class="active"
-        >
-          <img src="../assets/icons/users.svg" alt="icon" />
-          <p>Partners</p>
-        </router-link>
-        <router-link to="/admin/users" exact-active-class="active">
-          <img src="../assets/icons/users.svg" alt="icon" />
-          <p>Users</p>
-        </router-link>
-        <router-link to="/admin/settings" exact-active-class="active">
-          <img src="../assets/icons/settings.svg" alt="icon" />
-          <p>Settings</p>
-        </router-link>
-        <a @click.prevent="logout">
-          <img src="../assets/icons/logout.svg" alt="icon" />
-          <p>Logout</p>
-        </a>
-      </div>
+    </div>
+    <div class="menu">
+      <router-link to="/admin" exact-active-class="active">
+        <img src="../assets/icons/package.svg" alt="icon" />
+        <p>Products</p>
+        ,
+      </router-link>
+      <router-link to="/admin/orders" exact-active-class="active">
+        <img src="../assets/icons/order.svg" alt="icon" />
+        <p>Orders</p>
+      </router-link>
+      <router-link
+        v-if="user.role === 'partner_owner'"
+        to="/admin/styling"
+        exact-active-class="active"
+      >
+        <img src="../assets/icons/paintbrush.svg" alt="icon" />
+        <p>Styling</p>
+      </router-link>
+      <router-link
+        v-if="user.role === 'platform_admin'"
+        to="/admin/partners"
+        exact-active-class="active"
+      >
+        <img src="../assets/icons/users.svg" alt="icon" />
+        <p>Partners</p>
+      </router-link>
+      <router-link to="/admin/users" exact-active-class="active">
+        <img src="../assets/icons/users.svg" alt="icon" />
+        <p>Users</p>
+      </router-link>
+      <router-link to="/admin/settings" exact-active-class="active">
+        <img src="../assets/icons/settings.svg" alt="icon" />
+        <p>Settings</p>
+      </router-link>
+      <a @click.prevent="logout">
+        <img src="../assets/icons/logout.svg" alt="icon" />
+        <p>Logout</p>
+      </a>
     </div>
   </nav>
 </template>
@@ -129,6 +129,7 @@ const logout = () => {
 nav {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   gap: 120px;
   background: linear-gradient(to bottom, #000000, #473c5d);
   height: 100vh;
@@ -136,30 +137,28 @@ nav {
   position: fixed;
 }
 
-nav .logo {
-  background-image: url("../assets/images/GLINT-logo-white.png");
-  background-position: center;
-  background-size: contain;
-  background-repeat: no-repeat;
-  width: 64px;
-  height: 24px;
+nav .logo h3 {
+  font-size: 1.5rem;
+  color: #ffffff;
+  text-transform: uppercase;
+  font-weight: bold;
 }
 
-nav .elements,
-nav .elements .menu {
+nav,
+nav .menu {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 64px;
+  gap: 48px;
 }
 
-nav .elements .profile {
+nav .profile {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-nav .elements .profile .profilePicture {
+nav .profile .profilePicture {
   background-image: url("../assets/images/Odette_lunettes.webp");
   background-position: center;
   background-size: cover;
@@ -169,31 +168,31 @@ nav .elements .profile .profilePicture {
   border-radius: 50%;
 }
 
-nav .elements .profile div {
+nav .profile div {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-nav .elements .menu a,
-nav .elements .menu a.active {
+nav .menu a,
+nav .menu a.active {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 8px;
 }
 
-nav .elements .menu a.active {
+nav .menu a.active {
   background-color: var(--purple);
   padding: 4px 12px;
   border-radius: 8px;
 }
 
-nav .elements .menu a img {
+nav .menu a img {
   width: 24px;
 }
 
-nav .elements .menu a p {
+nav .menu a p {
   color: var(--white);
 }
 </style>
