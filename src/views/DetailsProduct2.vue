@@ -18,6 +18,87 @@ const selectedSoleColor = ref(null);
 const selectedInsideColor = ref(null);
 const selectedOutsideColor = ref(null);
 
+const route = useRoute();
+const productId = ref(null);
+const productData = ref({ productName: "", productPrice: 0 });
+
+const isLoading = ref(true);
+const error = ref(null);
+const canCheckout = ref(false); // Controleer of de partner een "Pro" pakket heeft
+
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1"
+  : "http://localhost:3000/api/v1";
+
+// Functie om de package van de partner op te halen
+async function fetchPartnerPackage(partnerId) {
+  try {
+    const response = await fetch(`${baseURL}/partners/${partnerId}`);
+    if (!response.ok) throw new Error("Network response was not ok");
+
+    const data = await response.json();
+    const partnerPackage = data.data.partner.package;
+    console.log("Partner Package:", partnerPackage);
+
+    // Controleer of het pakket "Pro" is en pas de canCheckout waarde aan
+    if (partnerPackage === "Pro") {
+      canCheckout.value = true; // Alleen Pro partners zien de checkout knop
+    } else {
+      canCheckout.value = false; // Anders niet
+    }
+  } catch (err) {
+    console.error("Error fetching partner data:", err);
+    canCheckout.value = false; // Zet het op false bij een fout
+  }
+}
+
+// Functie om productgegevens op te halen
+async function fetchProductData(code) {
+  isLoading.value = true;
+  error.value = null;
+
+  try {
+    const response = await fetch(`${baseURL}/products/${code}`);
+    if (!response.ok) throw new Error("Network response was not ok");
+
+    const data = await response.json();
+    productData.value = {
+      productName: data.data.product.productName,
+      productPrice: data.data.product.productPrice,
+    };
+
+    lacesColors.value = data.data.product.lacesColor || [];
+    solesColors.value = data.data.product.soleColor || [];
+    insideColors.value = data.data.product.insideColor || [];
+    outsideColors.value = data.data.product.outsideColor || [];
+
+    const partnerId = data.data.product.partnerId;
+    console.log("Partner ID:", partnerId);
+
+    // Haal de package van de partner op
+    await fetchPartnerPackage(partnerId); // Wacht totdat de package is opgehaald
+  } catch (err) {
+    console.error("Error occurred:", err);
+    error.value = "Unable to fetch product information.";
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+// Kijkt naar de route en haalt productgegevens op bij wijziging
+watch(
+  () => route.params.productId,
+  (newCode) => {
+    if (newCode && newCode !== productId.value) {
+      productId.value = newCode;
+      fetchProductData(newCode);
+    }
+  },
+  { immediate: true }
+);
+
+// Functies voor kleurselectie
 function selectColorForLaces(color) {
   if (!color) {
     console.error("Color is invalid");
@@ -27,7 +108,6 @@ function selectColorForLaces(color) {
   selectedColor.value = color;
   selectedLacesColor.value = color; // Bewaar de geselecteerde kleur
 
-  // Controleer of window.laces en window.laces.material.color beschikbaar zijn
   if (window.laces && window.laces.material && window.laces.material.color) {
     try {
       window.laces.material.color.set(color);
@@ -68,55 +148,6 @@ function selectColorForOutside(color) {
     console.error("Outside object or its material not found");
   }
 }
-
-const route = useRoute();
-const productId = ref(null);
-const productData = ref({ productName: "", productPrice: 0 });
-
-const isLoading = ref(true);
-const error = ref(null);
-
-const isProduction = window.location.hostname !== "localhost";
-const baseURL = isProduction
-  ? "https://glint-backend-admin.onrender.com/api/v1"
-  : "http://localhost:3000/api/v1";
-
-async function fetchProductData(code) {
-  isLoading.value = true;
-  error.value = null;
-
-  try {
-    const response = await fetch(`${baseURL}/products/${code}`);
-    if (!response.ok) throw new Error("Network response was not ok");
-
-    const data = await response.json();
-    productData.value = {
-      productName: data.data.product.productName,
-      productPrice: data.data.product.productPrice,
-    };
-
-    lacesColors.value = data.data.product.lacesColor || [];
-    solesColors.value = data.data.product.soleColor || [];
-    insideColors.value = data.data.product.insideColor || [];
-    outsideColors.value = data.data.product.outsideColor || [];
-  } catch (err) {
-    console.error("Error occurred:", err);
-    error.value = "Unable to fetch product information.";
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-watch(
-  () => route.params.productId,
-  (newCode) => {
-    if (newCode && newCode !== productId.value) {
-      productId.value = newCode;
-      fetchProductData(newCode);
-    }
-  },
-  { immediate: true }
-);
 
 onMounted(() => {
   const scene = new THREE.Scene();
@@ -173,12 +204,6 @@ onMounted(() => {
         }
       });
 
-      function changeLacesColor(color) {
-        if (window.laces) {
-          window.laces.material.color.set(color);
-        }
-      }
-
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.25;
@@ -189,41 +214,21 @@ onMounted(() => {
 
       // Integrate dat.GUI for interactive debugging and model properties
       const gui = new GUI();
-      const modelFolder = gui.addFolder("Model Controls");
-      modelFolder
-        .add(gltf.scene.rotation, "y", 0, Math.PI * 2, 0.01)
-        .name("Rotation Y");
-      modelFolder.add(gltf.scene.scale, "x", 1, 100).name("Scale X");
-      modelFolder.add(gltf.scene.scale, "y", 1, 100).name("Scale Y");
-      modelFolder.add(gltf.scene.scale, "z", 1, 100).name("Scale Z");
-      modelFolder.open();
+      gui.add(camera.position, "x", -100, 100);
+      gui.add(camera.position, "y", -100, 100);
+      gui.add(camera.position, "z", -100, 100);
+
+      function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+      }
 
       animate();
     },
     undefined,
-    (error) => {
-      console.error("Error loading GLB file:", error);
-    }
+    (error) => console.error("Error loading model:", error)
   );
-
-  function animate() {
-    requestAnimationFrame(animate);
-
-    if (scene.children.length > 0) {
-      const model = scene.children[0];
-      model.rotation.y += 0.01;
-    }
-
-    renderer.render(scene, camera);
-  }
-
-  window.addEventListener("resize", () => {
-    renderer.setSize(container.offsetWidth, container.offsetHeight);
-    camera.aspect = container.offsetWidth / container.offsetHeight;
-    camera.updateProjectionMatrix();
-  });
-
-  animate();
 });
 
 onMounted(() => {
@@ -364,6 +369,8 @@ async function submitOrder() {
     outsideColor: selectedOutsideColor.value,
   };
 
+  console.log("Submitting order data:", orderData);
+
   try {
     const response = await fetch("http://localhost:3000/api/v1/orders", {
       method: "POST",
@@ -380,6 +387,7 @@ async function submitOrder() {
     }
 
     const result = await response.json();
+    console.log("Order submitted successfully:", result);
 
     document.querySelector(".errorMessage").innerHTML = "";
 
@@ -395,6 +403,18 @@ async function submitOrder() {
     }
   }
 }
+
+// Watch voor veranderingen in productId in de route
+watch(
+  () => route.params.productId,
+  (newCode) => {
+    if (newCode && newCode !== productId.value) {
+      productId.value = newCode;
+      fetchProductData(newCode);
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
@@ -583,7 +603,11 @@ async function submitOrder() {
             </p>
           </div>
 
-          <button @click="submitOrder" class="btn active">Checkout</button>
+          <!-- Model en kleurkeuze UI hier -->
+          <button v-if="canCheckout" @click="submitOrder" class="btn active">
+            Checkout
+          </button>
+
           <p class="errorMessage"></p>
           <p class="successMessage"></p>
         </div>
