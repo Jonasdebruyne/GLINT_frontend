@@ -32,8 +32,16 @@ const fetchData = async () => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const result = await response.json();
-    // Correcte datatoewijzing
-    data.value = result.data.products; // hier de wijziging
+
+    // Filter de producten om alleen die van jouw bedrijf te tonen
+    const userCompanyId = jwtToken
+      ? JSON.parse(atob(jwtToken.split(".")[1])).companyId
+      : null; // Haal het companyId uit het token
+    console.log(userCompanyId);
+
+    data.value = result.data.products.filter(
+      (product) => product.partnerId === userCompanyId
+    );
   } catch (error) {
     console.error("Error fetching data:", error);
   }

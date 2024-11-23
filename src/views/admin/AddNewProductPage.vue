@@ -3,10 +3,12 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import Navigation from "../../components/navComponent.vue";
 
-// Router en JWT token ophalen
+// Router en JWT-token ophalen
 const router = useRouter();
 const jwtToken = localStorage.getItem("jwtToken");
-const errorMessage = ref < string > "";
+console.log(localStorage.getItem("jwtToken")); // Dit zou je token moeten tonen
+
+const errorMessage = ref("");
 
 // Basis-URL bepalen afhankelijk van de omgeving
 const isProduction = window.location.hostname !== "localhost";
@@ -21,36 +23,34 @@ const checkToken = () => {
   }
 };
 
+// Lifecycle hook
 onMounted(() => {
   checkToken();
 });
 
 // Product-informatie refs
-const productCode = ref < string > "";
-const typeOfProduct = ref < string > "sneaker";
-const productName = ref < string > "";
-const brand = ref < string > "";
-const productPrice = (ref < number) | (null > null);
-const description = ref < string > "";
-const colors = ref([]);
-const sizeOptions = ref([]);
-const lacesColor = ref([]);
-const soleColor = ref([]);
-const insideColor = ref([]);
-const outsideColor = ref([]);
+const productCode = ref("");
+const typeOfProduct = ref("sneaker");
+const productName = ref("");
+const brand = ref("");
+const productPrice = ref("");
+const description = ref("");
+const colors = ref("");
+const sizeOptions = ref("");
+const lacesColor = ref("");
+const soleColor = ref("");
+const insideColor = ref("");
+const outsideColor = ref("");
+const images = ref([]); // Geüploade afbeeldingen
 
-// Afbeeldingen initialiseren als een lege array
-const images = ref([]); // Dit zal de geüploade bestanden als File objecten opslaan
-
-// Functie voor het verwerken van afbeelding upload naar Cloudinary
+// Functie voor het uploaden van afbeeldingen naar Cloudinary
 const uploadImageToCloudinary = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", "ycy4zvmj"); // Vul hier je upload preset in
-  formData.append("cloud_name", "dzempjvto"); // Vul hier je cloud name in
+  formData.append("upload_preset", "ycy4zvmj");
+  formData.append("cloud_name", "dzempjvto");
 
   try {
-    console.log("Uploading file to Cloudinary:", file.name); // Debug: log de bestandsnaam
     const response = await fetch(
       `https://api.cloudinary.com/v1_1/dzempjvto/image/upload`,
       {
@@ -59,133 +59,120 @@ const uploadImageToCloudinary = async (file) => {
       }
     );
 
-    const data = await response.json();
-    console.log("Cloudinary response data:", data); // Debug: log de response van Cloudinary
-
-    if (response.ok && data.secure_url) {
-      console.log("Image successfully uploaded:", data.secure_url); // Log de URL
-      return data.secure_url; // Dit is de URL van de geüploade afbeelding
-    } else {
-      console.error("Cloudinary upload failed:", data);
-      throw new Error(
-        `Error uploading image to Cloudinary: ${data.error.message}`
-      );
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Cloudinary upload failed: ${errorData.error.message}`);
     }
+
+    const data = await response.json();
+    if (!data.secure_url) {
+      throw new Error("No secure_url found in Cloudinary response");
+    }
+
+    return data.secure_url;
   } catch (error) {
     console.error("Error uploading image:", error);
     throw error;
   }
 };
 
-// Functie voor het verwerken van bestandsevents
+// Functie om geselecteerde afbeeldingen op te slaan
 const handleImageUpload = (event) => {
-  const input = event.target;
-  if (input.files && input.files.length > 0) {
-    const filesArray = Array.from(input.files);
-    images = [...filesArray]; // Create a shallow copy of the array
-    console.log("Selected images:", images);
-  } else {
-    console.log("No files selected.");
+  if (event.target.files && event.target.files.length > 0) {
+    images.value = Array.from(event.target.files);
   }
 };
 
-// Functie om de invoer van kleurvelden om te zetten naar arrays
-const parseColors = (input) => {
-  if (Array.isArray(input)) {
-    return input; // If it's already an array, return it as is
-  }
+// Functie om kleurvelden en maatopties als arrays te verwerken
+const parseInputToArray = (input) => {
   return input
     .split(",")
-    .map((color) => color.trim())
-    .filter(Boolean); // Remove empty values
+    .map((item) => item.trim())
+    .filter(Boolean);
 };
 
-// Functie om het product toe te voegen
+// Functie om een nieuw product toe te voegen
 const addProduct = async () => {
-  // Zorg ervoor dat de kleurvelden altijd arrays zijn
-  const colorsArray = parseColors(colors.value);
-  const sizeOptionsArray = parseColors(sizeOptions.value); // Maatopties ook als array
-  const lacesColorArray = parseColors(lacesColor.value);
-  const soleColorArray = parseColors(soleColor.value);
-  const insideColorArray = parseColors(insideColor.value);
-  const outsideColorArray = parseColors(outsideColor.value);
-
-  // Controleer of de arrays gevuld zijn
-  if (colorsArray.length === 0 || sizeOptionsArray.length === 0) {
-    errorMessage.value =
-      "Please provide at least one color and one size option.";
-    return;
-  }
-
   // Controleer of alle vereiste velden zijn ingevuld
   if (
     !productCode.value ||
     !productName.value ||
     !productPrice.value ||
     !description.value ||
-    !brand.value ||
-    colorsArray.length === 0 ||
-    sizeOptionsArray.length === 0
+    !brand.value
   ) {
     errorMessage.value = "Please fill in all required fields.";
     return;
   }
 
-  // Bereid het JSON-object voor in plaats van FormData
+  const colorsArray = parseInputToArray(colors.value);
+  const sizeOptionsArray = parseInputToArray(sizeOptions.value);
+  const lacesColorArray = parseInputToArray(lacesColor.value);
+  const soleColorArray = parseInputToArray(soleColor.value);
+  const insideColorArray = parseInputToArray(insideColor.value);
+  const outsideColorArray = parseInputToArray(outsideColor.value);
+
+  if (colorsArray.length === 0 || sizeOptionsArray.length === 0) {
+    errorMessage.value =
+      "Please provide at least one color and one size option.";
+    return;
+  }
+
+  const userCompanyId = jwtToken
+    ? JSON.parse(atob(jwtToken.split(".")[1])).companyId
+    : null;
+
+  // Productgegevens voorbereiden zonder de "product" wrapper
   const productData = {
     productCode: productCode.value,
     productName: productName.value,
     productPrice: productPrice.value,
     description: description.value,
     brand: brand.value,
-    colors: colorsArray, // Colors as an array
-    sizeOptions: sizeOptionsArray, // Size options as an array
-    lacesColor: lacesColorArray, // Laces color as an array
-    soleColor: soleColorArray, // Sole color as an array
-    insideColor: insideColorArray, // Inside color as an array
-    outsideColor: outsideColorArray, // Outside color as an array
+    colors: colorsArray,
+    sizeOptions: sizeOptionsArray,
+    lacesColor: lacesColorArray,
+    soleColor: soleColorArray,
+    insideColor: insideColorArray,
+    outsideColor: outsideColorArray,
+    images: [], // Dit wordt later toegevoegd
+    partnerId: userCompanyId, // Zorg ervoor dat partnerId wordt verzonden zoals verwacht
   };
 
-  // Voeg de afbeelding URL toe, door de afbeelding eerst naar Cloudinary te sturen
-  if (images.value.length > 0) {
-    try {
-      console.log("Uploading images..."); // Debug: Begin met het uploaden van afbeeldingen
-      const imageUrls = await Promise.all(
-        images.value.map((file) => uploadImageToCloudinary(file)) // Upload elke afbeelding naar Cloudinary
-      );
-      console.log("Uploaded image URLs:", imageUrls); // Log de verkregen URLs van Cloudinary
-      productData.images = imageUrls; // Voeg de Cloudinary-URL's toe aan de images array
-    } catch (error) {
-      errorMessage.value = "An error occurred while uploading images.";
+  // Afbeeldingen uploaden naar Cloudinary
+  try {
+    if (images.value.length === 0) {
+      errorMessage.value = "Please upload at least one image.";
       return;
     }
-  } else {
-    console.log("No images selected."); // Debug: Als geen afbeelding is geselecteerd
+
+    productData.images = await Promise.all(
+      images.value.map((file) => uploadImageToCloudinary(file))
+    );
+  } catch (error) {
+    errorMessage.value = "An error occurred while uploading images.";
+    return;
   }
 
-  // Log de JSON voor debuggen
-  console.log("Prepared Product Data:", productData);
-
+  // Product naar backend sturen
   try {
+    console.log("Sending product data:", JSON.stringify(productData)); // Voeg deze log toe om te controleren
     const response = await fetch(`${baseURL}/products`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json", // Verzend als JSON
+        "Content-Type": "application/json",
         Authorization: `Bearer ${jwtToken}`,
       },
-      body: JSON.stringify({ product: productData }), // Verzend het productobject als JSON
+      body: JSON.stringify(productData), // Geen 'product' wrapper meer
     });
 
-    const data = await response.json(); // Parse de response body
-    console.log("API Response:", data); // Log de volledige response body
-
+    const data = await response.json();
     if (!response.ok) {
-      // Als de response niet ok is, geef dan een gedetailleerde foutmelding
-      errorMessage.value = `Error: ${data.message || "Unknown error"}`;
-      return;
+      throw new Error(data.message || "Unknown error occurred.");
     }
 
-    router.push("/admin"); // Redirect naar de admin pagina
+    console.log("Product successfully added:", data);
+    router.push("/admin");
   } catch (error) {
     console.error("Error adding product:", error);
     errorMessage.value = "An error occurred while adding the product.";
@@ -228,22 +215,36 @@ const addProduct = async () => {
 
       <div class="row">
         <div class="column">
-          <label for="colors">Colors:</label>
+          <label for="productPrice">Price:</label>
+          <input
+            v-model="productPrice"
+            id="productPrice"
+            type="number"
+            required
+          />
+        </div>
+        <div class="column">
+          <label for="description">Description:</label>
+          <textarea v-model="description" id="description" required></textarea>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="column">
+          <label for="colors">Colors (comma separated):</label>
           <input
             v-model="colors"
             id="colors"
             type="text"
-            required
             placeholder="Comma separated colors"
           />
         </div>
         <div class="column">
-          <label for="sizeOptions">Size Options:</label>
+          <label for="sizeOptions">Size Options (comma separated):</label>
           <input
             v-model="sizeOptions"
             id="sizeOptions"
             type="text"
-            required
             placeholder="Comma separated sizes"
           />
         </div>
@@ -251,60 +252,57 @@ const addProduct = async () => {
 
       <div class="row">
         <div class="column">
-          <label for="productPrice">Price:</label>
+          <label for="lacesColor">Laces Color:</label>
           <input
-            v-model.number="productPrice"
-            id="price"
-            type="number"
-            required
-            min="0"
-            step="0.01"
+            v-model="lacesColor"
+            id="lacesColor"
+            type="text"
+            placeholder="Comma separated laces colors"
+          />
+        </div>
+        <div class="column">
+          <label for="soleColor">Sole Color:</label>
+          <input
+            v-model="soleColor"
+            id="soleColor"
+            type="text"
+            placeholder="Comma separated sole colors"
           />
         </div>
       </div>
 
       <div class="row">
         <div class="column">
-          <label for="lacesColor">Laces Color:</label>
-          <input type="color" v-model="lacesColor" class="colorpicker" />
-        </div>
-        <div class="column">
-          <label for="soleColor">Sole Color:</label>
-          <input type="color" v-model="soleColor" class="colorpicker" />
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="column">
           <label for="insideColor">Inside Color:</label>
-          <input type="color" v-model="insideColor" class="colorpicker" />
+          <input
+            v-model="insideColor"
+            id="insideColor"
+            type="text"
+            placeholder="Comma separated inside colors"
+          />
         </div>
         <div class="column">
           <label for="outsideColor">Outside Color:</label>
-          <input type="color" v-model="outsideColor" class="colorpicker" />
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="column">
-          <label for="description">Description:</label>
-          <textarea
-            v-model="description"
-            id="description"
-            required
-            placeholder="Enter product description"
-          ></textarea>
+          <input
+            v-model="outsideColor"
+            id="outsideColor"
+            type="text"
+            placeholder="Comma separated outside colors"
+          />
         </div>
       </div>
 
       <div>
-        <label for="images">Product Images:</label>
+        <label for="images">Upload Images:</label>
         <input type="file" id="images" multiple @change="handleImageUpload" />
       </div>
 
-      <button type="submit">Add Product</button>
-      <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+      <button type="submit" class="btn active">Add Product</button>
     </form>
+
+    <div v-if="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
   </div>
 </template>
 
