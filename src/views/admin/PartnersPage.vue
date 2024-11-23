@@ -136,7 +136,7 @@ onMounted(() => {
 
     <div class="menu">
       <div class="btns">
-        <router-link exact to="/admin/AddNewPartnerPage" class="btn active">
+        <router-link exact to="/admin/add-new-partner" class="btn active">
           <p>Add new</p>
           <img src="../../assets/icons/add.svg" alt="icon" />
         </router-link>

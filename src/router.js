@@ -9,6 +9,7 @@ import Home from "./views/admin/HomePage.vue";
 import AddNewProduct from "./views/admin/AddNewProductPage.vue";
 import EditProduct from "./views/admin/EditProduct.vue";
 import Partners from "./views/admin/PartnersPage.vue";
+import AddNewPartner from "./views/admin/AddNewPartnerPage.vue";
 import EditPartner from "./views/admin/EditPartner.vue";
 import Orders from "./views/admin/OrdersPage.vue";
 import EditOrder from "./views/admin/EditOrder.vue";
@@ -70,6 +71,11 @@ export default createRouter({
       path: "/admin/partners",
       name: "Partners",
       component: Partners,
+    },
+    {
+      path: "/admin/add-new-partner",
+      name: "AddNewPartner",
+      component: AddNewPartner,
     },
     {
       path: "/admin/edit-partner/:id",
