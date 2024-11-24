@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted } from "vue";
 import Navigation from "../../components/navComponent.vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
@@ -13,8 +13,8 @@ const user = ref({
   newEmail: "",
   oldEmail: "",
   password: "",
-  newpassword: "",
-  oldpassword: "",
+  newPassword: "",
+  oldPassword: "",
   newPasswordRepeat: "",
   country: "",
   city: "",
@@ -24,6 +24,11 @@ const user = ref({
   role: "",
   activeUnactive: true,
 });
+
+const token = localStorage.getItem("jwtToken");
+if (!token) {
+  router.push("/login");
+}
 
 const parseJwt = (token) => {
   try {
@@ -42,21 +47,19 @@ const parseJwt = (token) => {
   }
 };
 
-const jwtToken = localStorage.getItem("jwtToken");
-console.log("JWT Token:", jwtToken);
+const tokenPayload = parseJwt(token);
+const userId = tokenPayload?.userId;
+const partnerId = tokenPayload?.partnerId || null;
 
-const tokenPayload = parseJwt(jwtToken);
-if (!tokenPayload || !tokenPayload.userId) {
+if (!userId) {
   router.push("/login");
 }
-const partnerId = tokenPayload.partnerId || null; // As partnerId is part of the JWT payload
 
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
   : "http://localhost:3000/api/v1";
 
-const userId = tokenPayload.userId;
 const activeSection = ref("My profile");
 const profileEditPopup = ref(false);
 const changeEmailAddressPopup = ref(false);
@@ -75,56 +78,50 @@ const setActiveSection = (section) => {
   activeSection.value = section;
 };
 
+// Fetch user profile
 const fetchUserProfile = async () => {
   try {
     const response = await axios.get(`${baseURL}/users/${userId}`, {
-      headers: {
-        Authorization: `Bearer ${jwtToken}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
 
-    if (response.data && response.data.data && response.data.data.user) {
-      user.value = {
-        firstName: response.data.data.user.firstname || "",
-        lastName: response.data.data.user.lastname || "",
-        email: response.data.data.user.email || "",
-        oldEmail: response.data.data.user.email || "",
-        country: response.data.data.user.country || "",
-        city: response.data.data.user.city || "",
-        postalCode: response.data.data.user.postalCode || "",
-        profilePicture: response.data.data.user.profilePicture || "",
-        bio: response.data.data.user.bio || "",
-        role: response.data.data.user.role || "",
-        activeUnactive: response.data.data.user.activeUnactive || true,
-      };
-    } else {
-      console.error("User object is not found in the response data");
-    }
+    const userData = response.data?.data?.user || {};
+    user.value = {
+      firstName: userData.firstname || "",
+      lastName: userData.lastname || "",
+      email: userData.email || "",
+      oldEmail: userData.email || "",
+      country: userData.country || "",
+      city: userData.city || "",
+      postalCode: userData.postalCode || "",
+      profilePicture: userData.profilePicture || "",
+      bio: userData.bio || "",
+      role: userData.role || "",
+      activeUnactive: userData.activeUnactive ?? true,
+    };
   } catch (error) {
     console.error("Error fetching user profile:", error);
   }
 };
 
+// Fetch partner data (if applicable)
 const fetchPartnerData = async () => {
+  if (!partnerId) return;
+
   try {
     const response = await axios.get(`${baseURL}/partners/${partnerId}`, {
-      headers: {
-        Authorization: `Bearer ${jwtToken}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
 
-    if (response.data && response.data.data && response.data.data.partner) {
-      const partner = response.data.data.partner;
-      partnerPackage.value = partner.package || "No package available";
-    } else {
-      partnerPackage.value = "No partner data available";
-    }
+    const partner = response.data?.data?.partner || {};
+    partnerPackage.value = partner.package || "No package available";
   } catch (error) {
     console.error("Error fetching partner data:", error);
     partnerPackage.value = "Error loading partner data";
   }
 };
 
+// Update user profile
 const updateProfile = async () => {
   try {
     const response = await axios.put(
@@ -144,13 +141,8 @@ const updateProfile = async () => {
           bio: user.value.bio,
         },
       },
-      {
-        headers: {
-          Authorization: `Bearer ${jwtToken}`,
-        },
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
-
     closeProfileEditPopup();
     opensuccessProfileEditPopup();
     await fetchUserProfile();
@@ -159,22 +151,14 @@ const updateProfile = async () => {
   }
 };
 
+// Update email address
 const updateEmailAddress = async () => {
   try {
     const response = await axios.put(
       `${baseURL}/users/${userId}`,
-      {
-        user: {
-          email: user.value.newEmail,
-        },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${jwtToken}`,
-        },
-      }
+      { user: { email: user.value.newEmail } },
+      { headers: { Authorization: `Bearer ${token}` } }
     );
-
     closeChangeEmailAddressPopup();
     openSuccesChangeEmailAddressPopup();
     await fetchUserProfile();
@@ -183,143 +167,87 @@ const updateEmailAddress = async () => {
   }
 };
 
-async function updatePassword() {
+// Update password
+const updatePassword = async () => {
   try {
     if (
-      !user.value.oldpassword ||
-      !user.value.newpassword ||
+      !user.value.oldPassword ||
+      !user.value.newPassword ||
       !user.value.newPasswordRepeat
     ) {
-      document.querySelector(".errorMessage").innerHTML =
-        "Please enter the old password, the new password and the repetition of the new password.";
-      return;
+      throw new Error(
+        "Please enter the old password, the new password and the repetition of the new password."
+      );
     }
 
-    if (user.value.newpassword !== user.value.newPasswordRepeat) {
-      document.querySelector(".errorMessage").innerHTML =
-        "The new password and the repetition of the new password do not match.";
-      return;
+    if (user.value.newPassword !== user.value.newPasswordRepeat) {
+      throw new Error(
+        "The new password and the repetition of the new password do not match."
+      );
     }
 
     const response = await axios.put(
       `${baseURL}/users/${userId}`,
       {
         user: {
-          oldPassword: user.value.oldpassword,
-          newPassword: user.value.newpassword,
+          oldPassword: user.value.oldPassword,
+          newPassword: user.value.newPassword,
         },
       },
-      {
-        headers: {
-          Authorization: `Bearer ${jwtToken}`,
-        },
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
-
     closeChangePasswordPopup();
     openSuccesChangePasswordPopup();
   } catch (error) {
     console.error("Error updating password:", error);
   }
-}
-
-const updateSubscription = async () => {
-  try {
-    const response = await axios.put(
-      `${baseURL}/partners/${partnerId}`,
-      {
-        name: partnerName.value,
-        package: selectedPackage.value,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${jwtToken}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    partnerPackage.value = response.data.data.partner.package;
-    openSuccesChangePasswordPopup();
-  } catch (error) {
-    console.error("Error updating subscription:", error);
-  }
 };
 
+// Handle account deletion
 const handleDeleteAccount = async () => {
   try {
-    await axios.delete(`${baseURL}/users/${userId}`);
-  } catch (error) {
-    console.error("Error deleting account:", error);
-  } finally {
+    await axios.delete(`${baseURL}/users/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     localStorage.removeItem("jwtToken");
     router.push("/login");
+  } catch (error) {
+    console.error("Error deleting account:", error);
   }
 };
 
-const openEditPopup = () => {
-  profileEditPopup.value = true;
-};
+// Popup control functions
+const openEditPopup = () => (profileEditPopup.value = true);
+const closeProfileEditPopup = () => (profileEditPopup.value = false);
 
-const openChangeEmailAddressPopup = () => {
-  changeEmailAddressPopup.value = true;
-};
+const openChangeEmailAddressPopup = () =>
+  (changeEmailAddressPopup.value = true);
+const closeChangeEmailAddressPopup = () =>
+  (changeEmailAddressPopup.value = false);
 
-const openChangePasswordPopup = () => {
-  changePasswordPopup.value = true;
-};
+const openChangePasswordPopup = () => (changePasswordPopup.value = true);
+const closeChangePasswordPopup = () => (changePasswordPopup.value = false);
 
-const openChangeSubscriptionPopup = () => {
-  changeSubscriptionPopup.value = true;
-};
+const openChangeSubscriptionPopup = () =>
+  (changeSubscriptionPopup.value = true);
+const closeChangeSubscriptionPopup = () =>
+  (changeSubscriptionPopup.value = false);
 
-const openDeleteAccountPopup = () => {
-  deleteAccountPopup.value = true;
-};
+const openDeleteAccountPopup = () => (deleteAccountPopup.value = true);
+const closeDeleteAccountPopup = () => (deleteAccountPopup.value = false);
 
-const closeProfileEditPopup = () => {
-  profileEditPopup.value = false;
-};
+const opensuccessProfileEditPopup = () =>
+  (successProfileEditPopup.value = true);
+const openSuccesChangeEmailAddressPopup = () =>
+  (succesEmailAddressPopup.value = true);
+const openSuccesChangePasswordPopup = () => (succesPasswordPopup.value = true);
 
-const closeChangeEmailAddressPopup = () => {
-  changeEmailAddressPopup.value = false;
-};
-
-const closeChangePasswordPopup = () => {
-  changePasswordPopup.value = false;
-};
-
-const closeChangeSubscriptionPopup = () => {
-  changeSubscriptionPopup.value = false;
-};
-
-const closeDeleteAccountPopup = () => {
-  deleteAccountPopup.value = false;
-};
-
-const opensuccessProfileEditPopup = () => {
-  successProfileEditPopup.value = true;
-};
-
-const openSuccesChangeEmailAddressPopup = () => {
-  succesEmailAddressPopup.value = true;
-};
-
-const openSuccesChangePasswordPopup = () => {
-  succesPasswordPopup.value = true;
-};
-
-const closeSuccessProfileEditPopup = () => {
-  successProfileEditPopup.value = false;
-};
-
-const closeSuccessEmailAddressPopup = () => {
-  succesEmailAddressPopup.value = false;
-};
-
-const closeSuccessChangePasswordPopup = () => {
-  succesPasswordPopup.value = false;
-};
+const closeSuccessProfileEditPopup = () =>
+  (successProfileEditPopup.value = false);
+const closeSuccessEmailAddressPopup = () =>
+  (succesEmailAddressPopup.value = false);
+const closeSuccessChangePasswordPopup = () =>
+  (succesPasswordPopup.value = false);
 
 onMounted(async () => {
   await fetchUserProfile();
