@@ -43,6 +43,8 @@ const parseJwt = (token) => {
 };
 
 const jwtToken = localStorage.getItem("jwtToken");
+console.log("JWT Token:", jwtToken);
+
 const tokenPayload = parseJwt(jwtToken);
 if (!tokenPayload || !tokenPayload.userId) {
   router.push("/login");
