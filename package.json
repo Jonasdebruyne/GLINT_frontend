@@ -11,6 +11,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "ar.js": "^2.2.2",
     "axios": "^1.7.7",
     "dat.gui": "^0.7.9",
     "jsonwebtoken": "^9.0.2",

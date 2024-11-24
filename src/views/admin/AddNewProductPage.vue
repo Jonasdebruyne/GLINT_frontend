@@ -2,11 +2,12 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import Navigation from "../../components/navComponent.vue";
+import axios from "axios";
 
 // Router en JWT-token ophalen
 const router = useRouter();
 const jwtToken = localStorage.getItem("jwtToken");
-console.log(localStorage.getItem("jwtToken")); // Dit zou je token moeten tonen
+console.log(jwtToken); // Dit zou je token moeten tonen
 
 const errorMessage = ref("");
 
@@ -23,9 +24,42 @@ const checkToken = () => {
   }
 };
 
-// Lifecycle hook
+// Functie om partnergegevens op te halen en partnernaam dynamisch in te stellen
+const partnerName = ref("");
+const fetchPartnerData = async () => {
+  try {
+    const tokenPayload = JSON.parse(atob(jwtToken.split(".")[1])); // Decoderen van JWT-token
+    const partnerId = tokenPayload.companyId;
+
+    if (!partnerId) {
+      console.error("Partner ID (companyId) is not available in the token.");
+      router.push("/login");
+      return;
+    }
+
+    const response = await axios.get(`${baseURL}/partners/${partnerId}`, {
+      headers: {
+        Authorization: `Bearer ${jwtToken}`,
+      },
+    });
+
+    const partner = response.data?.data?.partner;
+    if (partner) {
+      partnerName.value = partner.name || "Default"; // Dynamische partnernaam
+    } else {
+      console.error("Partner data not found in response");
+      partnerName.value = "Default";
+    }
+  } catch (error) {
+    console.error("Error fetching partner data:", error.response || error);
+    partnerName.value = "Default";
+  }
+};
+
+// Lifecycle hook voor het ophalen van partnergegevens
 onMounted(() => {
   checkToken();
+  fetchPartnerData(); // Haal partnergegevens op zodra de component gemonteerd is
 });
 
 // Product-informatie refs
@@ -49,6 +83,11 @@ const uploadImageToCloudinary = async (file) => {
   formData.append("file", file);
   formData.append("upload_preset", "ycy4zvmj");
   formData.append("cloud_name", "dzempjvto");
+
+  // Gebruik de partnernaam voor de mapnaam
+  const folderName = partnerName.value || "DefaultFolder"; // Als partnerName niet beschikbaar is, gebruik een fallback
+
+  formData.append("folder", folderName); // Dynamische map
 
   try {
     const response = await fetch(
