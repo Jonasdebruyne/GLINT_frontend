@@ -1,9 +1,11 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import axios from "axios";
 import Navigation from "../../components/navComponent.vue";
+import sha1 from "js-sha1";
 
-// Bepaal de basis-URL op basis van de omgeving
+// Basis-URL bepalen op basis van de omgeving
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
@@ -13,6 +15,7 @@ const router = useRouter();
 const jwtToken = localStorage.getItem("jwtToken");
 
 if (!jwtToken) {
+  console.log("No JWT token found. Redirecting to login...");
   router.push("/login");
 }
 
@@ -31,35 +34,73 @@ const lacesColor = ref([]);
 const soleColor = ref([]);
 const insideColor = ref([]);
 const outsideColor = ref([]);
+const partnerName = ref(""); // Partnernaam (kan dynamisch worden ingesteld)
 
-const productData = ref(null);
+let productData = []; // Productgegevens
 
+// Functie om partnergegevens op te halen
+const fetchPartnerData = async () => {
+  try {
+    const tokenPayload = JSON.parse(atob(jwtToken.split(".")[1])); // Decodeer JWT-token
+    const partnerId = tokenPayload.companyId;
+
+    if (!partnerId) {
+      console.error("Partner ID (companyId) is not available in the token.");
+      router.push("/login");
+      return;
+    }
+
+    const response = await axios.get(`${baseURL}/partners/${partnerId}`, {
+      headers: {
+        Authorization: `Bearer ${jwtToken}`,
+      },
+    });
+
+    const partner = response.data?.data?.partner;
+    if (partner) {
+      partnerName.value = partner.name || "Default"; // Dynamische partnernaam
+    } else {
+      console.error("Partner data not found in response");
+      partnerName.value = "Default";
+    }
+  } catch (error) {
+    console.error("Error fetching partner data:", error.response || error);
+    partnerName.value = "Default";
+  }
+};
+
+// Haal productgegevens op
 const fetchProductData = async () => {
   const id = route.params.id;
   productId.value = id;
+  console.log(`Fetching data for product ID: ${id}`);
+
   try {
     const response = await fetch(`${baseURL}/products/${id}`);
     if (!response.ok) {
+      console.error(`HTTP error! status: ${response.status}`);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
-    productData.value = data.data.product;
+    productData = data.data.product;
 
-    if (productData.value) {
-      productCode.value = productData.value.productCode;
-      productName.value = productData.value.productName;
-      productPrice.value = productData.value.productPrice;
-      typeOfProduct.value = productData.value.typeOfProduct;
-      description.value = productData.value.description;
-      brand.value = productData.value.brand;
-      colors.value = productData.value.colors;
-      sizeOptions.value = productData.value.sizeOptions;
-      images.value = productData.value.images;
-      lacesColor.value = productData.value.lacesColor;
-      soleColor.value = productData.value.soleColor;
-      insideColor.value = productData.value.insideColor;
-      outsideColor.value = productData.value.outsideColor;
+    if (productData) {
+      console.log("Product data fetched:", productData);
+
+      productCode.value = productData.productCode;
+      productName.value = productData.productName;
+      productPrice.value = productData.productPrice;
+      typeOfProduct.value = productData.typeOfProduct;
+      description.value = productData.description;
+      brand.value = productData.brand;
+      colors.value = productData.colors;
+      sizeOptions.value = productData.sizeOptions;
+      images.value = productData.images;
+      lacesColor.value = productData.lacesColor;
+      soleColor.value = productData.soleColor;
+      insideColor.value = productData.insideColor;
+      outsideColor.value = productData.outsideColor;
     }
   } catch (error) {
     console.error("Error fetching product data:", error);
@@ -67,16 +108,151 @@ const fetchProductData = async () => {
   }
 };
 
-onMounted(() => {
-  fetchProductData();
-});
-
+// Functie om de geselecteerde afbeeldingen op te slaan
 const handleFileChange = (event) => {
-  // Verkrijg de geselecteerde bestanden
+  console.log("File input changed, selected files:", event.target.files);
   images.value = Array.from(event.target.files);
 };
 
+// Gebruik je eigen uploadfunctie voor Cloudinary
+const uploadImageToCloudinary = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "ycy4zvmj");
+  formData.append("cloud_name", "dzempjvto");
+
+  const folderName = partnerName.value;
+  formData.append("folder", folderName);
+
+  try {
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/dzempjvto/image/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Cloudinary upload failed: ${errorData.error.message}`);
+    }
+
+    const data = await response.json();
+    if (!data.secure_url) {
+      throw new Error("No secure_url found in Cloudinary response");
+    }
+
+    return data.secure_url;
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    throw error;
+  }
+};
+
+// Functie om de nieuwe afbeeldingen te uploaden
+const uploadNewImages = async () => {
+  const uploadedImages = [];
+
+  for (const file of images.value) {
+    try {
+      const imageUrl = await uploadImageToCloudinary(file);
+      uploadedImages.push(imageUrl);
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("Fout bij het uploaden van de afbeeldingen.");
+    }
+  }
+
+  return uploadedImages;
+};
+
+const generateSignature = (timestamp, imageId) => {
+  const apiSecret = "g3uD4zo94Nn1l7S20LW_Y8wPKKY"; // Gebruik je Cloudinary api_secret hier
+  const signatureString = `public_id=${imageId}&timestamp=${timestamp}${apiSecret}`;
+
+  // Gebruik js-sha1 om de string te hashen
+  const signature = sha1(signatureString);
+  return signature;
+};
+
+// Functie om oude afbeeldingen te verwijderen
+// Functie om oude afbeeldingen te verwijderen
+const deleteOldImages = async () => {
+  try {
+    console.log("Starting to delete old images...");
+
+    if (!productData.images || productData.images.length === 0) {
+      console.log("No images to delete.");
+      return;
+    }
+
+    for (const imageUrl of productData.images) {
+      console.log(`Processing image URL: ${imageUrl}`);
+
+      // Stap 1: Haal alles na "/image/upload/" en verwijder de versie (bijv. v1732454523)
+      let imageId = imageUrl.split("/image/upload/")[1]; // Haalt alles na "/image/upload/"
+
+      // Stap 2: Verwijder de versie (v<version_number>)
+      imageId = imageId.split("/").slice(1).join("/"); // Dit verwijdert de versie en pakt de rest
+
+      // Stap 3: Verwijder bestandsextensie (bijv. .webp, .jpg, .png)
+      imageId = imageId.split(".")[0]; // Verwijder alles na de punt
+
+      console.log(`Extracted image ID: ${imageId}`);
+
+      const timestamp = Math.floor(Date.now() / 1000);
+      const signature = generateSignature(timestamp, imageId); // Maak een handtekening op basis van je Cloudinary secret
+
+      const deleteResponse = await fetch(
+        `https://api.cloudinary.com/v1_1/dzempjvto/image/destroy`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            public_id: imageId,
+            api_key: "496836855294519", // Voeg je API-key hier in
+            timestamp: timestamp,
+            signature: signature, // Voeg de handtekening toe
+          }),
+        }
+      );
+
+      const deleteData = await deleteResponse.json();
+      console.log("Delete response:", deleteData);
+
+      if (!deleteResponse.ok || deleteData.result !== "ok") {
+        throw new Error(
+          `Fout bij verwijderen van oude afbeelding: ${
+            deleteData.message || deleteData.result
+          }`
+        );
+      }
+    }
+  } catch (error) {
+    console.error("Error deleting old images:", error);
+  }
+};
+
+// Functie om het product bij te werken
 const updateProduct = async () => {
+  console.log("Updating product with the following data:", {
+    productCode: productCode.value,
+    productName: productName.value,
+    productPrice: productPrice.value,
+    description: description.value,
+    brand: brand.value,
+    colors: colors.value,
+    sizeOptions: sizeOptions.value,
+    images: images.value, // Nieuwe afbeeldingen worden hier bijgewerkt
+    lacesColor: lacesColor.value,
+    soleColor: soleColor.value,
+    insideColor: insideColor.value,
+    outsideColor: outsideColor.value,
+  });
+
   if (
     !productCode.value ||
     !productName.value ||
@@ -103,7 +279,7 @@ const updateProduct = async () => {
     brand: brand.value,
     colors: colors.value,
     sizeOptions: sizeOptions.value,
-    images: images.value, // Voeg images toe aan de request
+    images: images.value, // Nieuwe afbeeldingen
     lacesColor: lacesColor.value,
     soleColor: soleColor.value,
     insideColor: insideColor.value,
@@ -111,6 +287,19 @@ const updateProduct = async () => {
   };
 
   try {
+    // Eerst de oude afbeeldingen verwijderen
+    console.log("Starting to delete old images...");
+    await deleteOldImages();
+
+    // Dan de nieuwe afbeeldingen uploaden
+    console.log("Uploading new images...");
+    const uploadedImages = await uploadNewImages();
+
+    // Voeg de geüploade afbeeldingen toe aan het productDataToSend object
+    productDataToSend.images = uploadedImages;
+
+    // Stuur de bijgewerkte productgegevens naar de backend
+    console.log("Sending updated product data to the backend...");
     const response = await fetch(`${baseURL}/products/${productId.value}`, {
       method: "PUT",
       headers: {
@@ -120,16 +309,24 @@ const updateProduct = async () => {
     });
 
     if (!response.ok) {
+      console.error(`HTTP error! status: ${response.status}`);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const result = await response.json();
+    console.log("Product updated successfully:", result);
+
     router.push("/admin");
   } catch (error) {
     console.error("Error updating product:", error);
     alert("Er is een fout opgetreden bij het bijwerken van het product.");
   }
 };
+
+onMounted(() => {
+  fetchPartnerData();
+  fetchProductData();
+});
 </script>
 
 <template>
