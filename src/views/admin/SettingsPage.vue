@@ -122,8 +122,14 @@ const fetchPartnerData = async () => {
 };
 
 // Update user profile
+// Update user profile
 const updateProfile = async () => {
   try {
+    // Check for mandatory fields
+    if (!user.value.firstName || !user.value.lastName || !user.value.email) {
+      throw new Error("First Name, Last Name, and Email are required fields.");
+    }
+
     const response = await axios.put(
       `${baseURL}/users/${userId}`,
       {
@@ -143,11 +149,23 @@ const updateProfile = async () => {
       },
       { headers: { Authorization: `Bearer ${token}` } }
     );
+
+    // Check the response status
+    if (response.status !== 200) {
+      throw new Error(`Unexpected response status: ${response.status}`);
+    }
+
+    // Close popups and show success
     closeProfileEditPopup();
     opensuccessProfileEditPopup();
     await fetchUserProfile();
   } catch (error) {
     console.error("Error updating profile:", error);
+
+    // Log detailed error response
+    if (error.response) {
+      console.error("Server responded with error:", error.response.data);
+    }
   }
 };
 
