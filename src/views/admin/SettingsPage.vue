@@ -121,65 +121,145 @@ const fetchPartnerData = async () => {
       },
     });
 
-    const partner = response.data?.data?.partner;
+    // Controleer de volledige response
+    console.log("Partner Data Response:", response.data);
 
-    if (partner) {
-      const packageName = partner.package;
+    if (response.data && response.data.data && response.data.data.partner) {
+      const partner = response.data.data.partner;
+      console.log("Partner Package:", partner.package); // Log de package van de partner
 
-      partnerName.value = partner.name;
-
-      partnerPackage.value = packageName || "No package available";
-      selectedPackage.value = packageName || null;
-
-      if (!packageName) {
+      if (partner.package) {
+        partnerPackage.value = partner.package;
+      } else {
+        partnerPackage.value = "No package available"; // fallback als er geen package is
         console.error("Package is not available in the partner data");
       }
     } else {
       console.error("Partner data not found in response");
-      partnerPackage.value = "No partner data available";
-      selectedPackage.value = null;
+      partnerPackage.value = "No partner data available"; // fallback als partner data niet gevonden is
     }
   } catch (error) {
     console.error("Error fetching partner data:", error.response || error);
-    partnerPackage.value = "Error loading partner data";
-    selectedPackage.value = null;
+    partnerPackage.value = "Error loading partner data"; // fallback bij fout
   }
 };
 
-const updateSubscription = async () => {
+const updateProfile = async () => {
   try {
     const response = await axios.put(
-      `${baseURL}/partners/${partnerId}`,
+      `${baseURL}/users/${userId}`,
       {
-        name: partnerName.value,
-        package: selectedPackage.value,
+        user: {
+          firstname: user.value.firstName,
+          lastname: user.value.lastName,
+          email: user.value.email,
+          password: user.value.email,
+          role: user.value.role,
+          activeUnactive: user.value.activeUnactive,
+          country: user.value.country,
+          city: user.value.city,
+          postalCode: user.value.postalCode,
+          profileImage: user.value.profilePicture,
+          bio: user.value.bio,
+        },
       },
       {
         headers: {
           Authorization: `Bearer ${jwtToken}`,
-          "Content-Type": "application/json",
         },
       }
     );
 
-    partnerPackage.value = response.data.data.partner.package;
+    closeProfileEditPopup();
+    opensuccessProfileEditPopup();
+    await fetchUserProfile();
   } catch (error) {
-    console.error(
-      "Error updating subscription:",
-      error.response ? error.response.data : error.message
-    );
+    console.error("Error updating profile:", error);
   }
 };
 
+const updateEmailAddress = async () => {
+  try {
+    const response = await axios.put(
+      `${baseURL}/users/${userId}`,
+      {
+        user: {
+          firstname: user.value.firstName,
+          lastname: user.value.lastName,
+          email: user.value.newEmail,
+          password: user.value.email,
+          role: user.value.role,
+          activeUnactive: user.value.activeUnactive,
+          country: user.value.country,
+          city: user.value.city,
+          postalCode: user.value.postalCode,
+          profileImage: user.value.profilePicture,
+          bio: user.value.bio,
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      }
+    );
+
+    closeChangeEmailAddressPopup();
+    openSuccesChangeEmailAddressPopup();
+    await fetchUserProfile();
+  } catch (error) {
+    console.error("Error updating profile:", error);
+  }
+};
+
+async function updatePassword() {
+  try {
+    if (
+      !user.value.oldpassword ||
+      !user.value.newpassword ||
+      !user.value.newPasswordRepeat
+    ) {
+      document.querySelector(".errorMessage").innerHTML =
+        "Please enter the old password, the new password and the repetition of the new password.";
+      return;
+    }
+
+    if (user.value.newpassword !== user.value.newPasswordRepeat) {
+      document.querySelector(".errorMessage").innerHTML =
+        "The new password and the repetition of the new password do not match.";
+      return;
+    }
+
+    const response = await axios.put(
+      `${baseURL}/users/${userId}`,
+      {
+        user: {
+          oldPassword: user.value.oldpassword, // Oude wachtwoord
+          newPassword: user.value.newpassword, // Nieuwe wachtwoord
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      }
+    );
+
+    closeChangePasswordPopup();
+    openSuccesChangePasswordPopup();
+  } catch (error) {
+    console.error("Error updating password:", error);
+  }
+}
+
 const handleDeleteAccount = async () => {
   try {
-    await axios.delete(`${baseURL}/users/${userId}`, {
-      headers: {
-        Authorization: `Bearer ${jwtToken}`,
-      },
-    });
+    const response = await axios.delete(`${baseURL}/users/${userId}`);
   } catch (error) {
-    console.error("Error deleting account:", error);
+    console.error(
+      "Er ging iets mis bij het verwijderen van het account",
+      error
+    );
   } finally {
     localStorage.removeItem("jwtToken");
     router.push("/login");
