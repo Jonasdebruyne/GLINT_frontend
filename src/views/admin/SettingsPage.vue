@@ -1,12 +1,14 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import Navigation from "../../components/navComponent.vue";
-import axios from "axios";
+import { ref, reactive, onMounted, watch, provide } from "vue";
 import { useRouter } from "vue-router";
+import axios from "axios";
+import Navigation from "../../components/navComponent.vue";
 
+// Router setup
 const router = useRouter();
 
-const user = ref({
+// Reactive user object to store user details (gebruik reactive voor betere reactiviteit)
+const user = reactive({
   firstName: "",
   lastName: "",
   email: "",
@@ -25,6 +27,7 @@ const user = ref({
   activeUnactive: true,
 });
 
+// Authentication and token handling
 const token = localStorage.getItem("jwtToken");
 if (!token) {
   router.push("/login");
@@ -55,30 +58,33 @@ if (!userId) {
   router.push("/login");
 }
 
+// Base URL for API calls
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
   : "http://localhost:3000/api/v1";
 
+// State for managing the profile and other popups
 const activeSection = ref("My profile");
 const profileEditPopup = ref(false);
 const changeEmailAddressPopup = ref(false);
 const changePasswordPopup = ref(false);
 const changeSubscriptionPopup = ref(false);
-const selectedPackage = ref(null);
 const deleteAccountPopup = ref(false);
 const successProfileEditPopup = ref(false);
 const succesEmailAddressPopup = ref(false);
 const succesPasswordPopup = ref(false);
 
+// Partner related data
 const partnerPackage = ref(null);
 const partnerName = ref("");
 
+// Method to set active section
 const setActiveSection = (section) => {
   activeSection.value = section;
 };
 
-// Fetch user profile
+// Fetch user profile data
 const fetchUserProfile = async () => {
   try {
     const response = await axios.get(`${baseURL}/users/${userId}`, {
@@ -86,19 +92,18 @@ const fetchUserProfile = async () => {
     });
 
     const userData = response.data?.data?.user || {};
-    user.value = {
-      firstName: userData.firstname || "",
-      lastName: userData.lastname || "",
-      email: userData.email || "",
-      oldEmail: userData.email || "",
-      country: userData.country || "",
-      city: userData.city || "",
-      postalCode: userData.postalCode || "",
-      profilePicture: userData.profilePicture || "",
-      bio: userData.bio || "",
-      role: userData.role || "",
-      activeUnactive: userData.activeUnactive ?? true,
-    };
+    // Update the user object
+    user.firstName = userData.firstname || "";
+    user.lastName = userData.lastname || "";
+    user.email = userData.email || "";
+    user.oldEmail = userData.email || "";
+    user.country = userData.country || "";
+    user.city = userData.city || "";
+    user.postalCode = userData.postalCode || "";
+    user.profilePicture = userData.profilePicture || "";
+    user.bio = userData.bio || "";
+    user.role = userData.role || "";
+    user.activeUnactive = userData.activeUnactive ?? true;
   } catch (error) {
     console.error("Error fetching user profile:", error);
   }
@@ -122,11 +127,9 @@ const fetchPartnerData = async () => {
 };
 
 // Update user profile
-// Update user profile
 const updateProfile = async () => {
   try {
-    // Check for mandatory fields
-    if (!user.value.firstName || !user.value.lastName || !user.value.email) {
+    if (!user.firstName || !user.lastName || !user.email) {
       throw new Error("First Name, Last Name, and Email are required fields.");
     }
 
@@ -134,35 +137,31 @@ const updateProfile = async () => {
       `${baseURL}/users/${userId}`,
       {
         user: {
-          firstname: user.value.firstName,
-          lastname: user.value.lastName,
-          email: user.value.email,
-          password: user.value.password,
-          role: user.value.role,
-          activeUnactive: user.value.activeUnactive,
-          country: user.value.country,
-          city: user.value.city,
-          postalCode: user.value.postalCode,
-          profileImage: user.value.profilePicture,
-          bio: user.value.bio,
+          firstname: user.firstName,
+          lastname: user.lastName,
+          email: user.email,
+          password: user.password,
+          role: user.role,
+          activeUnactive: user.activeUnactive,
+          country: user.country,
+          city: user.city,
+          postalCode: user.postalCode,
+          profileImage: user.profilePicture,
+          bio: user.bio,
         },
       },
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    // Check the response status
     if (response.status !== 200) {
       throw new Error(`Unexpected response status: ${response.status}`);
     }
 
-    // Close popups and show success
     closeProfileEditPopup();
     opensuccessProfileEditPopup();
     await fetchUserProfile();
   } catch (error) {
     console.error("Error updating profile:", error);
-
-    // Log detailed error response
     if (error.response) {
       console.error("Server responded with error:", error.response.data);
     }
@@ -174,7 +173,7 @@ const updateEmailAddress = async () => {
   try {
     const response = await axios.put(
       `${baseURL}/users/${userId}`,
-      { user: { email: user.value.newEmail } },
+      { user: { email: user.newEmail } },
       { headers: { Authorization: `Bearer ${token}` } }
     );
     closeChangeEmailAddressPopup();
@@ -188,17 +187,13 @@ const updateEmailAddress = async () => {
 // Update password
 const updatePassword = async () => {
   try {
-    if (
-      !user.value.oldPassword ||
-      !user.value.newPassword ||
-      !user.value.newPasswordRepeat
-    ) {
+    if (!user.oldPassword || !user.newPassword || !user.newPasswordRepeat) {
       throw new Error(
-        "Please enter the old password, the new password and the repetition of the new password."
+        "Please enter the old password, the new password, and the repetition of the new password."
       );
     }
 
-    if (user.value.newPassword !== user.value.newPasswordRepeat) {
+    if (user.newPassword !== user.newPasswordRepeat) {
       throw new Error(
         "The new password and the repetition of the new password do not match."
       );
@@ -208,8 +203,8 @@ const updatePassword = async () => {
       `${baseURL}/users/${userId}`,
       {
         user: {
-          oldPassword: user.value.oldPassword,
-          newPassword: user.value.newPassword,
+          oldPassword: user.oldPassword,
+          newPassword: user.newPassword,
         },
       },
       { headers: { Authorization: `Bearer ${token}` } }
@@ -246,14 +241,10 @@ const closeChangeEmailAddressPopup = () =>
 const openChangePasswordPopup = () => (changePasswordPopup.value = true);
 const closeChangePasswordPopup = () => (changePasswordPopup.value = false);
 
-const openChangeSubscriptionPopup = () =>
-  (changeSubscriptionPopup.value = true);
-const closeChangeSubscriptionPopup = () =>
-  (changeSubscriptionPopup.value = false);
-
 const openDeleteAccountPopup = () => (deleteAccountPopup.value = true);
 const closeDeleteAccountPopup = () => (deleteAccountPopup.value = false);
 
+// Success popups
 const opensuccessProfileEditPopup = () =>
   (successProfileEditPopup.value = true);
 const openSuccesChangeEmailAddressPopup = () =>
@@ -267,10 +258,23 @@ const closeSuccessEmailAddressPopup = () =>
 const closeSuccessChangePasswordPopup = () =>
   (succesPasswordPopup.value = false);
 
+// Fetch initial data on mount
 onMounted(async () => {
   await fetchUserProfile();
   await fetchPartnerData();
 });
+
+// Provide the user data to all components (including Navigation)
+provide("user", user); // Makes user data available to child components like Navigation
+
+// Watch for changes in user data and update the Navigation component
+watch(
+  user,
+  (newUser) => {
+    console.log("User data updated:", newUser);
+  },
+  { deep: true }
+);
 </script>
 
 <template>
