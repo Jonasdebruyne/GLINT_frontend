@@ -49,7 +49,7 @@ const tokenPayload = parseJwt(jwtToken);
 if (!tokenPayload || !tokenPayload.userId) {
   router.push("/login");
 }
-const partnerId = tokenPayload.partnerId || null; // Als partnerId deel is van de JWT payload
+const partnerId = tokenPayload.partnerId || null; // As partnerId is part of the JWT payload
 
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
@@ -85,17 +85,17 @@ const fetchUserProfile = async () => {
 
     if (response.data && response.data.data && response.data.data.user) {
       user.value = {
-        firstName: response.data.data.user.firstname || null,
-        lastName: response.data.data.user.lastname || null,
-        email: response.data.data.user.email || null,
-        oldEmail: response.data.data.user.email || null,
-        country: response.data.data.user.country || null,
-        city: response.data.data.user.city || null,
-        postalCode: response.data.data.user.postalCode || null,
-        profilePicture: response.data.data.user.profilePicture || null,
-        bio: response.data.data.user.bio || null,
-        role: response.data.data.user.role || null,
-        activeUnactive: response.data.data.user.activeUnactive,
+        firstName: response.data.data.user.firstname || "",
+        lastName: response.data.data.user.lastname || "",
+        email: response.data.data.user.email || "",
+        oldEmail: response.data.data.user.email || "",
+        country: response.data.data.user.country || "",
+        city: response.data.data.user.city || "",
+        postalCode: response.data.data.user.postalCode || "",
+        profilePicture: response.data.data.user.profilePicture || "",
+        bio: response.data.data.user.bio || "",
+        role: response.data.data.user.role || "",
+        activeUnactive: response.data.data.user.activeUnactive || true,
       };
     } else {
       console.error("User object is not found in the response data");
@@ -113,26 +113,15 @@ const fetchPartnerData = async () => {
       },
     });
 
-    // Controleer de volledige response
-    console.log("Partner Data Response:", response.data);
-
     if (response.data && response.data.data && response.data.data.partner) {
       const partner = response.data.data.partner;
-      console.log("Partner Package:", partner.package); // Log de package van de partner
-
-      if (partner.package) {
-        partnerPackage.value = partner.package;
-      } else {
-        partnerPackage.value = "No package available"; // fallback als er geen package is
-        console.error("Package is not available in the partner data");
-      }
+      partnerPackage.value = partner.package || "No package available";
     } else {
-      console.error("Partner data not found in response");
-      partnerPackage.value = "No partner data available"; // fallback als partner data niet gevonden is
+      partnerPackage.value = "No partner data available";
     }
   } catch (error) {
-    console.error("Error fetching partner data:", error.response || error);
-    partnerPackage.value = "Error loading partner data"; // fallback bij fout
+    console.error("Error fetching partner data:", error);
+    partnerPackage.value = "Error loading partner data";
   }
 };
 
@@ -145,7 +134,7 @@ const updateProfile = async () => {
           firstname: user.value.firstName,
           lastname: user.value.lastName,
           email: user.value.email,
-          password: user.value.email,
+          password: user.value.password,
           role: user.value.role,
           activeUnactive: user.value.activeUnactive,
           country: user.value.country,
@@ -176,17 +165,7 @@ const updateEmailAddress = async () => {
       `${baseURL}/users/${userId}`,
       {
         user: {
-          firstname: user.value.firstName,
-          lastname: user.value.lastName,
           email: user.value.newEmail,
-          password: user.value.email,
-          role: user.value.role,
-          activeUnactive: user.value.activeUnactive,
-          country: user.value.country,
-          city: user.value.city,
-          postalCode: user.value.postalCode,
-          profileImage: user.value.profilePicture,
-          bio: user.value.bio,
         },
       },
       {
@@ -200,7 +179,7 @@ const updateEmailAddress = async () => {
     openSuccesChangeEmailAddressPopup();
     await fetchUserProfile();
   } catch (error) {
-    console.error("Error updating profile:", error);
+    console.error("Error updating email:", error);
   }
 };
 
@@ -226,8 +205,8 @@ async function updatePassword() {
       `${baseURL}/users/${userId}`,
       {
         user: {
-          oldPassword: user.value.oldpassword, // Oude wachtwoord
-          newPassword: user.value.newpassword, // Nieuwe wachtwoord
+          oldPassword: user.value.oldpassword,
+          newPassword: user.value.newpassword,
         },
       },
       {
@@ -244,14 +223,34 @@ async function updatePassword() {
   }
 }
 
+const updateSubscription = async () => {
+  try {
+    const response = await axios.put(
+      `${baseURL}/partners/${partnerId}`,
+      {
+        name: partnerName.value,
+        package: selectedPackage.value,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    partnerPackage.value = response.data.data.partner.package;
+    openSuccesChangePasswordPopup();
+  } catch (error) {
+    console.error("Error updating subscription:", error);
+  }
+};
+
 const handleDeleteAccount = async () => {
   try {
-    const response = await axios.delete(`${baseURL}/users/${userId}`);
+    await axios.delete(`${baseURL}/users/${userId}`);
   } catch (error) {
-    console.error(
-      "Er ging iets mis bij het verwijderen van het account",
-      error
-    );
+    console.error("Error deleting account:", error);
   } finally {
     localStorage.removeItem("jwtToken");
     router.push("/login");
@@ -318,19 +317,13 @@ const closeSuccessEmailAddressPopup = () => {
   succesEmailAddressPopup.value = false;
 };
 
-const closeSuccessPasswordPopup = () => {
-  succesPasswordPopup.value = false;
-};
-
-const closeSuccessSubscriptionPopup = () => {
+const closeSuccessChangePasswordPopup = () => {
   succesPasswordPopup.value = false;
 };
 
 onMounted(async () => {
   await fetchUserProfile();
-  if (partnerId) {
-    await fetchPartnerData();
-  }
+  await fetchPartnerData();
 });
 </script>
 
