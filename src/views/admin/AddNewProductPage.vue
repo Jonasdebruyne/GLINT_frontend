@@ -7,7 +7,7 @@ import axios from "axios";
 // Router en JWT-token ophalen
 const router = useRouter();
 const jwtToken = localStorage.getItem("jwtToken");
-console.log(jwtToken); // Dit zou je token moeten tonen
+console.log(jwtToken); // Check if the token is being fetched properly
 
 const errorMessage = ref("");
 
@@ -28,8 +28,10 @@ const checkToken = () => {
 const partnerName = ref("");
 const fetchPartnerData = async () => {
   try {
-    const tokenPayload = JSON.parse(atob(jwtToken.split(".")[1])); // Decoderen van JWT-token
+    const tokenPayload = JSON.parse(atob(jwtToken.split(".")[1])); // Decode token
+    console.log(tokenPayload);
     const partnerId = tokenPayload.companyId;
+    console.log(partnerId);
 
     if (!partnerId) {
       console.error("Partner ID (companyId) is not available in the token.");
@@ -39,6 +41,7 @@ const fetchPartnerData = async () => {
 
     const response = await axios.get(`${baseURL}/partners/${partnerId}`, {
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${jwtToken}`,
       },
     });
