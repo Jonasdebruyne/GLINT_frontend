@@ -35,22 +35,9 @@ const isValidEmail = (email) => {
 
 // Functie om een nieuwe partner toe te voegen
 const addPartner = async () => {
-  if (
-    !name.value ||
-    !street.value ||
-    !city.value ||
-    !postalCode.value ||
-    !country.value ||
-    !contactEmail.value ||
-    !contactPhone.value ||
-    !subscriptionPackage.value
-  ) {
-    alert("Vul alle verplichte velden in.");
-    return;
-  }
-
-  if (!isValidEmail(contactEmail.value)) {
-    alert("Vul een geldig e-mailadres in.");
+  // Alleen name en subscriptionPackage zijn verplicht
+  if (!name.value || !subscriptionPackage.value) {
+    alert("Naam en pakket zijn verplicht.");
     return;
   }
 
