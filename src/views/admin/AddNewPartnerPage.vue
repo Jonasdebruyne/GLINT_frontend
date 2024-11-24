@@ -55,21 +55,6 @@ const addPartner = async () => {
   }
 
   try {
-    const partnerPayload = {
-      name: name.value,
-      address: {
-        street: street.value,
-        city: city.value,
-        postal_code: postalCode.value,
-        country: country.value,
-      },
-      contact_email: contactEmail.value,
-      contact_phone: contactPhone.value,
-      package: subscriptionPackage.value, // Gebruik hier de hernoemde variabele 'subscriptionPackage'
-    };
-
-    console.log("Partner payload:", JSON.stringify(partnerPayload, null, 2)); // Log de payload voor debugging
-
     const response = await fetch(`${baseURL}/partners`, {
       method: "POST",
       headers: {
@@ -81,6 +66,7 @@ const addPartner = async () => {
 
     if (!response.ok) {
       const errorDetail = await response.json();
+      console.error("API Error:", errorDetail);
       throw new Error(
         `Fout bij het toevoegen van de partner: ${errorDetail.message}`
       );
