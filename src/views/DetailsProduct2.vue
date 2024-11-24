@@ -212,11 +212,8 @@ onMounted(() => {
 
       controls.update();
 
-      // Integrate dat.GUI for interactive debugging and model properties
-      const gui = new GUI();
-      gui.add(camera.position, "x", -100, 100);
-      gui.add(camera.position, "y", -100, 100);
-      gui.add(camera.position, "z", -100, 100);
+
+      
 
       function animate() {
         requestAnimationFrame(animate);
