@@ -4,6 +4,12 @@ import Navigation from "../../components/navComponent.vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
 
+const jwtToken = localStorage.getItem("jwtToken");
+const tokenPayload = parseJwt(jwtToken);
+if (!tokenPayload || !tokenPayload.userId) {
+  router.push("/login");
+}
+
 const router = useRouter();
 
 const user = ref({
@@ -25,11 +31,6 @@ const user = ref({
   activeUnactive: true,
 });
 
-const jwtToken = localStorage.getItem("jwtToken");
-if (!jwtToken) {
-  router.push("/login");
-}
-
 const parseJwt = (token) => {
   try {
     const base64Url = token.split(".")[1];
@@ -46,18 +47,6 @@ const parseJwt = (token) => {
     return null;
   }
 };
-
-const tokenPayload = parseJwt(jwtToken);
-if (!tokenPayload || !tokenPayload.userId) {
-  console.error("User ID is not available in the token.");
-  router.push("/login");
-}
-
-const partnerId = tokenPayload.companyId;
-if (!partnerId) {
-  console.error("Partner ID (companyId) is not available in the token.");
-  router.push("/login");
-}
 
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
