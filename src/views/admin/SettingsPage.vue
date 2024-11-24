@@ -4,12 +4,6 @@ import Navigation from "../../components/navComponent.vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
 
-const jwtToken = localStorage.getItem("jwtToken");
-const tokenPayload = parseJwt(jwtToken);
-if (!tokenPayload || !tokenPayload.userId) {
-  router.push("/login");
-}
-
 const router = useRouter();
 
 const user = ref({
@@ -47,6 +41,12 @@ const parseJwt = (token) => {
     return null;
   }
 };
+
+const jwtToken = localStorage.getItem("jwtToken");
+const tokenPayload = parseJwt(jwtToken);
+if (!tokenPayload || !tokenPayload.userId) {
+  router.push("/login");
+}
 
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
