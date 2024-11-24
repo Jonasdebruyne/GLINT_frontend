@@ -49,6 +49,7 @@ const tokenPayload = parseJwt(jwtToken);
 if (!tokenPayload || !tokenPayload.userId) {
   router.push("/login");
 }
+const partnerId = tokenPayload.partnerId; // Als partnerId deel is van de JWT payload
 
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
