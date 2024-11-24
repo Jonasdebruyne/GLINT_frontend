@@ -115,36 +115,31 @@ const addPartner = async () => {
       <div class="row">
         <div class="column">
           <label for="street">Straat:</label>
-          <input v-model="street" id="street" type="text" required />
+          <input v-model="street" id="street" type="text" />
         </div>
         <div class="column">
           <label for="city">Stad:</label>
-          <input v-model="city" id="city" type="text" required />
+          <input v-model="city" id="city" type="text" />
         </div>
       </div>
       <div class="row">
         <div class="column">
           <label for="postalCode">Postcode:</label>
-          <input v-model="postalCode" id="postalCode" type="text" required />
+          <input v-model="postalCode" id="postalCode" type="text" />
         </div>
         <div class="column">
           <label for="country">Land:</label>
-          <input v-model="country" id="country" type="text" required />
+          <input v-model="country" id="country" type="text" />
         </div>
       </div>
       <div class="row">
         <div class="column">
           <label for="contactEmail">Contact E-mail:</label>
-          <input
-            v-model="contactEmail"
-            id="contactEmail"
-            type="email"
-            required
-          />
+          <input v-model="contactEmail" id="contactEmail" type="email" />
         </div>
         <div class="column">
           <label for="contactPhone">Contact Telefoon:</label>
-          <input v-model="contactPhone" id="contactPhone" type="tel" required />
+          <input v-model="contactPhone" id="contactPhone" type="tel" />
         </div>
       </div>
       <div class="row">
