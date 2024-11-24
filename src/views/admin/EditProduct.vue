@@ -251,7 +251,7 @@ const updateProduct = async () => {
     brand: brand.value,
     colors: colors.value,
     sizeOptions: sizeOptions.value,
-    images: images.value, // Nieuwe afbeeldingen
+    images: images.value.length > 0 ? images.value : productData.images, // Als er geen nieuwe afbeeldingen zijn, gebruik dan de oude
     lacesColor: lacesColor.value,
     soleColor: soleColor.value,
     insideColor: insideColor.value,
@@ -259,14 +259,17 @@ const updateProduct = async () => {
   };
 
   try {
-    // Eerst de oude afbeeldingen verwijderen
-    await deleteOldImages();
+    // Eerst de oude afbeeldingen verwijderen (indien nodig)
+    if (images.value.length > 0) {
+      await deleteOldImages();
+    }
 
-    // Dan de nieuwe afbeeldingen uploaden
-    const uploadedImages = await uploadNewImages();
-
-    // Voeg de geüploade afbeeldingen toe aan het productDataToSend object
-    productDataToSend.images = uploadedImages;
+    // Als er nieuwe afbeeldingen zijn, upload ze dan
+    let uploadedImages = [];
+    if (images.value.length > 0) {
+      uploadedImages = await uploadNewImages();
+      productDataToSend.images = uploadedImages;
+    }
 
     // Stuur de bijgewerkte productgegevens naar de backend
     const response = await fetch(`${baseURL}/products/${productId.value}`, {

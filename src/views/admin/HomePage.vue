@@ -2,17 +2,21 @@
 import { ref, onMounted, computed } from "vue";
 import Navigation from "../../components/navComponent.vue";
 import router from "../../router";
+import sha1 from "js-sha1";
 
+// Controleer of de gebruiker is ingelogd door het JWT token
 const jwtToken = localStorage.getItem("jwtToken");
 if (!jwtToken) {
   router.push("/login");
 }
 
+// Basis URL afhankelijk van de omgeving (production of lokaal)
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
   : "http://localhost:3000/api/v1";
 
+// Definities van refs en computed properties
 const selectedTypeFilter = ref("All");
 const data = ref([]);
 const searchTerm = ref("");
@@ -20,6 +24,7 @@ const selectedProducts = ref([]);
 const isDeleteButtonVisible = computed(() => selectedProducts.value.length > 0);
 const isPopupVisible = ref(false);
 
+// Haal de producten op vanuit de API
 const fetchData = async () => {
   try {
     const token = localStorage.getItem("jwtToken");
@@ -31,13 +36,9 @@ const fetchData = async () => {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    const result = await response.json();
 
-    // Filter de producten om alleen die van jouw bedrijf te tonen
-    const userCompanyId = jwtToken
-      ? JSON.parse(atob(jwtToken.split(".")[1])).companyId
-      : null; // Haal het companyId uit het token
-    console.log(userCompanyId);
+    const result = await response.json();
+    const userCompanyId = getUserCompanyId(jwtToken); // Haal companyId uit JWT
 
     data.value = result.data.products.filter(
       (product) => product.partnerId === userCompanyId
@@ -47,6 +48,14 @@ const fetchData = async () => {
   }
 };
 
+// Haal companyId uit het JWT token
+const getUserCompanyId = (token) => {
+  if (!token) return null;
+  const decoded = JSON.parse(atob(token.split(".")[1]));
+  return decoded.companyId;
+};
+
+// Selecteer of deselecteer een product
 const toggleSelection = (productId) => {
   const index = selectedProducts.value.indexOf(productId);
   if (index === -1) {
@@ -56,27 +65,105 @@ const toggleSelection = (productId) => {
   }
 };
 
+// Selecteer of deselecteer alle producten
 const toggleSelectAll = (event) => {
   selectedProducts.value = event.target.checked
     ? data.value.map((product) => product._id)
     : [];
 };
 
+// Start het verwijderproces van geselecteerde producten
 const deleteSelectedProducts = () => {
   if (selectedProducts.value.length === 0) return;
   showPopup();
 };
 
+// Bevestig het verwijderen van geselecteerde producten
 const confirmDelete = async () => {
   await deleteProducts();
   hidePopup();
 };
 
+// Functie om de public_id uit de URL van Cloudinary te extraheren
+const extractPublicId = (imageUrl) => {
+  try {
+    const parts = imageUrl.split("/image/upload/");
+    if (parts.length < 2) {
+      console.error("Ongeldige URL-structuur:", imageUrl);
+      return null;
+    }
+
+    let publicIdWithVersion = parts[1]; // Deel na "/image/upload/"
+    const publicIdParts = publicIdWithVersion.split("/"); // Split om de versie eruit te halen
+
+    // Als de eerste component begint met "v" gevolgd door een nummer, negeer die
+    if (
+      publicIdParts[0].startsWith("v") &&
+      !isNaN(Number(publicIdParts[0].slice(1)))
+    ) {
+      publicIdParts.shift(); // Verwijder de versie
+    }
+
+    const publicIdWithoutExtension = publicIdParts.join("/").split(".")[0]; // Combineer en verwijder bestandsextensie
+    return publicIdWithoutExtension;
+  } catch (error) {
+    console.error("Fout bij het extraheren van public_id:", error);
+    return null;
+  }
+};
+
+// Functie om een afbeelding van Cloudinary te verwijderen
+const deleteImageFromCloudinary = async (imageUrl) => {
+  const publicId = extractPublicId(imageUrl);
+  if (!publicId) {
+    console.error("Geen geldige public_id gevonden voor afbeelding:", imageUrl);
+    return;
+  }
+
+  try {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const signature = generateSignature(timestamp, publicId); // Gebruik alleen de public_id
+
+    const response = await fetch(
+      "https://api.cloudinary.com/v1_1/dzempjvto/image/destroy",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          public_id: publicId,
+          api_key: "496836855294519",
+          timestamp: timestamp,
+          signature: signature,
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (result.result !== "ok") {
+      throw new Error("Cloudinary delete failed: " + result.result);
+    }
+  } catch (error) {
+    console.error("Error deleting image from Cloudinary:", error);
+  }
+};
+
+// Verwijder geselecteerde producten, inclusief hun afbeeldingen
 const deleteProducts = async () => {
   try {
     for (const id of selectedProducts.value) {
+      const product = data.value.find((product) => product._id === id);
+      if (product && product.images && product.images.length > 0) {
+        for (const imageUrl of product.images) {
+          await deleteImageFromCloudinary(imageUrl);
+        }
+      }
+
       const response = await fetch(`${baseURL}/products/${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
       });
 
       if (!response.ok) {
@@ -84,25 +171,38 @@ const deleteProducts = async () => {
       }
     }
 
-    await fetchData();
-    selectedProducts.value = [];
+    await fetchData(); // Herlaad de productlijst
+    selectedProducts.value = []; // Reset geselecteerde producten
   } catch (error) {
     console.error("Error deleting products:", error);
+    alert("Er is een fout opgetreden bij het verwijderen van de producten.");
   }
 };
 
+// Functie om de handtekening voor Cloudinary te genereren
+// Functie om de handtekening voor Cloudinary te genereren
+const generateSignature = (timestamp, imageId) => {
+  const apiSecret = "g3uD4zo94Nn1l7S20LW_Y8wPKKY"; // Cloudinary API Secret
+  const signatureString = `public_id=${imageId}&timestamp=${timestamp}${apiSecret}`;
+  return sha1(signatureString);
+};
+
+// Toon de popup voor bevestiging
 const showPopup = () => {
   isPopupVisible.value = true;
 };
 
+// Verberg de popup
 const hidePopup = () => {
   isPopupVisible.value = false;
 };
 
+// Haal gegevens op bij het laden van de component
 onMounted(() => {
   fetchData();
 });
 
+// Filter de producten op basis van zoekterm en producttype
 const filteredProducts = computed(() => {
   if (!data.value) return [];
 
