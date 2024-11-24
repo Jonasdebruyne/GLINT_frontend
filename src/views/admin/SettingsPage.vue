@@ -328,7 +328,9 @@ const closeSuccessSubscriptionPopup = () => {
 
 onMounted(async () => {
   await fetchUserProfile();
-  await fetchPartnerData();
+  if (partnerId) {
+    await fetchPartnerData();
+  }
 });
 </script>
 
