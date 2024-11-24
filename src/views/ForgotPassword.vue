@@ -3,39 +3,38 @@ import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 
+// Variabelen voor e-mail, verificatiecode en foutmeldingen
 const email = ref("");
 const verificationCode = ref("");
 const errorMessage = ref("");
 const router = useRouter();
 const route = useRoute();
 
+// Functie voor e-mailvalidatie
 const isValidEmail = (email) => {
-  // Controleer eerst of het emailadres leeg is
   if (!email || typeof email !== "string") {
     return false;
   }
-
-  // Reguliere expressie voor e-mailvalidatie
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  // Test de e-mail tegen de reguliere expressie
   return emailPattern.test(email);
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const email = urlParams.get("email"); // Haal de waarde van de 'email' queryparameter op
-
-  if (email) {
-    console.log(email); // Doe iets met de email, bijvoorbeeld opslaan of gebruiken
+// Haal de 'email' queryparameter op via Vue Router
+onMounted(() => {
+  const routeEmail = route.query.email;
+  if (routeEmail) {
+    email.value = routeEmail;
+    console.log("Email from query parameter:", routeEmail);
   }
 });
 
+// Controle of we in de productieomgeving draaien
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
-  ? "https://glint-backend-admin.onrender.com/api/v1"
-  : "http://localhost:3000/api/v1";
+  ? "https://glint-backend-admin.onrender.com/api/v1" // Zorg dat dit HTTPS is voor productie
+  : "http://localhost:3000/api/v1"; // Gebruik HTTP voor lokaal
 
+// Functie om de e-mail te versturen naar de backend
 const sendMail = async () => {
   if (!isValidEmail(email.value)) {
     errorMessage.value = "Voer een geldig e-mailadres in.";
@@ -47,6 +46,7 @@ const sendMail = async () => {
       email: email.value,
     });
 
+    // Controleer of het antwoord succesvol is
     if (response && response.status >= 200 && response.status < 300) {
       errorMessage.value = "";
       router.push({ path: "/verificationCode", query: { email: email.value } });
@@ -54,11 +54,19 @@ const sendMail = async () => {
       errorMessage.value = "Er is een onverwachte fout opgetreden.";
     }
   } catch (error) {
-    if (error.response && error.response.status === 404) {
-      errorMessage.value = "Gebruiker niet gevonden.";
+    // Specifieke foutmelding voor een 404 of andere netwerkfouten
+    if (error.response) {
+      if (error.response.status === 404) {
+        errorMessage.value = "Gebruiker niet gevonden.";
+      } else if (error.response.status === 500) {
+        errorMessage.value =
+          "Er is een serverfout opgetreden. Probeer het later opnieuw.";
+        console.error("500 Error:", error.response.data);
+      } else {
+        errorMessage.value = "Er is een onbekende fout opgetreden.";
+      }
     } else {
-      errorMessage.value =
-        "Er is een fout opgetreden bij het versturen van de e-mail.";
+      errorMessage.value = "Er is een probleem met het netwerk.";
     }
   }
 };
@@ -91,7 +99,7 @@ const sendMail = async () => {
 </template>
 
 <style scoped>
-/* Je bestaande CSS-stijlen hier */
+/* CSS-stijlen voor je formulier */
 .container {
   position: relative;
   background-image: url("../assets/images/background.jpg");
