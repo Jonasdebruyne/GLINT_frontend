@@ -15,7 +15,6 @@ const router = useRouter();
 const jwtToken = localStorage.getItem("jwtToken");
 
 if (!jwtToken) {
-  console.log("No JWT token found. Redirecting to login...");
   router.push("/login");
 }
 
@@ -73,7 +72,6 @@ const fetchPartnerData = async () => {
 const fetchProductData = async () => {
   const id = route.params.id;
   productId.value = id;
-  console.log(`Fetching data for product ID: ${id}`);
 
   try {
     const response = await fetch(`${baseURL}/products/${id}`);
@@ -86,8 +84,6 @@ const fetchProductData = async () => {
     productData = data.data.product;
 
     if (productData) {
-      console.log("Product data fetched:", productData);
-
       productCode.value = productData.productCode;
       productName.value = productData.productName;
       productPrice.value = productData.productPrice;
@@ -110,7 +106,6 @@ const fetchProductData = async () => {
 
 // Functie om de geselecteerde afbeeldingen op te slaan
 const handleFileChange = (event) => {
-  console.log("File input changed, selected files:", event.target.files);
   images.value = Array.from(event.target.files);
 };
 
@@ -180,16 +175,11 @@ const generateSignature = (timestamp, imageId) => {
 // Functie om oude afbeeldingen te verwijderen
 const deleteOldImages = async () => {
   try {
-    console.log("Starting to delete old images...");
-
     if (!productData.images || productData.images.length === 0) {
-      console.log("No images to delete.");
       return;
     }
 
     for (const imageUrl of productData.images) {
-      console.log(`Processing image URL: ${imageUrl}`);
-
       // Stap 1: Haal alles na "/image/upload/" en verwijder de versie (bijv. v1732454523)
       let imageId = imageUrl.split("/image/upload/")[1]; // Haalt alles na "/image/upload/"
 
@@ -198,8 +188,6 @@ const deleteOldImages = async () => {
 
       // Stap 3: Verwijder bestandsextensie (bijv. .webp, .jpg, .png)
       imageId = imageId.split(".")[0]; // Verwijder alles na de punt
-
-      console.log(`Extracted image ID: ${imageId}`);
 
       const timestamp = Math.floor(Date.now() / 1000);
       const signature = generateSignature(timestamp, imageId); // Maak een handtekening op basis van je Cloudinary secret
@@ -221,7 +209,6 @@ const deleteOldImages = async () => {
       );
 
       const deleteData = await deleteResponse.json();
-      console.log("Delete response:", deleteData);
 
       if (!deleteResponse.ok || deleteData.result !== "ok") {
         throw new Error(
@@ -238,21 +225,6 @@ const deleteOldImages = async () => {
 
 // Functie om het product bij te werken
 const updateProduct = async () => {
-  console.log("Updating product with the following data:", {
-    productCode: productCode.value,
-    productName: productName.value,
-    productPrice: productPrice.value,
-    description: description.value,
-    brand: brand.value,
-    colors: colors.value,
-    sizeOptions: sizeOptions.value,
-    images: images.value, // Nieuwe afbeeldingen worden hier bijgewerkt
-    lacesColor: lacesColor.value,
-    soleColor: soleColor.value,
-    insideColor: insideColor.value,
-    outsideColor: outsideColor.value,
-  });
-
   if (
     !productCode.value ||
     !productName.value ||
@@ -288,18 +260,15 @@ const updateProduct = async () => {
 
   try {
     // Eerst de oude afbeeldingen verwijderen
-    console.log("Starting to delete old images...");
     await deleteOldImages();
 
     // Dan de nieuwe afbeeldingen uploaden
-    console.log("Uploading new images...");
     const uploadedImages = await uploadNewImages();
 
     // Voeg de geüploade afbeeldingen toe aan het productDataToSend object
     productDataToSend.images = uploadedImages;
 
     // Stuur de bijgewerkte productgegevens naar de backend
-    console.log("Sending updated product data to the backend...");
     const response = await fetch(`${baseURL}/products/${productId.value}`, {
       method: "PUT",
       headers: {
@@ -314,7 +283,6 @@ const updateProduct = async () => {
     }
 
     const result = await response.json();
-    console.log("Product updated successfully:", result);
 
     router.push("/admin");
   } catch (error) {
