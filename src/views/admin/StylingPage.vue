@@ -1,19 +1,46 @@
 <script setup>
-import Navigation from "../../components/navComponent.vue";
-import { ref, onMounted } from "vue";
+import { ref, reactive, onMounted, computed, watch, provide } from "vue";
+import { useRouter } from "vue-router";
 import axios from "axios";
-import router from "../../router";
+import Navigation from "../../components/navComponent.vue";
 
-function parseJwt(token) {
+// Router setup
+const router = useRouter();
+
+// Reactive user object to store user details (gebruik reactive voor betere reactiviteit)
+const user = reactive({
+  firstName: "",
+  lastName: "",
+  email: "",
+  newEmail: "",
+  oldEmail: "",
+  password: "",
+  newPassword: "",
+  oldPassword: "",
+  newPasswordRepeat: "",
+  country: "",
+  city: "",
+  postalCode: "",
+  profilePicture: "",
+  bio: "",
+  role: "",
+  activeUnactive: true,
+});
+
+// Authentication and token handling
+const token = localStorage.getItem("jwtToken");
+if (!token) {
+  router.push("/login");
+}
+
+const parseJwt = (token) => {
   try {
     const base64Url = token.split(".")[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
       atob(base64)
         .split("")
-        .map(function (c) {
-          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
-        })
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
         .join("")
     );
     return JSON.parse(jsonPayload);
@@ -21,47 +48,110 @@ function parseJwt(token) {
     console.error("Error parsing JWT:", error);
     return null;
   }
-}
+};
 
-const jwtToken = localStorage.getItem("jwtToken");
-if (!jwtToken) {
+const tokenPayload = parseJwt(token);
+const userId = tokenPayload?.userId;
+const partnerId = tokenPayload?.partnerId || null;
+
+if (!userId) {
   router.push("/login");
 }
 
+// Base URL for API calls
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
   : "http://localhost:3000/api/v1";
 
-const userId = ref(null);
-const userRole = ref(null);
-const houseStyleId = ref(null);
-const backgroundColor = ref("#ffffff");
-const bodyTextColor = ref("#000000");
-const titleColor = ref("#000000");
-const textColor = ref("#000000");
-const buttonColor = ref("#000000");
-const primaryColor = ref("#000000");
-const secondaryColor = ref("#000000");
-const fontFamilyBodyText = ref("DM Sans");
-const fontFamilyTitles = ref("Syne");
-const logoUrl = ref("");
+// Partner related data
+const partnerPackage = ref(null);
 
-onMounted(() => {
-  const tokenPayload = parseJwt(jwtToken);
-  if (tokenPayload) {
-    userId.value = tokenPayload.userId;
-    userRole.value = tokenPayload.role;
-    houseStyleId.value = userId.value;
+// Fetch user profile data
+const fetchUserProfile = async () => {
+  try {
+    const response = await axios.get(`${baseURL}/users/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-    if (userRole.value !== "partner_owner") {
-      router.push("/admin");
-    }
-
-    fetchData();
-  } else {
-    console.error("Could not parse JWT.");
+    const userData = response.data?.data?.user || {};
+    // Update the user object
+    user.firstName = userData.firstname || "";
+    user.lastName = userData.lastname || "";
+    user.email = userData.email || "";
+    user.oldEmail = userData.email || "";
+    user.country = userData.country || "";
+    user.city = userData.city || "";
+    user.postalCode = userData.postalCode || "";
+    user.profilePicture = userData.profilePicture || "";
+    user.bio = userData.bio || "";
+    user.role = userData.role || "";
+    user.activeUnactive = userData.activeUnactive ?? true;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
   }
+};
+
+// Fetch partner data (if applicable)
+const fetchPartnerData = async () => {
+  if (!partnerId) return;
+
+  try {
+    const response = await axios.get(`${baseURL}/partners/${partnerId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const partner = response.data?.data?.partner || {};
+    partnerPackage.value = partner.package || "No package available";
+  } catch (error) {
+    console.error("Error fetching partner data:", error);
+    partnerPackage.value = "Error loading partner data";
+  }
+};
+
+// Fetch initial data on mount
+onMounted(async () => {
+  await fetchUserProfile();
+  await fetchPartnerData();
+});
+
+// Provide the user data to all components (including Navigation)
+provide("user", user); // Makes user data available to child components like Navigation
+
+// Watch for changes in user data and update the Navigation component
+watch(
+  user,
+  (newUser) => {
+    console.log("User data updated:", newUser);
+  },
+  { deep: true }
+);
+
+// Reactieve data-referenties
+const data = ref([]); // Zorg ervoor dat data altijd een lege array is
+const searchTerm = ref("");
+const selectedFilter = ref("All");
+const selectedUsers = ref([]); // Dit is een ref voor de geselecteerde gebruikers
+const isPopupVisible = ref(false);
+
+// Ophalen van gebruikersgegevens
+
+// Filter de gebruikers op basis van zoekterm en filter
+const filteredUsers = computed(() => {
+  // Controleer eerst of data.value gedefinieerd is
+  if (!data.value) return [];
+
+  return data.value.filter((user) => {
+    const matchesSearchTerm =
+      user.firstname.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
+      user.lastname.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.value.toLowerCase());
+
+    const matchesFilter =
+      selectedFilter.value === "All" || user.role === selectedFilter.value;
+
+    return matchesSearchTerm && matchesFilter;
+  });
 });
 
 const fetchData = async () => {
@@ -127,6 +217,56 @@ const saveColor = async () => {
     console.error("Fout bij het opslaan van de kleur:", error.response.data);
   }
 };
+
+// Verwijderen van geselecteerde gebruikers
+const deleteSelectedUsers = async () => {
+  if (!selectedUsers.value.length) return;
+
+  try {
+    await Promise.all(
+      selectedUsers.value.map(async (userId) => {
+        const response = await fetch(`${baseURL}/users/${userId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+          },
+        });
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
+      })
+    );
+
+    // Gegevens verversen en selectie wissen na succesvolle verwijdering
+    await fetchData();
+    selectedUsers.value = [];
+  } catch (error) {
+    console.error("Error deleting users:", error);
+  }
+};
+
+// Popup-weergavebeheer
+const showPopup = () => (isPopupVisible.value = true);
+const hidePopup = () => (isPopupVisible.value = false);
+const confirmDelete = async () => {
+  await deleteSelectedUsers();
+  hidePopup();
+};
+
+// Initialiseer component en haal data op
+onMounted(fetchData);
+
+const userRole = ref(null);
+const houseStyleId = ref(null);
+const backgroundColor = ref("#ffffff");
+const bodyTextColor = ref("#000000");
+const titleColor = ref("#000000");
+const textColor = ref("#000000");
+const buttonColor = ref("#000000");
+const primaryColor = ref("#000000");
+const secondaryColor = ref("#000000");
+const fontFamilyBodyText = ref("DM Sans");
+const fontFamilyTitles = ref("Syne");
+const logoUrl = ref("");
 
 async function changeColor(colorType) {
   const colorPicker = document.createElement("input");

@@ -1,9 +1,38 @@
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, reactive, onMounted, computed, watch, provide } from "vue";
+import { useRouter } from "vue-router";
+import axios from "axios";
 import Navigation from "../../components/navComponent.vue";
-import router from "../../router";
 
-// Functie om het JWT-token te decoderen en de payload te extraheren
+// Router setup
+const router = useRouter();
+
+// Reactive user object to store user details (gebruik reactive voor betere reactiviteit)
+const user = reactive({
+  firstName: "",
+  lastName: "",
+  email: "",
+  newEmail: "",
+  oldEmail: "",
+  password: "",
+  newPassword: "",
+  oldPassword: "",
+  newPasswordRepeat: "",
+  country: "",
+  city: "",
+  postalCode: "",
+  profilePicture: "",
+  bio: "",
+  role: "",
+  activeUnactive: true,
+});
+
+// Authentication and token handling
+const token = localStorage.getItem("jwtToken");
+if (!token) {
+  router.push("/login");
+}
+
 const decodeToken = (token) => {
   if (!token) return null;
   const base64Payload = token.split(".")[1];
@@ -17,15 +46,103 @@ if (!jwtToken) {
   router.push("/login");
 }
 
+const decoded = decodeToken(token);
 const decodedToken = decodeToken(jwtToken);
-const userPartnerId = decodedToken?.companyId; // Haal de partner-id van de ingelogde gebruiker
-console.log("Partner ID from token:", userPartnerId);
+const userPartnerId = decodedToken?.companyId;
 
-// API-basispad configureren
+const parseJwt = (token) => {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error("Error parsing JWT:", error);
+    return null;
+  }
+};
+
+const tokenPayload = parseJwt(token);
+const userId = tokenPayload?.userId;
+const partnerId = tokenPayload?.partnerId || null;
+
+if (!userId) {
+  router.push("/login");
+}
+
+// Base URL for API calls
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
   : "http://localhost:3000/api/v1";
+
+// Partner related data
+const partnerPackage = ref(null);
+
+// Fetch user profile data
+const fetchUserProfile = async () => {
+  try {
+    const response = await axios.get(`${baseURL}/users/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const userData = response.data?.data?.user || {};
+    // Update the user object
+    user.firstName = userData.firstname || "";
+    user.lastName = userData.lastname || "";
+    user.email = userData.email || "";
+    user.oldEmail = userData.email || "";
+    user.country = userData.country || "";
+    user.city = userData.city || "";
+    user.postalCode = userData.postalCode || "";
+    user.profilePicture = userData.profilePicture || "";
+    user.bio = userData.bio || "";
+    user.role = userData.role || "";
+    user.activeUnactive = userData.activeUnactive ?? true;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+  }
+};
+
+// Fetch partner data (if applicable)
+const fetchPartnerData = async () => {
+  if (!partnerId) return;
+
+  try {
+    const response = await axios.get(`${baseURL}/partners/${partnerId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const partner = response.data?.data?.partner || {};
+    partnerPackage.value = partner.package || "No package available";
+  } catch (error) {
+    console.error("Error fetching partner data:", error);
+    partnerPackage.value = "Error loading partner data";
+  }
+};
+
+// Fetch initial data on mount
+onMounted(async () => {
+  await fetchUserProfile();
+  await fetchPartnerData();
+});
+
+// Provide the user data to all components (including Navigation)
+provide("user", user); // Makes user data available to child components like Navigation
+
+// Watch for changes in user data and update the Navigation component
+watch(
+  user,
+  (newUser) => {
+    console.log("User data updated:", newUser);
+  },
+  { deep: true }
+);
 
 // Reactieve data-referenties
 const data = ref([]); // Zorg ervoor dat data altijd een lege array is
@@ -38,29 +155,32 @@ const isPopupVisible = ref(false);
 const isDeleteButtonVisible = computed(() => selectedUsers.value.length > 0);
 const emptyState = computed(() => data.value.length === 0);
 
-// Ophalen van gebruikersgegevens
 const fetchData = async () => {
   try {
     const token = localStorage.getItem("jwtToken");
+    const decodedToken = parseJwt(token); // Decode the token here
+    if (!decodedToken) {
+      throw new Error("Invalid token or failed to decode token");
+    }
+
     const response = await fetch(`${baseURL}/users`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
+
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const result = await response.json();
 
-    // Haal de rol van de ingelogde gebruiker
     const userRole = decodedToken?.role;
-
-    // Als de gebruiker een platform_admin is, toon dan alle gebruikers
     if (userRole === "platform_admin") {
       data.value = result.data.users;
     } else {
-      // Filter de gebruikers die bij de partner-id van de ingelogde gebruiker horen
-      data.value = result.data.users.filter(
-        (user) => user.partnerId === userPartnerId // Alleen gebruikers met dezelfde partnerId
-      );
+      const filteredUsers = result.data.users.filter((user) => {
+        const matchesPartner = user.partnerId === userPartnerId;
+        return matchesPartner;
+      });
+      data.value = filteredUsers;
     }
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -112,7 +232,7 @@ const deleteSelectedUsers = async () => {
         const response = await fetch(`${baseURL}/users/${userId}`, {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${jwtToken}`,
+            Authorization: `Bearer ${token}`, // Change jwtToken to token here
           },
         });
         if (!response.ok)
@@ -120,7 +240,7 @@ const deleteSelectedUsers = async () => {
       })
     );
 
-    // Gegevens verversen en selectie wissen na succesvolle verwijdering
+    // Refresh data and clear selection after successful deletion
     await fetchData();
     selectedUsers.value = [];
   } catch (error) {

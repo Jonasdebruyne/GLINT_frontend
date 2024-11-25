@@ -1,33 +1,136 @@
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, reactive, onMounted, computed, watch, provide } from "vue";
+import { useRouter } from "vue-router";
+import axios from "axios";
 import Navigation from "../../components/navComponent.vue";
-import router from "../../router";
-import sha1 from "js-sha1";
 
-// Controleer of de gebruiker is ingelogd door het JWT token
-const jwtToken = localStorage.getItem("jwtToken");
-if (!jwtToken) {
+// Router setup
+const router = useRouter();
+
+// Reactive user object to store user details (gebruik reactive voor betere reactiviteit)
+const user = reactive({
+  firstName: "",
+  lastName: "",
+  email: "",
+  newEmail: "",
+  oldEmail: "",
+  password: "",
+  newPassword: "",
+  oldPassword: "",
+  newPasswordRepeat: "",
+  country: "",
+  city: "",
+  postalCode: "",
+  profilePicture: "",
+  bio: "",
+  role: "",
+  activeUnactive: true,
+});
+
+// Authentication and token handling
+const token = localStorage.getItem("jwtToken");
+if (!token) {
   router.push("/login");
 }
 
-// Basis URL afhankelijk van de omgeving (production of lokaal)
+const parseJwt = (token) => {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error("Error parsing JWT:", error);
+    return null;
+  }
+};
+
+const tokenPayload = parseJwt(token);
+const userId = tokenPayload?.userId;
+const partnerId = tokenPayload?.partnerId || null;
+
+if (!userId) {
+  router.push("/login");
+}
+
+// Base URL for API calls
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
   : "http://localhost:3000/api/v1";
 
-// Definities van refs en computed properties
-const selectedTypeFilter = ref("All");
-const data = ref([]);
-const searchTerm = ref("");
-const selectedProducts = ref([]);
-const isDeleteButtonVisible = computed(() => selectedProducts.value.length > 0);
-const isPopupVisible = ref(false);
+// Partner related data
+const partnerPackage = ref(null);
+
+// Fetch user profile data
+const fetchUserProfile = async () => {
+  try {
+    const response = await axios.get(`${baseURL}/users/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const userData = response.data?.data?.user || {};
+    // Update the user object
+    user.firstName = userData.firstname || "";
+    user.lastName = userData.lastname || "";
+    user.email = userData.email || "";
+    user.oldEmail = userData.email || "";
+    user.country = userData.country || "";
+    user.city = userData.city || "";
+    user.postalCode = userData.postalCode || "";
+    user.profilePicture = userData.profilePicture || "";
+    user.bio = userData.bio || "";
+    user.role = userData.role || "";
+    user.activeUnactive = userData.activeUnactive ?? true;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+  }
+};
+
+// Fetch partner data (if applicable)
+const fetchPartnerData = async () => {
+  if (!partnerId) return;
+
+  try {
+    const response = await axios.get(`${baseURL}/partners/${partnerId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const partner = response.data?.data?.partner || {};
+    partnerPackage.value = partner.package || "No package available";
+  } catch (error) {
+    console.error("Error fetching partner data:", error);
+    partnerPackage.value = "Error loading partner data";
+  }
+};
+
+// Fetch initial data on mount
+onMounted(async () => {
+  await fetchUserProfile();
+  await fetchPartnerData();
+});
+
+// Provide the user data to all components (including Navigation)
+provide("user", user); // Makes user data available to child components like Navigation
+
+// Watch for changes in user data and update the Navigation component
+watch(
+  user,
+  (newUser) => {
+    console.log("User data updated:", newUser);
+  },
+  { deep: true }
+);
 
 // Haal de producten op vanuit de API
 const fetchData = async () => {
   try {
-    const token = localStorage.getItem("jwtToken");
+    const token = localStorage.getItem("jwtToken"); // Use the correct variable name
     const response = await fetch(`${baseURL}/products`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -38,7 +141,7 @@ const fetchData = async () => {
     }
 
     const result = await response.json();
-    const userCompanyId = getUserCompanyId(jwtToken); // Haal companyId uit JWT
+    const userCompanyId = getUserCompanyId(token); // Pass the correct token here
 
     data.value = result.data.products.filter(
       (product) => product.partnerId === userCompanyId
@@ -47,6 +150,17 @@ const fetchData = async () => {
     console.error("Error fetching data:", error);
   }
 };
+
+// Initialiseer component en haal data op
+onMounted(fetchData);
+
+// Definities van refs en computed properties
+const selectedTypeFilter = ref("All");
+const data = ref([]);
+const searchTerm = ref("");
+const selectedProducts = ref([]);
+const isDeleteButtonVisible = computed(() => selectedProducts.value.length > 0);
+const isPopupVisible = ref(false);
 
 // Haal companyId uit het JWT token
 const getUserCompanyId = (token) => {
@@ -162,7 +276,7 @@ const deleteProducts = async () => {
       const response = await fetch(`${baseURL}/products/${id}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${jwtToken}`,
+          Authorization: `Bearer ${token}`, // Use the correct token variable
         },
       });
 
@@ -171,8 +285,8 @@ const deleteProducts = async () => {
       }
     }
 
-    await fetchData(); // Herlaad de productlijst
-    selectedProducts.value = []; // Reset geselecteerde producten
+    await fetchData(); // Reload the product list
+    selectedProducts.value = []; // Reset selected products
   } catch (error) {
     console.error("Error deleting products:", error);
     alert("Er is een fout opgetreden bij het verwijderen van de producten.");

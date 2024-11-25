@@ -1,58 +1,64 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { reactive, onMounted, watch, inject } from "vue";
 import { useRouter } from "vue-router";
-import axios from "axios"; // Ensure axios is installed
+import axios from "axios";
 
+// Router instance for navigation
 const router = useRouter();
-const user = ref({ firstname: "", lastname: "", role: "" }); // Initialize with empty values
 
+// Inject the user object from parent (settingsPage)
+const user = inject("user", () =>
+  reactive({
+    firstName: "",
+    lastName: "",
+    role: "",
+    profilePicture: "",
+  })
+);
+
+if (!user) {
+  console.error("No user data provided!");
+  router.push("/login"); // Verplicht de gebruiker om in te loggen als er geen `user` data is.
+}
+
+// Function to extract user data from the JWT token (kan mogelijk overbodig zijn als we al `user` injecteren)
 const getUserDataFromToken = () => {
   const token = localStorage.getItem("jwtToken");
   if (token) {
     const payload = token.split(".")[1];
     const decodedPayload = JSON.parse(atob(payload));
     const userId = decodedPayload.userId;
-    const firstname = decodedPayload.firstname;
-    const lastname = decodedPayload.lastname;
+    const firstName = decodedPayload.firstname;
+    const lastName = decodedPayload.lastname;
     const role = decodedPayload.role;
+    const profilePicture = decodedPayload.profilePicture || "";
 
     if (!userId) {
       console.error("User ID not found in token");
     }
 
-    return { userId, firstname, lastname, role }; // Return userId, firstname en lastname
+    return { userId, firstName, lastName, role, profilePicture }; // Return updated fields
   }
   console.error("No token found in localStorage");
   return null;
 };
 
-// Bij het ophalen van de gebruikersdata in onMounted, pas deze functie aan:
-onMounted(() => {
-  const userData = getUserDataFromToken();
-  if (userData) {
-    user.value.firstname = userData.firstname; // Stel firstname in
-    user.value.lastname = userData.lastname; // Stel lastname in
-    user.value.role = userData.role; // Stel lastname in
-    fetchUserData(userData.userId); // Roep de API aan met userId
-  }
-});
-
-const isProduction = window.location.hostname !== "localhost";
-const baseURL = isProduction
-  ? "https://glint-backend-admin.onrender.com/api/v1"
-  : "http://localhost:3000/api/v1";
-
+// Function to fetch user data via API (kan eventueel worden vervangen door data in `user` injecteren)
 const fetchUserData = async (userId) => {
+  const isProduction = window.location.hostname !== "localhost";
+  const baseURL = isProduction
+    ? "https://glint-backend-admin.onrender.com/api/v1"
+    : "http://localhost:3000/api/v1";
+
   try {
     const response = await axios.get(`${baseURL}/users/${userId}`);
-
     const userData = response.data.data.user;
     if (userData) {
-      user.value = {
-        firstname: userData.firstname || "",
-        lastname: userData.lastname || "",
-        role: userData.role || "",
-      };
+      // Dynamically update the reactive user data
+      user.firstName = userData.firstname || "";
+      user.lastName = userData.lastname || "";
+      user.role = userData.role || "";
+      user.profilePicture = userData.profilePicture || "";
     } else {
       console.error("No user found in the response.");
     }
@@ -61,6 +67,42 @@ const fetchUserData = async (userId) => {
   }
 };
 
+// Fetch user data when component is mounted
+onMounted(() => {
+  const userData = getUserDataFromToken();
+  if (userData) {
+    // If user data is found in the token, fetch the full user data
+    fetchUserData(userData.userId);
+  }
+});
+
+// Watch for changes in the user object and log them for debugging
+watch(
+  () => user.firstName,
+  (newValue, oldValue) => {
+    console.log("User firstName updated:", newValue);
+  }
+);
+watch(
+  () => user.lastName,
+  (newValue, oldValue) => {
+    console.log("User lastName updated:", newValue);
+  }
+);
+watch(
+  () => user.role,
+  (newValue, oldValue) => {
+    console.log("User role updated:", newValue);
+  }
+);
+watch(
+  () => user.profilePicture,
+  (newValue, oldValue) => {
+    console.log("User profile picture updated:", newValue);
+  }
+);
+
+// Function to handle logout
 const logout = () => {
   localStorage.removeItem("jwtToken");
   router.push("/login");
@@ -69,58 +111,61 @@ const logout = () => {
 
 <template>
   <nav>
-    <div class="logo"></div>
-    <div class="elements">
-      <div class="profile">
-        <div class="profilePicture"></div>
-        <div>
-          <h3 v-if="user.firstname && user.lastname">
-            {{ user.firstname }} {{ user.lastname }}
-          </h3>
-          <p v-if="user.role">
-            {{ user.role }}
-          </p>
-        </div>
+    <div class="logo">
+      <h3>REBILT</h3>
+    </div>
+    <div class="profile">
+      <!-- Add dynamic profile picture from user data -->
+      <div
+        class="profilePicture"
+        :style="{ backgroundImage: 'url(' + user.profilePicture + ')' }"
+      ></div>
+      <div>
+        <h3 v-if="user.firstName && user.lastName">
+          {{ user.firstName }} {{ user.lastName }}
+        </h3>
+        <p v-if="user.role">
+          {{ user.role }}
+        </p>
       </div>
-      <div class="menu">
-        <router-link to="/admin" exact-active-class="active">
-          <img src="../assets/icons/package.svg" alt="icon" />
-          <p>Products</p>
-          ,
-        </router-link>
-        <router-link to="/admin/orders" exact-active-class="active">
-          <img src="../assets/icons/order.svg" alt="icon" />
-          <p>Orders</p>
-        </router-link>
-        <router-link
-          v-if="user.role === 'partner_owner'"
-          to="/admin/styling"
-          exact-active-class="active"
-        >
-          <img src="../assets/icons/paintbrush.svg" alt="icon" />
-          <p>Styling</p>
-        </router-link>
-        <router-link
-          v-if="user.role === 'platform_admin'"
-          to="/admin/partners"
-          exact-active-class="active"
-        >
-          <img src="../assets/icons/users.svg" alt="icon" />
-          <p>Partners</p>
-        </router-link>
-        <router-link to="/admin/users" exact-active-class="active">
-          <img src="../assets/icons/users.svg" alt="icon" />
-          <p>Users</p>
-        </router-link>
-        <router-link to="/admin/settings" exact-active-class="active">
-          <img src="../assets/icons/settings.svg" alt="icon" />
-          <p>Settings</p>
-        </router-link>
-        <a @click.prevent="logout">
-          <img src="../assets/icons/logout.svg" alt="icon" />
-          <p>Logout</p>
-        </a>
-      </div>
+    </div>
+    <div class="menu">
+      <router-link to="/admin" exact-active-class="active">
+        <img src="../assets/icons/package.svg" alt="icon" />
+        <p>Products</p>
+      </router-link>
+      <router-link to="/admin/orders" exact-active-class="active">
+        <img src="../assets/icons/order.svg" alt="icon" />
+        <p>Orders</p>
+      </router-link>
+      <router-link
+        v-if="user.role === 'partner_owner'"
+        to="/admin/styling"
+        exact-active-class="active"
+      >
+        <img src="../assets/icons/paintbrush.svg" alt="icon" />
+        <p>Styling</p>
+      </router-link>
+      <router-link
+        v-if="user.role === 'platform_admin'"
+        to="/admin/partners"
+        exact-active-class="active"
+      >
+        <img src="../assets/icons/users.svg" alt="icon" />
+        <p>Partners</p>
+      </router-link>
+      <router-link to="/admin/users" exact-active-class="active">
+        <img src="../assets/icons/users.svg" alt="icon" />
+        <p>Users</p>
+      </router-link>
+      <router-link to="/admin/settings" exact-active-class="active">
+        <img src="../assets/icons/settings.svg" alt="icon" />
+        <p>Settings</p>
+      </router-link>
+      <a @click.prevent="logout">
+        <img src="../assets/icons/logout.svg" alt="icon" />
+        <p>Logout</p>
+      </a>
     </div>
   </nav>
 </template>
@@ -129,6 +174,7 @@ const logout = () => {
 nav {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   gap: 120px;
   background: linear-gradient(to bottom, #000000, #473c5d);
   height: 100vh;
@@ -136,31 +182,28 @@ nav {
   position: fixed;
 }
 
-nav .logo {
-  background-image: url("../assets/images/GLINT-logo-white.png");
-  background-position: center;
-  background-size: contain;
-  background-repeat: no-repeat;
-  width: 64px;
-  height: 24px;
+nav .logo h3 {
+  font-size: 1.5rem;
+  color: #ffffff;
+  text-transform: uppercase;
+  font-weight: bold;
 }
 
-nav .elements,
-nav .elements .menu {
+nav,
+nav .menu {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 64px;
+  gap: 48px;
 }
 
-nav .elements .profile {
+nav .profile {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-nav .elements .profile .profilePicture {
-  background-image: url("../assets/images/Odette_lunettes.webp");
+nav .profile .profilePicture {
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -169,31 +212,31 @@ nav .elements .profile .profilePicture {
   border-radius: 50%;
 }
 
-nav .elements .profile div {
+nav .profile div {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-nav .elements .menu a,
-nav .elements .menu a.active {
+nav .menu a,
+nav .menu a.active {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 8px;
 }
 
-nav .elements .menu a.active {
+nav .menu a.active {
   background-color: var(--purple);
   padding: 4px 12px;
   border-radius: 8px;
 }
 
-nav .elements .menu a img {
+nav .menu a img {
   width: 24px;
 }
 
-nav .elements .menu a p {
+nav .menu a p {
   color: var(--white);
 }
 </style>
