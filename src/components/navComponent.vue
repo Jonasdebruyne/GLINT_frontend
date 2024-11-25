@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, onMounted, watch, inject } from "vue";
+import { reactive, computed, onMounted, watch, inject } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 
@@ -107,6 +107,13 @@ const logout = () => {
   localStorage.removeItem("jwtToken");
   router.push("/login");
 };
+
+const profileImage = computed(() => {
+  return (
+    user.profilePicture ||
+    new URL("../assets/images/Odette_lunettes.webp", import.meta.url).href
+  );
+});
 </script>
 
 <template>
@@ -118,7 +125,7 @@ const logout = () => {
       <!-- Add dynamic profile picture from user data -->
       <div
         class="profilePicture"
-        :style="{ backgroundImage: 'url(' + user.profilePicture + ')' }"
+        :style="{ backgroundImage: 'url(' + profileImage + ')' }"
       ></div>
       <div>
         <h3 v-if="user.firstName && user.lastName">
