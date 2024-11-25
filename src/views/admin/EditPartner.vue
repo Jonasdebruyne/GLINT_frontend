@@ -32,7 +32,7 @@ const partnerData = ref({
   },
   contact_email: "",
   contact_phone: "",
-  package: "Standard", // Default package value is "Standard"
+  package: "standard", // Default package value is "Standard"
 });
 
 const fetchPartnerData = async () => {
@@ -162,8 +162,8 @@ const updatePartner = async () => {
           <!-- Dropdown voor package -->
           <select v-model="partnerData.package" id="package" required>
             <option value="" disabled>Kies een pakket</option>
-            <option value="Standard">Standard</option>
-            <option value="Pro">Pro</option>
+            <option value="standard">standard</option>
+            <option value="pro">pro</option>
           </select>
         </div>
       </div>

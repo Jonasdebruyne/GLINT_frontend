@@ -164,25 +164,6 @@ onMounted(() => {
   fetchData();
 });
 
-// Filter de producten op basis van zoekterm en producttype
-const filteredProducts = computed(() => {
-  if (!data.value) return [];
-
-  const filteredBySearch = data.value.filter((product) => {
-    return Object.values(product).some((value) =>
-      String(value).toLowerCase().includes(searchTerm.value.toLowerCase())
-    );
-  });
-
-  const filteredByType = filteredBySearch.filter(
-    (product) =>
-      selectedTypeFilter.value === "All" ||
-      product.typeOfProduct === selectedTypeFilter.value
-  );
-
-  return filteredByType;
-});
-
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
@@ -233,11 +214,6 @@ const toggleSelectAll = (event) => {
     : [];
 };
 
-const deleteSelectedpartners = () => {
-  if (selectedpartners.value.length === 0) return;
-  showPopup();
-};
-
 const confirmDelete = async () => {
   await deletepartners();
   hidePopup();
@@ -267,8 +243,6 @@ const showPopup = () => {
 const hidePopup = () => {
   isPopupVisible.value = false;
 };
-
-const totalpartnersCount = computed(() => partners.value.length);
 
 const filteredpartners = computed(() => {
   if (!partners.value) return [];
