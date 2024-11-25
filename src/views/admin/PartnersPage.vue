@@ -188,7 +188,7 @@ const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
   : "http://localhost:3000/api/v1";
 
-const selectedFilter = ref("All");
+const selectedFilter = ref("all");
 const partners = ref([]);
 const searchTerm = ref("");
 const selectedpartners = ref([]);
@@ -207,6 +207,7 @@ const fetchpartners = async () => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const result = await response.json();
+    console.log(result); // Debug log om te controleren of alle partners worden opgehaald
     if (result && result.data && result.data.partners) {
       partners.value = result.data.partners;
     } else {
@@ -279,7 +280,7 @@ const filteredpartners = computed(() => {
 
   const filteredByType = filteredBySearch.filter(
     (partner) =>
-      selectedFilter.value === "All" || partner.package === selectedFilter.value // Adjusted to filter by package
+      selectedFilter.value === "all" || partner.package === selectedFilter.value
   );
 
   return filteredByType;
@@ -330,9 +331,9 @@ onMounted(() => {
       </div>
 
       <select class="filter" v-model="selectedFilter">
-        <option value="All">All</option>
-        <option value="Standard">Standard</option>
-        <option value="Pro">Pro</option>
+        <option value="all">All</option>
+        <option value="standard">Standard</option>
+        <option value="pro">Pro</option>
       </select>
     </div>
 

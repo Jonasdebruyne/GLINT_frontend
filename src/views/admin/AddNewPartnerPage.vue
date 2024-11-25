@@ -25,7 +25,7 @@ const postalCode = ref("");
 const country = ref("");
 const contactEmail = ref("");
 const contactPhone = ref("");
-const subscriptionPackage = ref("Standard"); // Herbenoemd van 'package' naar 'subscriptionPackage'
+const subscriptionPackage = ref("standard"); // Herbenoemd van 'package' naar 'subscriptionPackage'
 
 // Validatie van het e-mailadres
 const isValidEmail = (email) => {
@@ -137,8 +137,8 @@ const addPartner = async () => {
             id="subscriptionPackage"
             required
           >
-            <option value="Standard">Standard</option>
-            <option value="Pro">Pro</option>
+            <option value="standard">standard</option>
+            <option value="pro">pro</option>
           </select>
         </div>
       </div>
