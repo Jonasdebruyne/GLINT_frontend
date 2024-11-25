@@ -77,7 +77,6 @@ const succesPasswordPopup = ref(false);
 
 // Partner related data
 const partnerPackage = ref(null);
-const partnerName = ref("");
 
 // Method to set active section
 const setActiveSection = (section) => {
