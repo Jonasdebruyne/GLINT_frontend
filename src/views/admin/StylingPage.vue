@@ -1,14 +1,14 @@
 <script setup>
-import { ref, reactive, onMounted, computed, watch, provide } from "vue";
+import { ref, reactive, onMounted, provide } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import Navigation from "../../components/navComponent.vue";
 
-// Router setup
+// Router instance
 const router = useRouter();
 
-// Reactive user object to store user details (gebruik reactive voor betere reactiviteit)
-const user = reactive({
+// Reactive data for user profile and huisstijl (styling) data
+const user = ref({
   firstName: "",
   lastName: "",
   email: "",
@@ -27,8 +27,21 @@ const user = reactive({
   activeUnactive: true,
 });
 
-// Authentication and token handling
+provide("user", user);
+
+const huisstijlData = reactive({
+  primaryColor: "",
+  secondaryColor: "",
+  titleColor: "",
+  colorForButtons: "",
+  fonts: [],
+  logo: "",
+  backgroundImage: "",
+});
+
+// JWT token and user validation
 const token = localStorage.getItem("jwtToken");
+
 if (!token) {
   router.push("/login");
 }
@@ -51,255 +64,230 @@ const parseJwt = (token) => {
 };
 
 const tokenPayload = parseJwt(token);
-const userId = tokenPayload?.userId;
-const partnerId = tokenPayload?.partnerId || null;
+const userId = tokenPayload?.userId || null;
 
 if (!userId) {
   router.push("/login");
 }
 
-// Base URL for API calls
+// Base API URL
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
   : "http://localhost:3000/api/v1";
 
-// Partner related data
-const partnerPackage = ref(null);
-
-// Fetch user profile data
+// Fetch user profile
 const fetchUserProfile = async () => {
   try {
     const response = await axios.get(`${baseURL}/users/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-
     const userData = response.data?.data?.user || {};
-    // Update the user object
-    user.firstName = userData.firstname || "";
-    user.lastName = userData.lastname || "";
-    user.email = userData.email || "";
-    user.oldEmail = userData.email || "";
-    user.country = userData.country || "";
-    user.city = userData.city || "";
-    user.postalCode = userData.postalCode || "";
-    user.profilePicture = userData.profilePicture || "";
-    user.bio = userData.bio || "";
-    user.role = userData.role || "";
-    user.activeUnactive = userData.activeUnactive ?? true;
+    Object.assign(user, {
+      firstName: userData.firstname || "",
+      lastName: userData.lastname || "",
+      email: userData.email || "",
+      oldEmail: userData.email || "",
+      country: userData.country || "",
+      city: userData.city || "",
+      postalCode: userData.postalCode || "",
+      profilePicture: userData.profilePicture || "",
+      bio: userData.bio || "",
+      role: userData.role || "",
+      activeUnactive: userData.activeUnactive ?? true,
+    });
   } catch (error) {
     console.error("Error fetching user profile:", error);
   }
 };
 
-// Fetch partner data (if applicable)
-const fetchPartnerData = async () => {
-  if (!partnerId) return;
-
-  try {
-    const response = await axios.get(`${baseURL}/partners/${partnerId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    const partner = response.data?.data?.partner || {};
-    partnerPackage.value = partner.package || "No package available";
-  } catch (error) {
-    console.error("Error fetching partner data:", error);
-    partnerPackage.value = "Error loading partner data";
-  }
-};
-
-// Fetch initial data on mount
-onMounted(async () => {
-  await fetchUserProfile();
-  await fetchPartnerData();
-});
-
-// Provide the user data to all components (including Navigation)
-provide("user", user); // Makes user data available to child components like Navigation
-
-// Watch for changes in user data and update the Navigation component
-watch(
-  user,
-  (newUser) => {
-    console.log("User data updated:", newUser);
-  },
-  { deep: true }
-);
-
-// Reactieve data-referenties
-const data = ref([]); // Zorg ervoor dat data altijd een lege array is
-const searchTerm = ref("");
-const selectedFilter = ref("All");
-const selectedUsers = ref([]); // Dit is een ref voor de geselecteerde gebruikers
-const isPopupVisible = ref(false);
-
-// Ophalen van gebruikersgegevens
-
-// Filter de gebruikers op basis van zoekterm en filter
-const filteredUsers = computed(() => {
-  // Controleer eerst of data.value gedefinieerd is
-  if (!data.value) return [];
-
-  return data.value.filter((user) => {
-    const matchesSearchTerm =
-      user.firstname.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-      user.lastname.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.value.toLowerCase());
-
-    const matchesFilter =
-      selectedFilter.value === "All" || user.role === selectedFilter.value;
-
-    return matchesSearchTerm && matchesFilter;
-  });
-});
-
-const fetchData = async () => {
-  try {
-    const token = localStorage.getItem("jwtToken");
-
-    if (!houseStyleId.value) {
-      console.error("No houseStyleId available for API call.");
-      return;
-    }
-
-    const apiUrl = `${baseURL}/housestyle/${houseStyleId.value}`;
-
-    const response = await axios.get(apiUrl, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const result = response.data;
-
-    const houseStyle = result?.data?.houseStyles?.[0];
-    if (houseStyle) {
-      backgroundColor.value = houseStyle.background_color;
-      bodyTextColor.value = houseStyle.text_color;
-      titleColor.value = houseStyle.primary_color;
-      buttonColor.value = houseStyle.secondary_color;
-      fontFamilyBodyText.value = houseStyle.fontFamilyBodyText;
-      fontFamilyTitles.value = houseStyle.fontFamilyTitles;
-      logoUrl.value = houseStyle.logo_url;
-    } else {
-      console.warn("House style data is empty or malformed.");
-    }
-  } catch (error) {
-    console.error("Error fetching data:", error);
-  }
-};
-
-const saveColor = async () => {
-  try {
-    const token = localStorage.getItem("jwtToken");
-
-    const colorData = {
-      houseStyle: {
-        primary_color: titleColor.value,
-        secondary_color: buttonColor.value,
-        background_color: backgroundColor.value,
-        text_color: bodyTextColor.value,
-        fontFamilyBodyText: "DM Sans",
-        fontFamilyTitles: "Syne",
-        logo_url: "assets/images/logo.png",
-      },
-    };
-
-    const apiUrl = `${baseURL}/housestyle/${userId.value || userId}`;
-
-    const response = await axios.put(apiUrl, colorData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  } catch (error) {
-    console.error("Fout bij het opslaan van de kleur:", error.response.data);
-  }
-};
-
-// Verwijderen van geselecteerde gebruikers
-const deleteSelectedUsers = async () => {
-  if (!selectedUsers.value.length) return;
-
-  try {
-    await Promise.all(
-      selectedUsers.value.map(async (userId) => {
-        const response = await fetch(`${baseURL}/users/${userId}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${jwtToken}`,
-          },
-        });
-        if (!response.ok)
-          throw new Error(`HTTP error! status: ${response.status}`);
+// Fetch huisstijl (styling) data
+const loadFonts = (fonts) => {
+  fonts.forEach((font) => {
+    const fontFace = new FontFace(font.name, `url(${font.path})`);
+    fontFace
+      .load()
+      .then((loadedFace) => {
+        document.fonts.add(loadedFace);
+        console.log(`Font ${font.name} loaded successfully.`);
       })
+      .catch((error) => {
+        console.error(`Failed to load font ${font.name}:`, error);
+      });
+  });
+};
+
+const fetchHuisstijlData = async () => {
+  try {
+    const response = await axios.get(
+      "https://res.cloudinary.com/dzempjvto/raw/upload/v1732653110/Stijn/Huisstijl/huisstijl_data.json"
     );
 
-    // Gegevens verversen en selectie wissen na succesvolle verwijdering
-    await fetchData();
-    selectedUsers.value = [];
+    console.log("Huisstijl data succesvol opgehaald:", response.data);
+
+    const data = response.data;
+    Object.assign(huisstijlData, {
+      primaryColor: data.primaryColor || huisstijlData.primaryColor,
+      secondaryColor: data.secondaryColor || huisstijlData.secondaryColor,
+      titleColor: data.titleColor || huisstijlData.titleColor,
+      colorForButtons: data.colorForButtons || huisstijlData.colorForButtons,
+      fonts: data.fonts || huisstijlData.fonts,
+      logo: data.logo || huisstijlData.logo,
+      backgroundImage: data.backgroundImage || huisstijlData.backgroundImage,
+    });
+
+    if (huisstijlData.fonts?.length) {
+      loadFonts(huisstijlData.fonts);
+    }
+    console.log("Huisstijl data geladen:", data);
   } catch (error) {
-    console.error("Error deleting users:", error);
+    console.error("Error fetching huisstijl data:", error);
   }
 };
 
-// Popup-weergavebeheer
-const showPopup = () => (isPopupVisible.value = true);
-const hidePopup = () => (isPopupVisible.value = false);
-const confirmDelete = async () => {
-  await deleteSelectedUsers();
-  hidePopup();
+// Reset huisstijl data to defaults
+const resetHouseStyle = () => {
+  Object.assign(huisstijlData, {
+    primaryColor: "#000000",
+    secondaryColor: "#FFFFFF",
+    titleColor: "#000000",
+    colorForButtons: "#007BFF",
+    fonts: [],
+  });
+  console.log("Huisstijl reset to default values.");
 };
 
-// Initialiseer component en haal data op
-onMounted(fetchData);
+// Refs for file inputs
+const logoInput = ref(null);
+const backgroundInput = ref(null);
 
-const userRole = ref(null);
-const houseStyleId = ref(null);
-const backgroundColor = ref("#ffffff");
-const bodyTextColor = ref("#000000");
-const titleColor = ref("#000000");
-const textColor = ref("#000000");
-const buttonColor = ref("#000000");
-const primaryColor = ref("#000000");
-const secondaryColor = ref("#000000");
-const fontFamilyBodyText = ref("DM Sans");
-const fontFamilyTitles = ref("Syne");
-const logoUrl = ref("");
+// Function to trigger the file input click
+const triggerFileInput = (inputName) => {
+  let fileInput;
+  if (inputName === "logo") {
+    fileInput = logoInput.value;
+  } else if (inputName === "backgroundImage") {
+    fileInput = backgroundInput.value;
+  }
 
-async function changeColor(colorType) {
-  const colorPicker = document.createElement("input");
-  colorPicker.type = "color";
+  if (fileInput) {
+    fileInput.click();
+  } else {
+    console.error(`File input with name '${inputName}' not found!`);
+  }
+};
 
-  colorPicker.value = colorType.value;
+const updateHuisstijlDataJson = async (newImageUrl, inputName) => {
+  try {
+    // Fetch the current huisstijl_data.json from Cloudinary
+    const response = await axios.get(
+      "https://res.cloudinary.com/dzempjvto/raw/upload/v1732575816/Stijn/Huisstijl/huisstijl_data.json"
+    );
 
-  colorPicker.addEventListener("input", async (event) => {
-    const newColor = event.target.value;
+    console.log("Current huisstijl data:", response.data); // Log the current JSON data
 
-    if (colorType === titleColor) {
-      titleColor.value = newColor;
-    } else if (colorType === buttonColor) {
-      buttonColor.value = newColor;
-    } else if (colorType === backgroundColor) {
-      backgroundColor.value = newColor;
-    } else if (colorType === bodyTextColor) {
-      bodyTextColor.value = newColor;
+    const currentData = response.data;
+
+    // Update the logo or background image based on inputName
+    if (inputName === "logo") {
+      currentData.logo = newImageUrl; // Update logo URL
+    } else if (inputName === "backgroundImage") {
+      currentData.backgroundImage = newImageUrl; // Update background image URL
     }
 
-    await saveColor();
-  });
+    console.log("Updated huisstijl data:", currentData); // Log the updated JSON data
 
-  colorPicker.click();
-}
+    // Convert the updated JSON data into a Blob
+    const jsonString = JSON.stringify(currentData);
+    const blob = new Blob([jsonString], { type: "application/json" });
 
-function hexToRgb(hex) {
-  hex = hex.replace(/^#/, "");
-  let r = parseInt(hex.substring(0, 2), 16);
-  let g = parseInt(hex.substring(2, 4), 16);
-  let b = parseInt(hex.substring(4, 6), 16);
-  return `rgb(${r}, ${g}, ${b})`;
-}
+    // Prepare FormData for uploading the JSON file to Cloudinary
+    const formData = new FormData();
+    formData.append("file", blob); // Append the JSON Blob
+    formData.append("upload_preset", "ycy4zvmj"); // Use your Cloudinary upload preset
+    formData.append("resource_type", "raw"); // Set resource type to "raw"
+    formData.append("public_id", "huisstijl_data"); // Public ID for the JSON file (use a different one if necessary)
+    formData.append("folder", "Stijn/Huisstijl"); // Specify the folder
+
+    // Upload the JSON file back to Cloudinary
+    const uploadResponse = await axios.post(
+      "https://api.cloudinary.com/v1_1/dzempjvto/raw/upload", // Cloudinary upload API endpoint
+      formData
+    );
+
+    console.log(
+      "Huisstijl data JSON successfully uploaded:",
+      uploadResponse.data
+    );
+  } catch (error) {
+    console.error("Error updating huisstijl_data.json:", error);
+  }
+};
+
+// Handle file selection and upload to Cloudinary
+const uploadToCloudinary = async (file, inputName) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "ycy4zvmj");
+  formData.append("cloud_name", "dzempjvto");
+  formData.append("folder", "Stijn/Huisstijl");
+
+  try {
+    // Log the file to be uploaded
+    console.log("Uploading file to Cloudinary:", file.name);
+
+    const response = await axios.post(
+      `https://api.cloudinary.com/v1_1/dzempjvto/image/upload`,
+      formData
+    );
+
+    // Log Cloudinary response
+    console.log("Cloudinary upload response:", response);
+
+    if (response?.data?.secure_url) {
+      const uploadedImageUrl = response.data.secure_url;
+      console.log("Image successfully uploaded. URL:", uploadedImageUrl);
+
+      // Update huisstijl_data.json with the new image URL
+      await updateHuisstijlDataJson(uploadedImageUrl, inputName);
+
+      return uploadedImageUrl;
+    } else {
+      console.error("No secure URL received from Cloudinary.");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error uploading file to Cloudinary:", error);
+    return null;
+  }
+};
+
+const initialize = async () => {
+  await fetchUserProfile();
+  await fetchHuisstijlData();
+};
+
+const handleFileChange = (event, inputName) => {
+  const files = event.target.files;
+  if (files && files.length > 0) {
+    const file = files[0];
+    if (inputName === "logo") {
+      huisstijlData.logo = URL.createObjectURL(file);
+    } else if (inputName === "backgroundImage") {
+      huisstijlData.backgroundImage = URL.createObjectURL(file);
+    }
+
+    // Upload the file to Cloudinary after selection
+    uploadToCloudinary(file, inputName);
+  } else {
+    console.error("No file selected.");
+  }
+};
+
+// Triggering file upload on mounted
+onMounted(() => {
+  initialize();
+});
 </script>
 
 <template>
@@ -307,98 +295,102 @@ function hexToRgb(hex) {
   <div class="content">
     <h1>Styling</h1>
     <div class="elements">
+      <!-- Colours Section -->
       <div class="top">
         <h2>Colours</h2>
         <a href="#" class="btn" @click.prevent="resetHouseStyle">Reset</a>
       </div>
       <div class="colours">
         <div class="column">
-          <h3>Background color</h3>
+          <h3>Primary Color</h3>
           <div class="row">
-            <p>{{ backgroundColor }} - {{ hexToRgb(backgroundColor) }}</p>
+            <p>{{ huisstijlData.primaryColor }}</p>
             <div
               class="color"
-              :style="{ backgroundColor: backgroundColor }"
-              @click="() => changeColor(backgroundColor)"
+              :style="{ backgroundColor: huisstijlData.primaryColor }"
             ></div>
           </div>
         </div>
-
         <div class="column">
-          <h3>Body text color</h3>
+          <h3>Secondary Color</h3>
           <div class="row">
-            <p>{{ bodyTextColor }} - {{ hexToRgb(bodyTextColor) }}</p>
+            <p>{{ huisstijlData.secondaryColor }}</p>
             <div
               class="color"
-              :style="{ color: bodyTextColor }"
-              @click="() => changeColor(bodyTextColor)"
+              :style="{ backgroundColor: huisstijlData.secondaryColor }"
             ></div>
           </div>
         </div>
         <div class="column">
           <h3>Title color</h3>
           <div class="row">
-            <p>{{ titleColor }} - {{ hexToRgb(titleColor) }}</p>
-
+            <p>{{ huisstijlData.titleColor }}</p>
             <div
               class="color"
-              :style="{ color: titleColor }"
-              @click="() => changeColor(titleColor)"
+              :style="{ backgroundColor: huisstijlData.titleColor }"
             ></div>
           </div>
         </div>
         <div class="column">
           <h3>Color for buttons</h3>
           <div class="row">
-            <p>{{ buttonColor }} - {{ hexToRgb(buttonColor) }}</p>
+            <p>{{ huisstijlData.colorForButtons }}</p>
             <div
               class="color"
-              :style="{ backgroundColor: buttonColor }"
-              @click="() => changeColor(buttonColor)"
+              :style="{ backgroundColor: huisstijlData.colorForButtons }"
             ></div>
           </div>
         </div>
       </div>
 
+      <!-- Fonts Section -->
       <div class="fonts">
         <h2>Fonts</h2>
-        <div class="column">
-          <h3>Body text</h3>
-          <div class="row">
-            <div class="column">
-              <label>Name</label>
-              <p>{{ fontFamilyBodyText }}</p>
-            </div>
-            <div class="column">
-              <label>Preview</label>
-              <p :style="{ fontFamily: fontFamilyBodyText }">
-                AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz​
-              </p>
-            </div>
-          </div>
-        </div>
-        <div class="column">
-          <h3>Titles</h3>
-          <div class="row">
-            <div class="column">
-              <label>Name</label>
-              <p>{{ fontFamilyTitles }}</p>
-            </div>
-            <div class="column">
-              <label>Preview</label>
-              <p :style="{ fontFamily: fontFamilyTitles }">
-                AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz​
-              </p>
-            </div>
-          </div>
+        <div
+          v-for="(font, index) in huisstijlData.fonts"
+          :key="index"
+          class="column"
+        >
+          <h3>{{ font.name || "No Font" }}</h3>
+          <p
+            :style="{ fontFamily: font.name ? `'${font.name}'` : 'sans-serif' }"
+          >
+            AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz​
+          </p>
         </div>
       </div>
+
       <div class="images">
         <h2>Images</h2>
-        <div class="row">
+        <div class="column">
           <h3>Logo</h3>
-          <div class="column">
-            <p>{{ logoUrl }}</p>
+          <div class="row">
+            <img :src="huisstijlData.logo" alt="Logo" />
+            <!-- Bestandinvoer voor logo -->
+            <input
+              type="file"
+              ref="logoInput"
+              @change="handleFileChange($event, 'logo')"
+              style="display: none"
+            />
+            <button @click="triggerFileInput('logo')">Upload Logo</button>
+          </div>
+        </div>
+
+        <div class="column">
+          <h3>Background Image</h3>
+          <div class="row">
+            <img :src="huisstijlData.backgroundImage" alt="Background Image" />
+            <!-- Bestandinvoer voor achtergrondafbeelding -->
+            <input
+              type="file"
+              ref="backgroundInput"
+              @change="handleFileChange($event, 'backgroundImage')"
+              style="display: none"
+            />
+            <button @click="triggerFileInput('backgroundImage')">
+              Upload Background Image
+            </button>
           </div>
         </div>
       </div>
@@ -444,6 +436,25 @@ function hexToRgb(hex) {
   gap: 16px;
 }
 
+.elements .images img {
+  width: 64px;
+  height: 64px;
+}
+
+.elements .images .row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.elements .images .row button {
+  background-color: var(--gray);
+  border-radius: 8px;
+  padding: 4px 12px;
+}
+
 .column {
   display: flex;
   flex-direction: column;
@@ -456,6 +467,12 @@ function hexToRgb(hex) {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+}
+
+.column .row .column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .column .row .color {

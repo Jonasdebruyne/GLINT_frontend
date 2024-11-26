@@ -978,7 +978,7 @@ li svg {
   }
 
   .rotate-informer {
-    top: 94%;
+    top: 90%;
   }
 
   .config-wrapper {
