@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, onMounted, provide } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import Navigation from "../../components/navComponent.vue";
@@ -7,7 +7,37 @@ import Navigation from "../../components/navComponent.vue";
 // Router instance
 const router = useRouter();
 
-// Reactive data for user profile and huisstijl (styling) data
+// JWT token en gebruikersvalidatie
+const token = localStorage.getItem("jwtToken");
+if (!token) {
+  router.push("/login");
+}
+
+const parseJwt = (token) => {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = atob(base64);
+    return JSON.parse(decodeURIComponent(jsonPayload));
+  } catch (error) {
+    console.error("Error parsing JWT:", error);
+    return null;
+  }
+};
+
+const tokenPayload = parseJwt(token);
+const userId = tokenPayload?.userId || null;
+if (!userId) {
+  router.push("/login");
+}
+
+// API basis URL configureren
+const isProduction = window.location.hostname !== "localhost";
+const baseURL = isProduction
+  ? "https://glint-backend-admin.onrender.com/api/v1"
+  : "http://localhost:3000/api/v1";
+
+// Reactieve data voor het gebruikersprofiel en huisstijl
 const user = ref({
   firstName: "",
   lastName: "",
@@ -27,125 +57,157 @@ const user = ref({
   activeUnactive: true,
 });
 
-provide("user", user);
-
 const huisstijlData = reactive({
-  primaryColor: "",
-  secondaryColor: "",
-  titleColor: "",
-  colorForButtons: "",
+  primaryColor: "#9747ff",
+  secondaryColor: "#000000",
+  titleColor: "#ffffff",
+  colorForButtons: "#0071e3",
   fonts: [],
   logo: "",
   backgroundImage: "",
 });
 
-// JWT token and user validation
-const token = localStorage.getItem("jwtToken");
-
-if (!token) {
-  router.push("/login");
-}
-
-const parseJwt = (token) => {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-    return JSON.parse(jsonPayload);
-  } catch (error) {
-    console.error("Error parsing JWT:", error);
-    return null;
-  }
-};
-
-const tokenPayload = parseJwt(token);
-const userId = tokenPayload?.userId || null;
-
-if (!userId) {
-  router.push("/login");
-}
-
-// Base API URL
-const isProduction = window.location.hostname !== "localhost";
-const baseURL = isProduction
-  ? "https://glint-backend-admin.onrender.com/api/v1"
-  : "http://localhost:3000/api/v1";
-
-// Fetch user profile
+// Functie om het gebruikersprofiel op te halen
 const fetchUserProfile = async () => {
   try {
-    const response = await axios.get(`${baseURL}/users/${userId}`, {
+    const { data } = await axios.get(`${baseURL}/users/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    const userData = response.data?.data?.user || {};
-    Object.assign(user, {
-      firstName: userData.firstname || "",
-      lastName: userData.lastname || "",
-      email: userData.email || "",
-      oldEmail: userData.email || "",
-      country: userData.country || "",
-      city: userData.city || "",
-      postalCode: userData.postalCode || "",
-      profilePicture: userData.profilePicture || "",
-      bio: userData.bio || "",
-      role: userData.role || "",
-      activeUnactive: userData.activeUnactive ?? true,
-    });
+    Object.assign(user, data?.data?.user);
   } catch (error) {
     console.error("Error fetching user profile:", error);
   }
 };
 
-// Fetch huisstijl (styling) data
-const loadFonts = (fonts) => {
-  fonts.forEach((font) => {
-    const fontFace = new FontFace(font.name, `url(${font.path})`);
-    fontFace
-      .load()
-      .then((loadedFace) => {
-        document.fonts.add(loadedFace);
-        console.log(`Font ${font.name} loaded successfully.`);
-      })
-      .catch((error) => {
-        console.error(`Failed to load font ${font.name}:`, error);
-      });
-  });
-};
-
+// Functie om huisstijl data op te halen
 const fetchHuisstijlData = async () => {
+  const cachedHuisstijlData = localStorage.getItem("huisstijlData");
+  if (cachedHuisstijlData) {
+    Object.assign(huisstijlData, JSON.parse(cachedHuisstijlData));
+    console.log("Huisstijl data geladen uit cache:", huisstijlData);
+    return;
+  }
+
   try {
     const response = await axios.get(
-      "https://res.cloudinary.com/dzempjvto/raw/upload/v1732653110/Stijn/Huisstijl/huisstijl_data.json"
+      `https://res.cloudinary.com/dzempjvto/raw/upload/v1732653110/Stijn/Huisstijl/huisstijl_data.json?nocache=${new Date().getTime()}`
     );
-
-    console.log("Huisstijl data succesvol opgehaald:", response.data);
-
     const data = response.data;
-    Object.assign(huisstijlData, {
-      primaryColor: data.primaryColor || huisstijlData.primaryColor,
-      secondaryColor: data.secondaryColor || huisstijlData.secondaryColor,
-      titleColor: data.titleColor || huisstijlData.titleColor,
-      colorForButtons: data.colorForButtons || huisstijlData.colorForButtons,
-      fonts: data.fonts || huisstijlData.fonts,
-      logo: data.logo || huisstijlData.logo,
-      backgroundImage: data.backgroundImage || huisstijlData.backgroundImage,
-    });
-
-    if (huisstijlData.fonts?.length) {
-      loadFonts(huisstijlData.fonts);
-    }
+    localStorage.setItem("huisstijlData", JSON.stringify(data));
+    Object.assign(huisstijlData, data);
     console.log("Huisstijl data geladen:", data);
   } catch (error) {
     console.error("Error fetching huisstijl data:", error);
   }
 };
 
-// Reset huisstijl data to defaults
+// Functie om huisstijl data naar Cloudinary bij te werken
+const updateHuisstijlDataJson = async (newImageUrl, inputName) => {
+  try {
+    const response = await axios.get(
+      "https://res.cloudinary.com/dzempjvto/raw/upload/v1732653110/Stijn/Huisstijl/huisstijl_data.json"
+    );
+
+    console.log("Huidige huisstijl data:", response.data); // Log de huidige JSON data
+
+    const currentData = response.data;
+
+    // Update de juiste afbeelding-URL op basis van de inputName
+    if (inputName === "logo") {
+      currentData.logo = newImageUrl; // Bijwerken van logo-URL
+      console.log("Logo URL geüpdatet naar:", newImageUrl);
+    } else if (inputName === "backgroundImage") {
+      currentData.backgroundImage = newImageUrl; // Bijwerken van background image URL
+      console.log("Background image URL geüpdatet naar:", newImageUrl);
+    }
+
+    // Maak een nieuwe Blob van de bijgewerkte JSON
+    const formData = new FormData();
+    formData.append(
+      "file",
+      new Blob([JSON.stringify(currentData)], { type: "application/json" })
+    );
+    formData.append("upload_preset", "ycy4zvmj"); // Gebruik je Cloudinary upload preset
+    formData.append("resource_type", "raw"); // Gegevens uploaden als raw bestand
+    formData.append("public_id", "huisstijl_data"); // Public ID van het bestand
+    formData.append("folder", "Stijn/Huisstijl"); // De Cloudinary folder
+
+    // Upload de bijgewerkte JSON naar Cloudinary
+    const uploadResponse = await axios.post(
+      "https://api.cloudinary.com/v1_1/dzempjvto/raw/upload", // Cloudinary upload endpoint
+      formData
+    );
+
+    console.log(
+      "Geüpdatete huisstijl_data.json succesvol geüpload:",
+      uploadResponse.data
+    );
+
+    // Haal de nieuwe secure_url van het geüploade bestand
+    const updatedJsonUrl = uploadResponse.data.secure_url;
+    console.log("Nieuwe URL van huisstijl_data.json:", updatedJsonUrl);
+
+    // Update huisstijlData object met de nieuwe gegevens
+    huisstijlData.logo = currentData.logo;
+    huisstijlData.backgroundImage = currentData.backgroundImage;
+    huisstijlData.primaryColor = currentData.primaryColor;
+    huisstijlData.secondaryColor = currentData.secondaryColor;
+    huisstijlData.titleColor = currentData.titleColor;
+    huisstijlData.colorForButtons = currentData.colorForButtons;
+    huisstijlData.fonts = currentData.fonts;
+
+    // Update de cache in localStorage
+    localStorage.setItem("huisstijlData", JSON.stringify(huisstijlData));
+
+    console.log("Huisstijl data bijgewerkt:", huisstijlData);
+  } catch (error) {
+    console.error("Fout bij het updaten van huisstijl_data.json:", error);
+  }
+};
+
+// Functie om bestand te uploaden naar Cloudinary
+const uploadToCloudinary = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "ycy4zvmj");
+  formData.append("cloud_name", "dzempjvto");
+  formData.append("folder", "Stijn/Huisstijl");
+
+  try {
+    const { data } = await axios.post(
+      `https://api.cloudinary.com/v1_1/dzempjvto/image/upload`,
+      formData
+    );
+    return data.secure_url;
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    throw error;
+  }
+};
+
+// Functie om bestandveranderingen te verwerken
+const handleFileChange = async (event, inputName) => {
+  const files = event.target.files;
+  if (files?.length > 0) {
+    const file = files[0];
+    console.log("File selected:", file.name);
+
+    try {
+      const uploadedUrl = await uploadToCloudinary(file);
+      console.log("Uploaded file URL:", uploadedUrl);
+
+      if (inputName === "logo") huisstijlData.logo = uploadedUrl;
+      else if (inputName === "backgroundImage")
+        huisstijlData.backgroundImage = uploadedUrl;
+
+      await updateHuisstijlDataJson(uploadedUrl, inputName);
+    } catch (error) {
+      console.error("Error handling file change:", error);
+    }
+  }
+};
+
+// Functie om huisstijl data te resetten
 const resetHouseStyle = () => {
   Object.assign(huisstijlData, {
     primaryColor: "#000000",
@@ -154,140 +216,22 @@ const resetHouseStyle = () => {
     colorForButtons: "#007BFF",
     fonts: [],
   });
-  console.log("Huisstijl reset to default values.");
+  console.log("Huisstijl reset naar standaard waarden.");
 };
 
-// Refs for file inputs
+// Refs voor bestandsinvoer
 const logoInput = ref(null);
 const backgroundInput = ref(null);
 
-// Function to trigger the file input click
+// Functie om het bestand invoer aan te roepen
 const triggerFileInput = (inputName) => {
-  let fileInput;
-  if (inputName === "logo") {
-    fileInput = logoInput.value;
-  } else if (inputName === "backgroundImage") {
-    fileInput = backgroundInput.value;
-  }
-
-  if (fileInput) {
-    fileInput.click();
-  } else {
-    console.error(`File input with name '${inputName}' not found!`);
-  }
+  const fileInput =
+    inputName === "logo" ? logoInput.value : backgroundInput.value;
+  fileInput?.click();
 };
 
-const updateHuisstijlDataJson = async (newImageUrl, inputName) => {
-  try {
-    // Fetch the current huisstijl_data.json from Cloudinary
-    const response = await axios.get(
-      "https://res.cloudinary.com/dzempjvto/raw/upload/v1732575816/Stijn/Huisstijl/huisstijl_data.json"
-    );
-
-    console.log("Current huisstijl data:", response.data); // Log the current JSON data
-
-    const currentData = response.data;
-
-    // Update the logo or background image based on inputName
-    if (inputName === "logo") {
-      currentData.logo = newImageUrl; // Update logo URL
-    } else if (inputName === "backgroundImage") {
-      currentData.backgroundImage = newImageUrl; // Update background image URL
-    }
-
-    console.log("Updated huisstijl data:", currentData); // Log the updated JSON data
-
-    // Convert the updated JSON data into a Blob
-    const jsonString = JSON.stringify(currentData);
-    const blob = new Blob([jsonString], { type: "application/json" });
-
-    // Prepare FormData for uploading the JSON file to Cloudinary
-    const formData = new FormData();
-    formData.append("file", blob); // Append the JSON Blob
-    formData.append("upload_preset", "ycy4zvmj"); // Use your Cloudinary upload preset
-    formData.append("resource_type", "raw"); // Set resource type to "raw"
-    formData.append("public_id", "huisstijl_data"); // Public ID for the JSON file (use a different one if necessary)
-    formData.append("folder", "Stijn/Huisstijl"); // Specify the folder
-
-    // Upload the JSON file back to Cloudinary
-    const uploadResponse = await axios.post(
-      "https://api.cloudinary.com/v1_1/dzempjvto/raw/upload", // Cloudinary upload API endpoint
-      formData
-    );
-
-    console.log(
-      "Huisstijl data JSON successfully uploaded:",
-      uploadResponse.data
-    );
-  } catch (error) {
-    console.error("Error updating huisstijl_data.json:", error);
-  }
-};
-
-// Handle file selection and upload to Cloudinary
-const uploadToCloudinary = async (file, inputName) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", "ycy4zvmj");
-  formData.append("cloud_name", "dzempjvto");
-  formData.append("folder", "Stijn/Huisstijl");
-
-  try {
-    // Log the file to be uploaded
-    console.log("Uploading file to Cloudinary:", file.name);
-
-    const response = await axios.post(
-      `https://api.cloudinary.com/v1_1/dzempjvto/image/upload`,
-      formData
-    );
-
-    // Log Cloudinary response
-    console.log("Cloudinary upload response:", response);
-
-    if (response?.data?.secure_url) {
-      const uploadedImageUrl = response.data.secure_url;
-      console.log("Image successfully uploaded. URL:", uploadedImageUrl);
-
-      // Update huisstijl_data.json with the new image URL
-      await updateHuisstijlDataJson(uploadedImageUrl, inputName);
-
-      return uploadedImageUrl;
-    } else {
-      console.error("No secure URL received from Cloudinary.");
-      return null;
-    }
-  } catch (error) {
-    console.error("Error uploading file to Cloudinary:", error);
-    return null;
-  }
-};
-
-const initialize = async () => {
-  await fetchUserProfile();
-  await fetchHuisstijlData();
-};
-
-const handleFileChange = (event, inputName) => {
-  const files = event.target.files;
-  if (files && files.length > 0) {
-    const file = files[0];
-    if (inputName === "logo") {
-      huisstijlData.logo = URL.createObjectURL(file);
-    } else if (inputName === "backgroundImage") {
-      huisstijlData.backgroundImage = URL.createObjectURL(file);
-    }
-
-    // Upload the file to Cloudinary after selection
-    uploadToCloudinary(file, inputName);
-  } else {
-    console.error("No file selected.");
-  }
-};
-
-// Triggering file upload on mounted
-onMounted(() => {
-  initialize();
-});
+fetchHuisstijlData(); // Alleen laden wanneer de component wordt geladen
+fetchUserProfile();
 </script>
 
 <template>
