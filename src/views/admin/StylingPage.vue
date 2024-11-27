@@ -102,6 +102,46 @@ const fetchHuisstijlData = async () => {
   }
 };
 
+// Functie om font te uploaden naar Cloudinary
+const uploadFontToCloudinary = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "ycy4zvmj");
+  formData.append("cloud_name", "dzempjvto");
+  formData.append("folder", "Stijn/Huisstijl/fonts");
+
+  try {
+    const { data } = await axios.post(
+      "https://api.cloudinary.com/v1_1/dzempjvto/raw/upload",
+      formData
+    );
+    return data.secure_url;
+  } catch (error) {
+    console.error("Fout bij het uploaden van het font:", error);
+    throw error;
+  }
+};
+
+// Functie om font-bestand te verwerken
+const handleFontFileChange = async (event) => {
+  const files = event.target.files;
+  if (files?.length > 0) {
+    const file = files[0];
+    try {
+      // Upload het fontbestand naar Cloudinary
+      const uploadedFontUrl = await uploadFontToCloudinary(file);
+
+      // Voeg het font toe aan de lijst van huisstijl fonts
+      huisstijlData.fonts.push({ url: uploadedFontUrl, name: file.name });
+
+      // Sla de gewijzigde huisstijl data op
+      await updateHuisstijlDataJson();
+    } catch (error) {
+      console.error("Fout bij het verwerken van het fontbestand:", error);
+    }
+  }
+};
+
 // Functie om huisstijl data naar Cloudinary bij te werken
 const updateHuisstijlDataJson = async () => {
   try {
@@ -116,19 +156,9 @@ const updateHuisstijlDataJson = async () => {
     currentData.secondaryColor = huisstijlData.secondaryColor;
     currentData.titleColor = huisstijlData.titleColor;
     currentData.colorForButtons = huisstijlData.colorForButtons;
+    currentData.fonts = huisstijlData.fonts;
 
-    // Werk alleen de gewijzigde velden bij
-    // Check of 'logo' is gewijzigd en werk het bij
-    if (huisstijlData.logo !== currentData.logo) {
-      currentData.logo = huisstijlData.logo;
-    }
-
-    // Check of 'backgroundImage' is gewijzigd en werk het bij
-    if (huisstijlData.backgroundImage !== currentData.backgroundImage) {
-      currentData.backgroundImage = huisstijlData.backgroundImage;
-    }
-
-    // Maak een FormData-object voor de upload
+    // Upload de gewijzigde JSON naar Cloudinary
     const formData = new FormData();
     formData.append(
       "file",
@@ -139,22 +169,14 @@ const updateHuisstijlDataJson = async () => {
     formData.append("public_id", "huisstijl_data");
     formData.append("folder", "Stijn/Huisstijl");
 
-    // Upload de gewijzigde JSON naar Cloudinary
-    const uploadResponse = await axios.post(
+    // Upload de JSON naar Cloudinary
+    await axios.post(
       "https://api.cloudinary.com/v1_1/dzempjvto/raw/upload",
       formData
     );
 
-    // Werk huisstijlData bij met de nieuwste gegevens    const updatedJsonUrl = uploadResponse.data.secure_url;
-
     // Werk huisstijlData bij met de nieuwste gegevens
-    huisstijlData.logo = currentData.logo;
-    huisstijlData.backgroundImage = currentData.backgroundImage;
-    huisstijlData.primaryColor = currentData.primaryColor;
-    huisstijlData.secondaryColor = currentData.secondaryColor;
-    huisstijlData.titleColor = currentData.titleColor;
-    huisstijlData.colorForButtons = currentData.colorForButtons;
-    huisstijlData.fonts = currentData.fonts;
+    Object.assign(huisstijlData, currentData);
 
     // Sla de bijgewerkte huisstijlData lokaal op
     localStorage.setItem("huisstijlData", JSON.stringify(huisstijlData));
@@ -163,85 +185,12 @@ const updateHuisstijlDataJson = async () => {
   }
 };
 
-// Functie om bestand te uploaden naar Cloudinary
-const uploadToCloudinary = async (file) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", "ycy4zvmj");
-  formData.append("cloud_name", "dzempjvto");
-  formData.append("folder", "Stijn/Huisstijl");
-
-  try {
-    const { data } = await axios.post(
-      "https://api.cloudinary.com/v1_1/dzempjvto/image/upload",
-      formData
-    );
-    return data.secure_url;
-  } catch (error) {
-    console.error("Fout bij het uploaden van bestand:", error);
-    throw error;
-  }
-};
-
-// Functie om bestandveranderingen te verwerken
-const handleFileChange = async (event, inputName) => {
-  const files = event.target.files;
-  if (files?.length > 0) {
-    const file = files[0];
-    try {
-      // Upload het bestand naar Cloudinary
-      const uploadedUrl = await uploadToCloudinary(file);
-
-      // Alleen de relevante afbeelding bijwerken (logo of achtergrondafbeelding)
-      if (inputName === "logo") {
-        huisstijlData.logo = uploadedUrl;
-      } else if (inputName === "backgroundImage") {
-        huisstijlData.backgroundImage = uploadedUrl;
-      }
-
-      // Update de JSON met alleen de gewijzigde afbeelding
-      await updateHuisstijlDataJson();
-    } catch (error) {
-      console.error("Fout bij het verwerken van bestandverandering:", error);
-    }
-  }
-};
-
-// Functie om huisstijl te resetten naar de standaardwaarden
-const resetHouseStyle = () => {
-  Object.assign(huisstijlData, {
-    primaryColor: "#000000",
-    secondaryColor: "#FFFFFF",
-    titleColor: "#000000",
-    colorForButtons: "#007BFF",
-    fonts: [],
-  });
-};
-
 // Refs voor bestandsinvoer
-const logoInput = ref(null);
-const backgroundInput = ref(null);
+const fontInput = ref(null);
 
-// Functie om de bestandinvoer aan te roepen
-const triggerFileInput = (inputName) => {
-  const fileInput =
-    inputName === "logo" ? logoInput.value : backgroundInput.value;
-  fileInput?.click();
-};
-
-// Functie om de kleur van een veld aan te passen
-const openColorPicker = (field) => {
-  // Kleurkiezer openen
-  const input = document.createElement("input");
-  input.type = "color";
-  input.value = huisstijlData[field];
-
-  input.addEventListener("input", (event) => {
-    huisstijlData[field] = event.target.value;
-    updateHuisstijlDataJson(); // Sla de wijzigingen op
-  });
-
-  input.click();
+// Functie om de bestandinvoer voor fonts aan te roepen
+const triggerFontInput = () => {
+  fontInput.value?.click();
 };
 
 fetchHuisstijlData();
