@@ -4,15 +4,16 @@ import { useRouter } from "vue-router";
 import axios from "axios";
 import Navigation from "../../components/navComponent.vue";
 
-// Router instance
+// Router instantie en gebruikersvalidatie
 const router = useRouter();
-
-// JWT token en gebruikersvalidatie
 const token = localStorage.getItem("jwtToken");
+
+// Als er geen token is, wordt de gebruiker doorgestuurd naar de login pagina
 if (!token) {
   router.push("/login");
 }
 
+// JWT token parseren
 const parseJwt = (token) => {
   try {
     const base64Url = token.split(".")[1];
@@ -20,7 +21,7 @@ const parseJwt = (token) => {
     const jsonPayload = atob(base64);
     return JSON.parse(decodeURIComponent(jsonPayload));
   } catch (error) {
-    console.error("Error parsing JWT:", error);
+    console.error("Fout bij het parsen van JWT:", error);
     return null;
   }
 };
@@ -31,7 +32,7 @@ if (!userId) {
   router.push("/login");
 }
 
-// API basis URL configureren
+// API basis URL configuratie
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
@@ -75,7 +76,7 @@ const fetchUserProfile = async () => {
     });
     Object.assign(user, data?.data?.user);
   } catch (error) {
-    console.error("Error fetching user profile:", error);
+    console.error("Fout bij het ophalen van het gebruikersprofiel:", error);
   }
 };
 
@@ -97,57 +98,56 @@ const fetchHuisstijlData = async () => {
     Object.assign(huisstijlData, data);
     console.log("Huisstijl data geladen:", data);
   } catch (error) {
-    console.error("Error fetching huisstijl data:", error);
+    console.error("Fout bij het ophalen van huisstijl data:", error);
   }
 };
 
 // Functie om huisstijl data naar Cloudinary bij te werken
-const updateHuisstijlDataJson = async (newImageUrl, inputName) => {
+const updateHuisstijlDataJson = async () => {
   try {
+    // Haal de huidige huisstijl data op van Cloudinary
     const response = await axios.get(
       "https://res.cloudinary.com/dzempjvto/raw/upload/v1732653110/Stijn/Huisstijl/huisstijl_data.json"
     );
-
-    console.log("Huidige huisstijl data:", response.data); // Log de huidige JSON data
-
     const currentData = response.data;
 
-    // Update de juiste afbeelding-URL op basis van de inputName
-    if (inputName === "logo") {
-      currentData.logo = newImageUrl; // Bijwerken van logo-URL
-      console.log("Logo URL geüpdatet naar:", newImageUrl);
-    } else if (inputName === "backgroundImage") {
-      currentData.backgroundImage = newImageUrl; // Bijwerken van background image URL
-      console.log("Background image URL geüpdatet naar:", newImageUrl);
+    // Werk de gekleurde velden bij
+    currentData.primaryColor = huisstijlData.primaryColor;
+    currentData.secondaryColor = huisstijlData.secondaryColor;
+    currentData.titleColor = huisstijlData.titleColor;
+    currentData.colorForButtons = huisstijlData.colorForButtons;
+
+    // Werk alleen de gewijzigde velden bij
+    // Check of 'logo' is gewijzigd en werk het bij
+    if (huisstijlData.logo !== currentData.logo) {
+      currentData.logo = huisstijlData.logo;
     }
 
-    // Maak een nieuwe Blob van de bijgewerkte JSON
+    // Check of 'backgroundImage' is gewijzigd en werk het bij
+    if (huisstijlData.backgroundImage !== currentData.backgroundImage) {
+      currentData.backgroundImage = huisstijlData.backgroundImage;
+    }
+
+    // Maak een FormData-object voor de upload
     const formData = new FormData();
     formData.append(
       "file",
       new Blob([JSON.stringify(currentData)], { type: "application/json" })
     );
-    formData.append("upload_preset", "ycy4zvmj"); // Gebruik je Cloudinary upload preset
-    formData.append("resource_type", "raw"); // Gegevens uploaden als raw bestand
-    formData.append("public_id", "huisstijl_data"); // Public ID van het bestand
-    formData.append("folder", "Stijn/Huisstijl"); // De Cloudinary folder
+    formData.append("upload_preset", "ycy4zvmj");
+    formData.append("resource_type", "raw");
+    formData.append("public_id", "huisstijl_data");
+    formData.append("folder", "Stijn/Huisstijl");
 
-    // Upload de bijgewerkte JSON naar Cloudinary
+    // Upload de gewijzigde JSON naar Cloudinary
     const uploadResponse = await axios.post(
-      "https://api.cloudinary.com/v1_1/dzempjvto/raw/upload", // Cloudinary upload endpoint
+      "https://api.cloudinary.com/v1_1/dzempjvto/raw/upload",
       formData
     );
 
-    console.log(
-      "Geüpdatete huisstijl_data.json succesvol geüpload:",
-      uploadResponse.data
-    );
+    // Werk huisstijlData bij met de nieuwste gegevens    const updatedJsonUrl = uploadResponse.data.secure_url;
 
-    // Haal de nieuwe secure_url van het geüploade bestand
-    const updatedJsonUrl = uploadResponse.data.secure_url;
-    console.log("Nieuwe URL van huisstijl_data.json:", updatedJsonUrl);
-
-    // Update huisstijlData object met de nieuwe gegevens
+    // Werk huisstijlData bij met de nieuwste gegevens
     huisstijlData.logo = currentData.logo;
     huisstijlData.backgroundImage = currentData.backgroundImage;
     huisstijlData.primaryColor = currentData.primaryColor;
@@ -156,10 +156,8 @@ const updateHuisstijlDataJson = async (newImageUrl, inputName) => {
     huisstijlData.colorForButtons = currentData.colorForButtons;
     huisstijlData.fonts = currentData.fonts;
 
-    // Update de cache in localStorage
+    // Sla de bijgewerkte huisstijlData lokaal op
     localStorage.setItem("huisstijlData", JSON.stringify(huisstijlData));
-
-    console.log("Huisstijl data bijgewerkt:", huisstijlData);
   } catch (error) {
     console.error("Fout bij het updaten van huisstijl_data.json:", error);
   }
@@ -175,12 +173,12 @@ const uploadToCloudinary = async (file) => {
 
   try {
     const { data } = await axios.post(
-      `https://api.cloudinary.com/v1_1/dzempjvto/image/upload`,
+      "https://api.cloudinary.com/v1_1/dzempjvto/image/upload",
       formData
     );
     return data.secure_url;
   } catch (error) {
-    console.error("Error uploading file:", error);
+    console.error("Fout bij het uploaden van bestand:", error);
     throw error;
   }
 };
@@ -190,24 +188,26 @@ const handleFileChange = async (event, inputName) => {
   const files = event.target.files;
   if (files?.length > 0) {
     const file = files[0];
-    console.log("File selected:", file.name);
-
     try {
+      // Upload het bestand naar Cloudinary
       const uploadedUrl = await uploadToCloudinary(file);
-      console.log("Uploaded file URL:", uploadedUrl);
 
-      if (inputName === "logo") huisstijlData.logo = uploadedUrl;
-      else if (inputName === "backgroundImage")
+      // Alleen de relevante afbeelding bijwerken (logo of achtergrondafbeelding)
+      if (inputName === "logo") {
+        huisstijlData.logo = uploadedUrl;
+      } else if (inputName === "backgroundImage") {
         huisstijlData.backgroundImage = uploadedUrl;
+      }
 
-      await updateHuisstijlDataJson(uploadedUrl, inputName);
+      // Update de JSON met alleen de gewijzigde afbeelding
+      await updateHuisstijlDataJson();
     } catch (error) {
-      console.error("Error handling file change:", error);
+      console.error("Fout bij het verwerken van bestandverandering:", error);
     }
   }
 };
 
-// Functie om huisstijl data te resetten
+// Functie om huisstijl te resetten naar de standaardwaarden
 const resetHouseStyle = () => {
   Object.assign(huisstijlData, {
     primaryColor: "#000000",
@@ -216,21 +216,35 @@ const resetHouseStyle = () => {
     colorForButtons: "#007BFF",
     fonts: [],
   });
-  console.log("Huisstijl reset naar standaard waarden.");
 };
 
 // Refs voor bestandsinvoer
 const logoInput = ref(null);
 const backgroundInput = ref(null);
 
-// Functie om het bestand invoer aan te roepen
+// Functie om de bestandinvoer aan te roepen
 const triggerFileInput = (inputName) => {
   const fileInput =
     inputName === "logo" ? logoInput.value : backgroundInput.value;
   fileInput?.click();
 };
 
-fetchHuisstijlData(); // Alleen laden wanneer de component wordt geladen
+// Functie om de kleur van een veld aan te passen
+const openColorPicker = (field) => {
+  // Kleurkiezer openen
+  const input = document.createElement("input");
+  input.type = "color";
+  input.value = huisstijlData[field];
+
+  input.addEventListener("input", (event) => {
+    huisstijlData[field] = event.target.value;
+    updateHuisstijlDataJson(); // Sla de wijzigingen op
+  });
+
+  input.click();
+};
+
+fetchHuisstijlData();
 fetchUserProfile();
 </script>
 
@@ -252,6 +266,7 @@ fetchUserProfile();
             <div
               class="color"
               :style="{ backgroundColor: huisstijlData.primaryColor }"
+              @click="openColorPicker('primaryColor')"
             ></div>
           </div>
         </div>
@@ -262,6 +277,7 @@ fetchUserProfile();
             <div
               class="color"
               :style="{ backgroundColor: huisstijlData.secondaryColor }"
+              @click="openColorPicker('secondaryColor')"
             ></div>
           </div>
         </div>
@@ -272,6 +288,7 @@ fetchUserProfile();
             <div
               class="color"
               :style="{ backgroundColor: huisstijlData.titleColor }"
+              @click="openColorPicker('titleColor')"
             ></div>
           </div>
         </div>
@@ -282,11 +299,11 @@ fetchUserProfile();
             <div
               class="color"
               :style="{ backgroundColor: huisstijlData.colorForButtons }"
+              @click="openColorPicker('colorForButtons')"
             ></div>
           </div>
         </div>
       </div>
-
       <!-- Fonts Section -->
       <div class="fonts">
         <h2>Fonts</h2>
@@ -296,11 +313,22 @@ fetchUserProfile();
           class="column"
         >
           <h3>{{ font.name || "No Font" }}</h3>
-          <p
-            :style="{ fontFamily: font.name ? `'${font.name}'` : 'sans-serif' }"
-          >
-            AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz​
-          </p>
+          <div class="row">
+            <p
+              :style="{
+                fontFamily: font.name ? '${font.name}' : 'sans-serif',
+              }"
+            >
+              AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz​
+            </p>
+            <input
+              type="file"
+              ref="fontInput"
+              @change="handleFileChange($event, 'logo')"
+              style="display: none"
+            />
+            <button @click="triggerFileInput('logo')">Upload</button>
+          </div>
         </div>
       </div>
 
@@ -317,7 +345,7 @@ fetchUserProfile();
               @change="handleFileChange($event, 'logo')"
               style="display: none"
             />
-            <button @click="triggerFileInput('logo')">Upload Logo</button>
+            <button @click="triggerFileInput('logo')">Upload</button>
           </div>
         </div>
 
@@ -332,9 +360,7 @@ fetchUserProfile();
               @change="handleFileChange($event, 'backgroundImage')"
               style="display: none"
             />
-            <button @click="triggerFileInput('backgroundImage')">
-              Upload Background Image
-            </button>
+            <button @click="triggerFileInput('backgroundImage')">Upload</button>
           </div>
         </div>
       </div>
@@ -372,6 +398,12 @@ fetchUserProfile();
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.elements .colours {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .elements .colours,
 .elements .fonts,
 .elements .images {
@@ -393,12 +425,12 @@ fetchUserProfile();
   width: 100%;
 }
 
-.elements .images .row button {
-  background-color: var(--gray);
+button {
+  background-color: var(--purple);
+  color: var(--white);
   border-radius: 8px;
   padding: 4px 12px;
 }
-
 .column {
   display: flex;
   flex-direction: column;
