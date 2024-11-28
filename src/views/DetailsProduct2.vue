@@ -352,7 +352,7 @@ async function submitOrder() {
   console.log("Submitting order data:", orderData);
 
   try {
-    const response = await fetch("http://localhost:3000/api/v1/orders", {
+    const response = await fetch(`${baseURL}/orders`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
