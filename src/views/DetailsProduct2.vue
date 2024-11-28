@@ -664,9 +664,7 @@ onMounted(() => {
           </div>
 
           <!-- Model en kleurkeuze UI hier -->
-          <button v-if="canCheckout" @click="submitOrder" class="btn active">
-            Checkout
-          </button>
+          <button @click="submitOrder" class="btn active">Checkout</button>
 
           <p class="errorMessage"></p>
           <p class="successMessage"></p>
