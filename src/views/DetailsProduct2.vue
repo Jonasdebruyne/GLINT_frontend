@@ -342,17 +342,17 @@ async function submitOrder() {
   }
 
   const orderData = {
-    productId: productId.value,
     lacesColor: selectedLacesColor.value,
     soleColor: selectedSoleColor.value,
     insideColor: selectedInsideColor.value,
     outsideColor: selectedOutsideColor.value,
   };
 
+  // Log de data die je verstuurt naar de server
   console.log("Submitting order data:", orderData);
 
   try {
-    const response = await fetch(`${baseURL}/orders`, {
+    const response = await fetch(`${baseURL}/orders/${productId.value}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -370,12 +370,10 @@ async function submitOrder() {
     console.log("Order submitted successfully:", result);
 
     document.querySelector(".errorMessage").innerHTML = "";
-
     document.querySelector(".successMessage").innerHTML =
       "Order submitted successfully!";
   } catch (error) {
     console.error("Error submitting order:", error);
-
     const errorMessageElement = document.querySelector(".errorMessage");
     if (errorMessageElement) {
       errorMessageElement.innerHTML =
