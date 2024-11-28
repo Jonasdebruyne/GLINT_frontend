@@ -68,6 +68,11 @@ const huisstijlData = reactive({
   backgroundImage: "",
 });
 
+const selectedFontForTitles = ref(""); // Dit wordt later ingesteld met huisstijlData.fonts[0]?.name
+const selectedFontForText = ref(""); // Dit wordt later ingesteld met huisstijlData.fonts[0]?.name
+
+const GoogleFonts = ref([]);
+
 // Functie om het gebruikersprofiel op te halen
 const fetchUserProfile = async () => {
   try {
@@ -86,6 +91,10 @@ const fetchHuisstijlData = async () => {
   if (cachedHuisstijlData) {
     Object.assign(huisstijlData, JSON.parse(cachedHuisstijlData));
     console.log("Huisstijl data geladen uit cache:", huisstijlData);
+    if (huisstijlData.fonts && huisstijlData.fonts.length > 0) {
+      selectedFontForTitles.value = huisstijlData.fonts[0].name; // Stelt de eerste font in uit huisstijlData
+      selectedFontForText.value = huisstijlData.fonts[1].name; // Stelt de eerste font in uit huisstijlData
+    }
     return;
   }
 
@@ -97,8 +106,86 @@ const fetchHuisstijlData = async () => {
     localStorage.setItem("huisstijlData", JSON.stringify(data));
     Object.assign(huisstijlData, data);
     console.log("Huisstijl data geladen:", data);
+    if (huisstijlData.fonts && huisstijlData.fonts.length > 0) {
+      selectedFontForTitles.value = huisstijlData.fonts[0].name; // Stelt de eerste font in uit huisstijlData
+      selectedFontForText.value = huisstijlData.fonts[1].name; // Stelt de eerste font in uit huisstijlData
+    }
   } catch (error) {
     console.error("Fout bij het ophalen van huisstijl data:", error);
+  }
+};
+
+const fetchGoogleFonts = async () => {
+  const apiKey = "AIzaSyBAS05cq9-WKD92VljeuLee5V7YkIrTTMw";
+  const googleFontsApi = `https://www.googleapis.com/webfonts/v1/webfonts?key=${apiKey}`;
+  try {
+    const { data } = await axios.get(googleFontsApi);
+    GoogleFonts.value = data.items.map((font) => font.family);
+  } catch (error) {
+    console.error(
+      "Fout bij het ophalen van Google Fonts. Controleer je API-sleutel.",
+      error
+    );
+  }
+};
+
+// Functie om een geselecteerd font in te stellen (gebruiker selecteert uit de dropdown)
+// Functie om een geselecteerd font in te stellen (gebruiker selecteert uit de dropdown)
+const selectFont = (font, type) => {
+  if (
+    huisstijlData.fonts.some((f) => f.name === font) ||
+    GoogleFonts.value.includes(font)
+  ) {
+    if (type === "title") {
+      selectedFontForTitles.value = font;
+      huisstijlData.fonts[0].name = font; // Werk het geselecteerde font bij in huisstijlData
+    } else if (type === "text") {
+      selectedFontForText.value = font;
+      huisstijlData.fonts[1].name = font; // Werk het geselecteerde font bij in huisstijlData
+    }
+    console.log("Geselecteerd font:", font);
+  } else {
+    console.error("Font niet gevonden in de beschikbare lijst:", font);
+  }
+};
+
+// Functie om font te uploaden naar Cloudinary
+const uploadFontToCloudinary = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "ycy4zvmj");
+  formData.append("cloud_name", "dzempjvto");
+  formData.append("folder", "Stijn/Huisstijl/fonts");
+
+  try {
+    const { data } = await axios.post(
+      "https://api.cloudinary.com/v1_1/dzempjvto/raw/upload",
+      formData
+    );
+    return data.secure_url;
+  } catch (error) {
+    console.error("Fout bij het uploaden van het font:", error);
+    throw error;
+  }
+};
+
+// Functie om font-bestand te verwerken
+const handleFontFileChange = async (event) => {
+  const files = event.target.files;
+  if (files?.length > 0) {
+    const file = files[0];
+    try {
+      // Upload het fontbestand naar Cloudinary
+      const uploadedFontUrl = await uploadFontToCloudinary(file);
+
+      // Voeg het font toe aan de lijst van huisstijl fonts
+      huisstijlData.fonts.push({ url: uploadedFontUrl, name: file.name });
+
+      // Sla de gewijzigde huisstijl data op
+      await updateHuisstijlDataJson();
+    } catch (error) {
+      console.error("Fout bij het verwerken van het fontbestand:", error);
+    }
   }
 };
 
@@ -116,19 +203,9 @@ const updateHuisstijlDataJson = async () => {
     currentData.secondaryColor = huisstijlData.secondaryColor;
     currentData.titleColor = huisstijlData.titleColor;
     currentData.colorForButtons = huisstijlData.colorForButtons;
+    currentData.fonts = huisstijlData.fonts;
 
-    // Werk alleen de gewijzigde velden bij
-    // Check of 'logo' is gewijzigd en werk het bij
-    if (huisstijlData.logo !== currentData.logo) {
-      currentData.logo = huisstijlData.logo;
-    }
-
-    // Check of 'backgroundImage' is gewijzigd en werk het bij
-    if (huisstijlData.backgroundImage !== currentData.backgroundImage) {
-      currentData.backgroundImage = huisstijlData.backgroundImage;
-    }
-
-    // Maak een FormData-object voor de upload
+    // Upload de gewijzigde JSON naar Cloudinary
     const formData = new FormData();
     formData.append(
       "file",
@@ -139,22 +216,14 @@ const updateHuisstijlDataJson = async () => {
     formData.append("public_id", "huisstijl_data");
     formData.append("folder", "Stijn/Huisstijl");
 
-    // Upload de gewijzigde JSON naar Cloudinary
-    const uploadResponse = await axios.post(
+    // Upload de JSON naar Cloudinary
+    await axios.post(
       "https://api.cloudinary.com/v1_1/dzempjvto/raw/upload",
       formData
     );
 
-    // Werk huisstijlData bij met de nieuwste gegevens    const updatedJsonUrl = uploadResponse.data.secure_url;
-
     // Werk huisstijlData bij met de nieuwste gegevens
-    huisstijlData.logo = currentData.logo;
-    huisstijlData.backgroundImage = currentData.backgroundImage;
-    huisstijlData.primaryColor = currentData.primaryColor;
-    huisstijlData.secondaryColor = currentData.secondaryColor;
-    huisstijlData.titleColor = currentData.titleColor;
-    huisstijlData.colorForButtons = currentData.colorForButtons;
-    huisstijlData.fonts = currentData.fonts;
+    Object.assign(huisstijlData, currentData);
 
     // Sla de bijgewerkte huisstijlData lokaal op
     localStorage.setItem("huisstijlData", JSON.stringify(huisstijlData));
@@ -207,7 +276,6 @@ const handleFileChange = async (event, inputName) => {
   }
 };
 
-// Functie om huisstijl te resetten naar de standaardwaarden
 const resetHouseStyle = async () => {
   const defaultData = {
     primaryColor: "#9747ff",
@@ -285,6 +353,13 @@ const openColorPicker = (field) => {
 
   input.click();
 };
+// Refs voor bestandsinvoer
+const fontInput = ref(null);
+
+// Functie om de bestandinvoer voor fonts aan te roepen
+const triggerFontInput = () => {
+  fontInput.value?.click();
+};
 
 fetchHuisstijlData();
 fetchUserProfile();
@@ -349,27 +424,73 @@ fetchUserProfile();
       <!-- Fonts Section -->
       <div class="fonts">
         <h2>Fonts</h2>
-        <div
-          v-for="(font, index) in huisstijlData.fonts"
-          :key="index"
-          class="column"
-        >
-          <h3>{{ font.name || "No Font" }}</h3>
+        <!-- Dropdown voor lettertype selectie -->
+        <div class="font">
+          <h3>Font voor titles</h3>
           <div class="row">
-            <p
-              :style="{
-                fontFamily: font.name ? '${font.name}' : 'sans-serif',
-              }"
-            >
-              AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz​
-            </p>
-            <input
-              type="file"
-              ref="fontInput"
-              @change="handleFileChange($event, 'logo')"
-              style="display: none"
-            />
-            <button @click="triggerFileInput('logo')">Upload</button>
+            <div class="font-preview">
+              <h3>Voorbeeld met "{{ selectedFontForTitles }}"</h3>
+              <p :style="{ fontFamily: selectedFontForTitles }">
+                AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz
+              </p>
+            </div>
+            <div class="font-select">
+              <label for="font-dropdown">Selecteer een font:</label>
+              <select
+                id="font-dropdown"
+                v-model="selectedFontForTitles"
+                @change="selectFont(selectedFontForTitles, 'title')"
+              >
+                <option value="" disabled :selected="!selectedFontForTitles">
+                  Selecteer een font
+                </option>
+                <!-- Voeg zowel Google Fonts als de fonts uit huisstijlData toe -->
+                <option
+                  v-for="font in [
+                    ...GoogleFonts,
+                    ...huisstijlData.fonts.map((f) => f.name),
+                  ]"
+                  :key="font"
+                  :value="font"
+                >
+                  {{ font }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="font">
+          <h3>Font voor tekst</h3>
+          <div class="row">
+            <div class="font-preview">
+              <h3>Voorbeeld met "{{ selectedFontForText }}"</h3>
+              <p :style="{ fontFamily: selectedFontForText }">
+                AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz
+              </p>
+            </div>
+            <div class="font-select">
+              <label for="font-dropdown">Selecteer een font:</label>
+              <select
+                id="font-dropdown"
+                v-model="selectedFontForText"
+                @change="selectFont(selectedFontForText, 'text')"
+              >
+                <option value="" disabled :selected="!selectedFontForText">
+                  Selecteer een font
+                </option>
+                <!-- Voeg zowel Google Fonts als de fonts uit huisstijlData toe -->
+                <option
+                  v-for="font in [
+                    ...GoogleFonts,
+                    ...huisstijlData.fonts.map((f) => f.name),
+                  ]"
+                  :key="font"
+                  :value="font"
+                >
+                  {{ font }}
+                </option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -499,5 +620,38 @@ button {
   border: 3px solid var(--gray);
   border-radius: 50%;
   cursor: pointer;
+}
+
+.elements .fonts .font {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.elements .fonts .font .row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+}
+
+.elements .fonts .font .row .font-preview,
+.elements .fonts .font .row .font-select {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 50%;
+}
+
+#font-dropdown {
+  width: 100%;
+  padding: 8px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  margin-top: 8px;
 }
 </style>
