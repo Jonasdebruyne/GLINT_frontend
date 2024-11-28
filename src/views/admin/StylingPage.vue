@@ -63,13 +63,13 @@ const huisstijlData = reactive({
   secondaryColor: "#000000",
   titleColor: "#ffffff",
   colorForButtons: "#0071e3",
-  fonts: [],
+  fonts: [], // Google fonts worden hier geladen
   logo: "",
   backgroundImage: "",
 });
 
-const selectedFontForTitles = ref(""); // Dit wordt later ingesteld met huisstijlData.fonts[0]?.name
-const selectedFontForText = ref(""); // Dit wordt later ingesteld met huisstijlData.fonts[0]?.name
+const selectedFontForTitles = ref("");
+const selectedFontForText = ref("");
 
 const GoogleFonts = ref([]);
 
@@ -92,8 +92,8 @@ const fetchHuisstijlData = async () => {
     Object.assign(huisstijlData, JSON.parse(cachedHuisstijlData));
     console.log("Huisstijl data geladen uit cache:", huisstijlData);
     if (huisstijlData.fonts && huisstijlData.fonts.length > 0) {
-      selectedFontForTitles.value = huisstijlData.fonts[0].name; // Stelt de eerste font in uit huisstijlData
-      selectedFontForText.value = huisstijlData.fonts[1].name; // Stelt de eerste font in uit huisstijlData
+      selectedFontForTitles.value = huisstijlData.fonts[0].name;
+      selectedFontForText.value = huisstijlData.fonts[1].name;
     }
     return;
   }
@@ -107,14 +107,15 @@ const fetchHuisstijlData = async () => {
     Object.assign(huisstijlData, data);
     console.log("Huisstijl data geladen:", data);
     if (huisstijlData.fonts && huisstijlData.fonts.length > 0) {
-      selectedFontForTitles.value = huisstijlData.fonts[0].name; // Stelt de eerste font in uit huisstijlData
-      selectedFontForText.value = huisstijlData.fonts[1].name; // Stelt de eerste font in uit huisstijlData
+      selectedFontForTitles.value = huisstijlData.fonts[0].name;
+      selectedFontForText.value = huisstijlData.fonts[1].name;
     }
   } catch (error) {
     console.error("Fout bij het ophalen van huisstijl data:", error);
   }
 };
 
+// Functie om Google Fonts op te halen
 const fetchGoogleFonts = async () => {
   const apiKey = "AIzaSyBAS05cq9-WKD92VljeuLee5V7YkIrTTMw";
   const googleFontsApi = `https://www.googleapis.com/webfonts/v1/webfonts?key=${apiKey}`;
@@ -122,113 +123,41 @@ const fetchGoogleFonts = async () => {
     const { data } = await axios.get(googleFontsApi);
     GoogleFonts.value = data.items.map((font) => font.family);
   } catch (error) {
-    console.error(
-      "Fout bij het ophalen van Google Fonts. Controleer je API-sleutel.",
-      error
-    );
+    console.error("Error fetching Google Fonts:", error);
   }
 };
 
-// Functie om een geselecteerd font in te stellen (gebruiker selecteert uit de dropdown)
-// Functie om een geselecteerd font in te stellen (gebruiker selecteert uit de dropdown)
+// Dynamisch een Google Font laden
+const loadGoogleFont = (font) => {
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = `https://fonts.googleapis.com/css2?family=${font.replace(
+    /\s+/g,
+    "+"
+  )}&display=swap`;
+  document.head.appendChild(link);
+};
+
+// Selecteer een font en update de huisstijl
 const selectFont = (font, type) => {
+  if (GoogleFonts.value.includes(font)) {
+    loadGoogleFont(font); // Dynamisch laden van het font
+  }
+
   if (
     huisstijlData.fonts.some((f) => f.name === font) ||
     GoogleFonts.value.includes(font)
   ) {
     if (type === "title") {
       selectedFontForTitles.value = font;
-      huisstijlData.fonts[0].name = font; // Werk het geselecteerde font bij in huisstijlData
+      huisstijlData.fonts[0].name = font;
     } else if (type === "text") {
       selectedFontForText.value = font;
-      huisstijlData.fonts[1].name = font; // Werk het geselecteerde font bij in huisstijlData
+      huisstijlData.fonts[1].name = font;
     }
     console.log("Geselecteerd font:", font);
   } else {
     console.error("Font niet gevonden in de beschikbare lijst:", font);
-  }
-};
-
-// Functie om font te uploaden naar Cloudinary
-const uploadFontToCloudinary = async (file) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", "ycy4zvmj");
-  formData.append("cloud_name", "dzempjvto");
-  formData.append("folder", "Stijn/Huisstijl/fonts");
-
-  try {
-    const { data } = await axios.post(
-      "https://api.cloudinary.com/v1_1/dzempjvto/raw/upload",
-      formData
-    );
-    return data.secure_url;
-  } catch (error) {
-    console.error("Fout bij het uploaden van het font:", error);
-    throw error;
-  }
-};
-
-// Functie om font-bestand te verwerken
-const handleFontFileChange = async (event) => {
-  const files = event.target.files;
-  if (files?.length > 0) {
-    const file = files[0];
-    try {
-      // Upload het fontbestand naar Cloudinary
-      const uploadedFontUrl = await uploadFontToCloudinary(file);
-
-      // Voeg het font toe aan de lijst van huisstijl fonts
-      huisstijlData.fonts.push({ url: uploadedFontUrl, name: file.name });
-
-      // Sla de gewijzigde huisstijl data op
-      await updateHuisstijlDataJson();
-    } catch (error) {
-      console.error("Fout bij het verwerken van het fontbestand:", error);
-    }
-  }
-};
-
-// Functie om huisstijl data naar Cloudinary bij te werken
-const updateHuisstijlDataJson = async () => {
-  try {
-    // Haal de huidige huisstijl data op van Cloudinary
-    const response = await axios.get(
-      "https://res.cloudinary.com/dzempjvto/raw/upload/v1732653110/Stijn/Huisstijl/huisstijl_data.json"
-    );
-    const currentData = response.data;
-
-    // Werk de gekleurde velden bij
-    currentData.primaryColor = huisstijlData.primaryColor;
-    currentData.secondaryColor = huisstijlData.secondaryColor;
-    currentData.titleColor = huisstijlData.titleColor;
-    currentData.colorForButtons = huisstijlData.colorForButtons;
-    currentData.fonts = huisstijlData.fonts;
-
-    // Upload de gewijzigde JSON naar Cloudinary
-    const formData = new FormData();
-    formData.append(
-      "file",
-      new Blob([JSON.stringify(currentData)], { type: "application/json" })
-    );
-    formData.append("upload_preset", "ycy4zvmj");
-    formData.append("resource_type", "raw");
-    formData.append("public_id", "huisstijl_data");
-    formData.append("folder", "Stijn/Huisstijl");
-
-    // Upload de JSON naar Cloudinary
-    await axios.post(
-      "https://api.cloudinary.com/v1_1/dzempjvto/raw/upload",
-      formData
-    );
-
-    // Werk huisstijlData bij met de nieuwste gegevens
-    Object.assign(huisstijlData, currentData);
-
-    // Sla de bijgewerkte huisstijlData lokaal op
-    localStorage.setItem("huisstijlData", JSON.stringify(huisstijlData));
-  } catch (error) {
-    console.error("Fout bij het updaten van huisstijl_data.json:", error);
   }
 };
 
@@ -252,30 +181,29 @@ const uploadToCloudinary = async (file) => {
   }
 };
 
-// Functie om bestandveranderingen te verwerken
-const handleFileChange = async (event, inputName) => {
-  const files = event.target.files;
-  if (files?.length > 0) {
-    const file = files[0];
-    try {
-      // Upload het bestand naar Cloudinary
-      const uploadedUrl = await uploadToCloudinary(file);
+// Functie om de kleur van een veld aan te passen
 
-      // Alleen de relevante afbeelding bijwerken (logo of achtergrondafbeelding)
-      if (inputName === "logo") {
-        huisstijlData.logo = uploadedUrl;
-      } else if (inputName === "backgroundImage") {
-        huisstijlData.backgroundImage = uploadedUrl;
-      }
+// Refs voor bestandsinvoer
+const fontInput = ref(null);
 
-      // Update de JSON met alleen de gewijzigde afbeelding
-      await updateHuisstijlDataJson();
-    } catch (error) {
-      console.error("Fout bij het verwerken van bestandverandering:", error);
-    }
-  }
+// Functie om de bestandinvoer voor fonts aan te roepen
+const triggerFontInput = () => {
+  fontInput.value?.click();
 };
 
+const openColorPicker = (field) => {
+  // Kleurkiezer openen
+  const input = document.createElement("input");
+  input.type = "color";
+  input.value = huisstijlData[field];
+
+  input.addEventListener("input", async (event) => {
+    huisstijlData[field] = event.target.value;
+    await updateHuisstijlDataJson(); // Update de wijzigingen op Cloudinary
+  });
+
+  input.click();
+};
 const resetHouseStyle = async () => {
   const defaultData = {
     primaryColor: "#9747ff",
@@ -311,7 +239,7 @@ const resetHouseStyle = async () => {
     );
     formData.append("upload_preset", "ycy4zvmj");
     formData.append("resource_type", "raw");
-    formData.append("public_id", "huisstijl_data");
+    formData.append("public_id", "huisstijl_data.json");
     formData.append("folder", "Stijn/Huisstijl");
 
     await axios.post(
@@ -319,50 +247,18 @@ const resetHouseStyle = async () => {
       formData
     );
 
-    // Werk de lokale cache bij
-    localStorage.setItem("huisstijlData", JSON.stringify(defaultData));
-
-    console.log("Huisstijl is gereset naar de standaardwaarden.");
+    console.log("Huisstijl succesvol gereset naar de standaardinstellingen.");
   } catch (error) {
-    console.error("Fout bij het resetten van huisstijl_data.json:", error);
+    console.error("Fout bij het resetten van de huisstijl:", error);
   }
 };
 
-// Refs voor bestandsinvoer
-const logoInput = ref(null);
-const backgroundInput = ref(null);
-
-// Functie om de bestandinvoer aan te roepen
-const triggerFileInput = (inputName) => {
-  const fileInput =
-    inputName === "logo" ? logoInput.value : backgroundInput.value;
-  fileInput?.click();
-};
-
-// Functie om de kleur van een veld aan te passen
-const openColorPicker = (field) => {
-  // Kleurkiezer openen
-  const input = document.createElement("input");
-  input.type = "color";
-  input.value = huisstijlData[field];
-
-  input.addEventListener("input", (event) => {
-    huisstijlData[field] = event.target.value;
-    updateHuisstijlDataJson(); // Sla de wijzigingen op
-  });
-
-  input.click();
-};
-// Refs voor bestandsinvoer
-const fontInput = ref(null);
-
-// Functie om de bestandinvoer voor fonts aan te roepen
-const triggerFontInput = () => {
-  fontInput.value?.click();
-};
-
-fetchHuisstijlData();
-fetchUserProfile();
+// Laden van Google Fonts en huisstijl data bij het starten van de component
+onMounted(() => {
+  fetchGoogleFonts();
+  fetchHuisstijlData();
+  fetchUserProfile();
+});
 </script>
 
 <template>
