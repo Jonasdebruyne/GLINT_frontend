@@ -25,7 +25,8 @@ const message = ref("");
 
 const selectedColor = ref(null);
 const selectedLacesColor = ref(null);
-const selectedSoleColor = ref(null);
+const selectedSoleBottomColor = ref(null);
+const selectedSoleTopColor = ref(null);
 const selectedInsideColor = ref(null);
 const selectedOutsideColor = ref(null);
 
@@ -127,7 +128,7 @@ function selectColorForLaces(color) {
 
 function selectColorForBottomSole(color) {
   selectedColor.value = color;
-  selectedSoleColor.value = color;
+  selectedSoleBottomColor.value = color;
 
   if (window.sole && window.sole.material) {
     window.sole.material.color.set(color);
@@ -138,7 +139,7 @@ function selectColorForBottomSole(color) {
 
 function selectColorForTopSole(color) {
   selectedColor.value = color;
-  selectedSoleColor.value = color;
+  selectedSoleTopColor.value = color;
 
   if (window.sole && window.sole.material) {
     window.sole.material.color.set(color);
@@ -276,11 +277,12 @@ onMounted(() => {
   const overviewButton = document.querySelector(
     ".config-wrapper .overviewButton"
   );
+
+  const backButton = document.querySelector(".config-wrapper .backButton");
+  const nextButton = document.querySelector(".config-wrapper .nextButton");
   const summaryButton = document.querySelector(
     ".config-wrapper .summaryButton"
   );
-  const backButton = document.querySelector(".config-wrapper .backButton");
-  const nextButton = document.querySelector(".config-wrapper .nextButton");
 
   let currentPageIndex = -1;
 
@@ -298,11 +300,6 @@ onMounted(() => {
     overviewButton?.style.setProperty(
       "visibility",
       currentPageIndex === -1 ? "hidden" : "visible"
-    );
-
-    summaryButton?.style.setProperty(
-      "visibility",
-      currentPageIndex === pages.length ? "hidden" : "visible"
     );
   }
 
@@ -327,12 +324,25 @@ onMounted(() => {
       currentPageIndex = 0;
       overview.style.display = "none";
       pages[currentPageIndex]?.style.setProperty("display", "flex");
+      document.querySelector(".summaryButton").style.display = "none";
     } else if (currentPageIndex < pages.length - 1) {
       pages[currentPageIndex]?.style.setProperty("display", "none");
       currentPageIndex++;
       pages[currentPageIndex]?.style.setProperty("display", "flex");
+      document.querySelector(".summaryButton").style.display = "none";
+    }
+
+    if (currentPageIndex == pages.length - 1) {
+      document.querySelector(".summaryButton").style.display = "flex";
     }
     updateButtonVisibility();
+  });
+
+  summaryButton?.addEventListener("click", () => {
+    document.querySelector(".backButton").style.display = "none";
+    document.querySelector(".summaryButton").style.display = "none";
+    pages[currentPageIndex]?.style.setProperty("display", "none");
+    document.querySelector(".summary").style.display = "flex";
   });
 
   backButton?.addEventListener("click", () => {
@@ -360,14 +370,6 @@ onMounted(() => {
     updateButtonVisibility();
   });
 
-  summaryButton?.addEventListener("click", () => {
-    currentPageIndex = pages.length;
-    overview.style.display = "none";
-    summary.style.display = "flex";
-    pages.forEach((page) => (page.style.display = "none"));
-    updateButtonVisibility();
-  });
-
   if (currentPageIndex === -1) {
     overview.style.display = "flex";
     pages.forEach((page) => (page.style.display = "none"));
@@ -381,7 +383,8 @@ onMounted(() => {
 function validateColors() {
   const colors = [
     selectedLacesColor.value,
-    selectedSoleColor.value,
+    selectedSoleBottomColor.value,
+    selectedSoleTopColor.value,
     selectedInsideColor.value,
     selectedOutsideColor.value,
   ];
@@ -402,7 +405,8 @@ async function submitOrder() {
   // Verzamelen van formulierdata inclusief kleurkeuzes
   const orderData = {
     lacesColor: selectedLacesColor.value, // Gebruik .value om de ref variabele aan te roepen
-    soleColor: selectedSoleColor.value,
+    soleBottomColor: selectedSoleBottomColor.value,
+    soleTopColor: selectedSoleTopColor.value,
     insideColor: selectedInsideColor.value,
     outsideColor: selectedOutsideColor.value,
     firstName: firstName.value, // Gebruik .value voor andere ref variabelen
@@ -746,25 +750,43 @@ onMounted(() => {
           <h2>Summary</h2>
           <div class="configurations">
             <div>
-              <p>Color of the laces</p>
+              <p>Color/texture of the laces</p>
               <p class="fontweight">
                 {{ selectedLacesColor || "Not selected" }}
               </p>
             </div>
             <div>
-              <p>Color of the sole</p>
+              <p>Color/texture of the bottom sole</p>
               <p class="fontweight">
-                {{ selectedSoleColor || "Not selected" }}
+                {{ selectedSoleBottomColor || "Not selected" }}
               </p>
             </div>
             <div>
-              <p>Color of the inside of your shoe</p>
+              <p>Color/texture of the top sole</p>
+              <p class="fontweight">
+                {{ selectedSoleTopColor || "Not selected" }}
+              </p>
+            </div>
+            <div>
+              <p>Color/texture of the outside 1</p>
               <p class="fontweight">
                 {{ selectedInsideColor || "Not selected" }}
               </p>
             </div>
             <div>
-              <p>Color of the outside of your shoe</p>
+              <p>Color/texture of the outside 2</p>
+              <p class="fontweight">
+                {{ selectedOutsideColor || "Not selected" }}
+              </p>
+            </div>
+            <div>
+              <p>Color/texture of the outside 3</p>
+              <p class="fontweight">
+                {{ selectedOutsideColor || "Not selected" }}
+              </p>
+            </div>
+            <div>
+              <p>Color/texture of the inside</p>
               <p class="fontweight">
                 {{ selectedOutsideColor || "Not selected" }}
               </p>
@@ -897,6 +919,15 @@ onMounted(() => {
 
           <a href="#" class="nextButton" style="visibility: visible">
             <p>Next</p>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+              <path
+                d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
+              ></path>
+            </svg>
+          </a>
+
+          <a href="#" class="summaryButton" style="display: none">
+            <p>Summary</p>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
               <path
                 d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
@@ -1083,7 +1114,7 @@ li svg {
 .config-wrapper .links {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   width: 100%;
 }
