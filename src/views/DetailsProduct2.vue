@@ -624,7 +624,7 @@ onMounted(() => {
               </svg>
             </li>
             <li>
-              <p>2. Choose the texture of the bottom of the</p>
+              <p>6. Choose the texture of the outside 1</p>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
                 <path
                   d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
@@ -632,7 +632,7 @@ onMounted(() => {
               </svg>
             </li>
             <li>
-              <p>3. Choose the color of the inside of your shoe</p>
+              <p>7. Choose the texture of the outside 2</p>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
                 <path
                   d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
@@ -640,7 +640,7 @@ onMounted(() => {
               </svg>
             </li>
             <li>
-              <p>4. Choose the color of the outside of your shoe</p>
+              <p>8. Choose the texture of the outside 3</p>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
                 <path
                   d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
