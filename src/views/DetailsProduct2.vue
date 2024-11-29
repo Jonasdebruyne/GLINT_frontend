@@ -11,6 +11,14 @@ const lacesColors = ref([]);
 const solesColors = ref([]);
 const insideColors = ref([]);
 const outsideColors = ref([]);
+const firstName = ref("");
+const lastName = ref("");
+const email = ref("");
+const street = ref("");
+const houseNumber = ref("");
+const postalCode = ref("");
+const city = ref("");
+const message = ref("");
 
 const selectedColor = ref(null);
 const selectedLacesColor = ref(null);
@@ -333,6 +341,7 @@ function validateColors() {
 }
 
 async function submitOrder() {
+  // Valideer kleurkeuzes
   if (!validateColors()) {
     const errorMessageElement = document.querySelector(".errorMessage");
     if (errorMessageElement) {
@@ -341,17 +350,27 @@ async function submitOrder() {
     return;
   }
 
+  // Verzamelen van formulierdata inclusief kleurkeuzes
   const orderData = {
-    lacesColor: selectedLacesColor.value,
+    lacesColor: selectedLacesColor.value, // Gebruik .value om de ref variabele aan te roepen
     soleColor: selectedSoleColor.value,
     insideColor: selectedInsideColor.value,
     outsideColor: selectedOutsideColor.value,
+    firstName: firstName.value, // Gebruik .value voor andere ref variabelen
+    lastName: lastName.value,
+    email: email.value,
+    street: street.value,
+    houseNumber: houseNumber.value,
+    postalCode: postalCode.value,
+    city: city.value,
+    message: message.value || "", // Zet lege waarde voor 'message' als deze niet ingevuld is
   };
 
   // Log de data die je verstuurt naar de server
   console.log("Submitting order data:", orderData);
 
   try {
+    // Verstuur het formulier naar de server
     const response = await fetch(`${baseURL}/orders/${productId.value}`, {
       method: "POST",
       headers: {
@@ -369,6 +388,7 @@ async function submitOrder() {
     const result = await response.json();
     console.log("Order submitted successfully:", result);
 
+    // Succesbericht tonen
     document.querySelector(".errorMessage").innerHTML = "";
     document.querySelector(".successMessage").innerHTML =
       "Order submitted successfully!";
@@ -634,39 +654,146 @@ onMounted(() => {
             ></div>
           </div>
         </div>
+        <!-- Summary section with selected colors -->
         <div class="summary display">
           <h2>Summary</h2>
-          <div>
-            <p>Color of the laces</p>
-            <p class="fontweight">
-              {{ selectedLacesColor || "Not selected" }}
-            </p>
+          <div class="configurations">
+            <div>
+              <p>Color of the laces</p>
+              <p class="fontweight">
+                {{ selectedLacesColor || "Not selected" }}
+              </p>
+            </div>
+            <div>
+              <p>Color of the sole</p>
+              <p class="fontweight">
+                {{ selectedSoleColor || "Not selected" }}
+              </p>
+            </div>
+            <div>
+              <p>Color of the inside of your shoe</p>
+              <p class="fontweight">
+                {{ selectedInsideColor || "Not selected" }}
+              </p>
+            </div>
+            <div>
+              <p>Color of the outside of your shoe</p>
+              <p class="fontweight">
+                {{ selectedOutsideColor || "Not selected" }}
+              </p>
+            </div>
           </div>
-          <div>
-            <p>Color of the sole</p>
-            <p class="fontweight">
-              {{ selectedSoleColor || "Not selected" }}
-            </p>
-          </div>
-          <div>
-            <p>Color of the inside of your shoe</p>
-            <p class="fontweight">
-              {{ selectedInsideColor || "Not selected" }}
-            </p>
-          </div>
-          <div>
-            <p>Color of the outside of your shoe</p>
-            <p class="fontweight">
-              {{ selectedOutsideColor || "Not selected" }}
-            </p>
-          </div>
+          <!-- Personal info form -->
+          <h3>Personal info</h3>
+          <form @submit.prevent="submitOrder">
+            <div class="row">
+              <div class="column">
+                <label for="firstname">First Name</label>
+                <input
+                  type="text"
+                  id="firstname"
+                  name="firstname"
+                  v-model="firstName"
+                  placeholder="John"
+                  required
+                />
+              </div>
+              <div class="column">
+                <label for="lastname">Last Name</label>
+                <input
+                  type="text"
+                  id="lastname"
+                  name="lastname"
+                  v-model="lastName"
+                  placeholder="Doe"
+                  required
+                />
+              </div>
+            </div>
 
-          <!-- Model en kleurkeuze UI hier -->
-          <button @click="submitOrder" class="btn active">Checkout</button>
+            <div class="row">
+              <div class="column">
+                <label for="email">Email</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  v-model="email"
+                  placeholder="johndoe@gmail.com"
+                  required
+                />
+              </div>
+            </div>
 
-          <p class="errorMessage"></p>
-          <p class="successMessage"></p>
+            <div class="row">
+              <div class="column">
+                <label for="street">Street</label>
+                <input
+                  type="text"
+                  id="street"
+                  name="street"
+                  v-model="street"
+                  placeholder="Grote markt"
+                  required
+                />
+              </div>
+              <div class="column">
+                <label for="house-number">House Number</label>
+                <input
+                  type="text"
+                  id="house-number"
+                  name="house-number"
+                  v-model="houseNumber"
+                  placeholder="1"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="column">
+                <label for="postalcode">Postal Code</label>
+                <input
+                  type="text"
+                  id="postalcode"
+                  name="postalcode"
+                  v-model="postalCode"
+                  placeholder="2800"
+                  required
+                />
+              </div>
+              <div class="column">
+                <label for="city">City</label>
+                <input
+                  type="text"
+                  id="city"
+                  name="city"
+                  v-model="city"
+                  placeholder="Mechelen"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="column">
+                <label for="message">Message</label>
+                <input
+                  type="text"
+                  id="message"
+                  name="message"
+                  v-model="message"
+                  placeholder="Your message"
+                />
+              </div>
+            </div>
+
+            <button type="submit" class="btn active">Checkout</button>
+            <p class="errorMessage"></p>
+            <p class="successMessage"></p>
+          </form>
         </div>
+
         <div class="links">
           <a href="#" class="backButton" style="visibility: hidden">
             <svg
@@ -702,6 +829,7 @@ onMounted(() => {
   height: 896px;
   width: 100%;
   position: relative;
+  overflow: hidden;
 }
 
 .logo {
@@ -835,6 +963,13 @@ onMounted(() => {
   padding: 16px 52px 24px;
 }
 
+.config-wrapper .configurations,
+.config-wrapper form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .config-wrapper a {
   display: flex;
   flex-direction: row;
@@ -895,7 +1030,7 @@ li svg {
 }
 
 .config-wrapper .overview ul li,
-.config-wrapper .summary div {
+.config-wrapper .summary .configurations div {
   display: flex;
   width: 100%;
   justify-content: space-between;
@@ -903,6 +1038,28 @@ li svg {
   padding: 20px 0;
   cursor: pointer;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.config-wrapper form .row {
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.config-wrapper form .row .column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.config-wrapper form .row .column input {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding-left: 8px;
+  width: 100%;
 }
 
 .colorsItem {
@@ -953,6 +1110,10 @@ li svg {
   color: green;
 }
 
+.backButton {
+  padding-bottom: 16px;
+}
+
 @media (min-width: 1200px) {
   .container {
     flex-direction: row;
@@ -978,7 +1139,7 @@ li svg {
   }
 
   .config-wrapper {
-    padding: 48px;
+    padding: 16px 52px 24px;
     gap: 48px;
     top: 0;
     width: 25%;

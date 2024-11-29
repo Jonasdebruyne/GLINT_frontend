@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, onMounted, computed, watch, provide } from "vue";
+import { ref, reactive, computed, onMounted, watch, provide } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import Navigation from "../../components/navComponent.vue";
@@ -7,31 +7,8 @@ import Navigation from "../../components/navComponent.vue";
 // Router setup
 const router = useRouter();
 
-// Reactive user object to store user details (gebruik reactive voor betere reactiviteit)
-const user = reactive({
-  firstName: "",
-  lastName: "",
-  email: "",
-  newEmail: "",
-  oldEmail: "",
-  password: "",
-  newPassword: "",
-  oldPassword: "",
-  newPasswordRepeat: "",
-  country: "",
-  city: "",
-  postalCode: "",
-  profilePicture: "",
-  bio: "",
-  role: "",
-  activeUnactive: true,
-});
-
-// Authentication and token handling
-const token = localStorage.getItem("jwtToken");
-if (!token) {
-  router.push("/login");
-}
+// JWT Handling Utility
+const getToken = () => localStorage.getItem("jwtToken");
 
 const parseJwt = (token) => {
   try {
@@ -50,6 +27,12 @@ const parseJwt = (token) => {
   }
 };
 
+// Check for token validity
+const token = getToken();
+if (!token) {
+  router.push("/login");
+}
+
 const tokenPayload = parseJwt(token);
 const userId = tokenPayload?.userId;
 const partnerId = tokenPayload?.partnerId || null;
@@ -58,168 +41,106 @@ if (!userId) {
   router.push("/login");
 }
 
-// Base URL for API calls
+// Base URL for API calls (development vs production)
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
   : "http://localhost:3000/api/v1";
 
-// Partner related data
+// Reactive state
+const user = reactive({
+  firstName: "",
+  lastName: "",
+  email: "",
+  oldEmail: "",
+  password: "",
+  country: "",
+  city: "",
+  postalCode: "",
+  profilePicture: "",
+  bio: "",
+  role: "",
+  activeUnactive: true,
+});
+
 const partnerPackage = ref(null);
+const orders = ref([]);
+const data = ref([]);
+const selectedOrders = ref([]);
+const searchTerm = ref("");
+const selectedFilter = ref("All");
 
-// Fetch user profile data
+// API Call Utility Function
+const fetchDataFromApi = async (url, method = "GET", data = {}) => {
+  const token = getToken();
+  const config = {
+    headers: { Authorization: `Bearer ${token}` },
+    method,
+    data,
+  };
+
+  try {
+    const response = await axios(url, config);
+    return response.data?.data || {};
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return null;
+  }
+};
+
+// Fetch User Profile
 const fetchUserProfile = async () => {
-  try {
-    const response = await axios.get(`${baseURL}/users/${userId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    const userData = response.data?.data?.user || {};
-    // Update the user object
-    user.firstName = userData.firstname || "";
-    user.lastName = userData.lastname || "";
-    user.email = userData.email || "";
-    user.oldEmail = userData.email || "";
-    user.country = userData.country || "";
-    user.city = userData.city || "";
-    user.postalCode = userData.postalCode || "";
-    user.profilePicture = userData.profilePicture || "";
-    user.bio = userData.bio || "";
-    user.role = userData.role || "";
-    user.activeUnactive = userData.activeUnactive ?? true;
-  } catch (error) {
-    console.error("Error fetching user profile:", error);
+  const userData = await fetchDataFromApi(`${baseURL}/users/${userId}`);
+  if (userData?.user) {
+    Object.assign(user, userData.user); // Directly update the user object
   }
 };
 
-// Fetch partner data (if applicable)
+// Fetch Partner Data
 const fetchPartnerData = async () => {
-  if (!partnerId) return;
-
-  try {
-    const response = await axios.get(`${baseURL}/partners/${partnerId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    const partner = response.data?.data?.partner || {};
-    partnerPackage.value = partner.package || "No package available";
-  } catch (error) {
-    console.error("Error fetching partner data:", error);
-    partnerPackage.value = "Error loading partner data";
+  if (partnerId) {
+    const partnerData = await fetchDataFromApi(
+      `${baseURL}/partners/${partnerId}`
+    );
+    partnerPackage.value =
+      partnerData?.partner?.package || "No package available";
   }
 };
 
-// Fetch initial data on mount
+// Fetch Orders Data
+const fetchOrders = async () => {
+  const ordersData = await fetchDataFromApi(`${baseURL}/orders`);
+  orders.value = ordersData?.orders || [];
+};
+
+// Initial Fetch on Mount
 onMounted(async () => {
   await fetchUserProfile();
   await fetchPartnerData();
+  await fetchOrders();
+  setInterval(fetchOrders, 5000); // Poll orders every 5 seconds
 });
 
-// Provide the user data to all components (including Navigation)
-provide("user", user); // Makes user data available to child components like Navigation
-
-// Watch for changes in user data and update the Navigation component
-watch(
-  user,
-  (newUser) => {
-    console.log("User data updated:", newUser);
-  },
-  { deep: true }
-);
-
-// Reactieve data-referenties
-const data = ref([]); // Zorg ervoor dat data altijd een lege array is
-const selectedUsers = ref([]); // Dit is een ref voor de geselecteerde gebruikers
-
-// Ophalen van gebruikersgegevens
-const fetchData = async () => {
-  try {
-    const token = localStorage.getItem("jwtToken");
-    const decodedToken = parseJwt(token); // Decode the token here
-    if (!decodedToken) {
-      throw new Error("Invalid token or failed to decode token");
-    }
-
-    const response = await fetch(`${baseURL}/users`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    const result = await response.json();
-
-    const userRole = decodedToken?.role; // Now you can safely use decodedToken
-
-    // If the user is a platform_admin, show all users, otherwise filter by partnerId
-    if (userRole === "platform_admin") {
-      data.value = result.data.users;
-    } else {
-      data.value = result.data.users.filter(
-        (user) => user.partnerId === decodedToken?.partnerId // Use partnerId from decodedToken
-      );
-    }
-  } catch (error) {
-    console.error("Error fetching data:", error);
-  }
-};
-
-// Filter de gebruikers op basis van zoekterm en filter
-const filteredUsers = computed(() => {
-  // Controleer eerst of data.value gedefinieerd is
-  if (!data.value) return [];
-
-  return data.value.filter((user) => {
-    const matchesSearchTerm =
-      user.firstname.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-      user.lastname.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.value.toLowerCase());
-
+// Computed values for filtering
+const filteredOrders = computed(() => {
+  return orders.value.filter((order) => {
+    const matchesSearchTerm = Object.values(order).some((value) =>
+      String(value).toLowerCase().includes(searchTerm.value.toLowerCase())
+    );
     const matchesFilter =
-      selectedFilter.value === "All" || user.role === selectedFilter.value;
-
+      selectedFilter.value === "All" ||
+      order.orderStatus === selectedFilter.value;
     return matchesSearchTerm && matchesFilter;
   });
 });
 
-// Initialiseer component en haal data op
-onMounted(fetchData);
-
-const selectedFilter = ref("All");
-const orders = ref([]);
-const searchTerm = ref("");
-const selectedOrders = ref([]);
-const isDeleteButtonVisible = computed(() => selectedOrders.value.length > 0);
-const isPopupVisible = ref(false);
-
-const fetchOrders = async () => {
-  try {
-    const token = localStorage.getItem("jwtToken");
-    const response = await fetch(`${baseURL}/orders`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const result = await response.json();
-    if (result && result.data && result.data.orders) {
-      orders.value = result.data.orders;
-    } else {
-      console.error("No orders found in the response.");
-    }
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-  }
-};
-
+// Handle Order Selection
 const toggleSelection = (orderId) => {
-  const index = selectedOrders.indexOf(orderId);
+  const index = selectedOrders.value.indexOf(orderId);
   if (index === -1) {
-    selectedOrders.push(orderId);
+    selectedOrders.value.push(orderId);
   } else {
-    selectedOrders.splice(index, 1);
+    selectedOrders.value.splice(index, 1);
   }
 };
 
@@ -229,6 +150,8 @@ const toggleSelectAll = (event) => {
     : [];
 };
 
+// Handle Deleting Orders
+const isDeleteButtonVisible = computed(() => selectedOrders.value.length > 0);
 const deleteSelectedOrders = () => {
   if (selectedOrders.value.length === 0) return;
   showPopup();
@@ -242,54 +165,26 @@ const confirmDelete = async () => {
 const deleteOrders = async () => {
   try {
     for (const id of selectedOrders.value) {
-      const response = await fetch(`${baseURL}/orders/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      await fetch(`${baseURL}/orders/${id}`, { method: "DELETE" });
     }
-
-    await fetchOrders();
     selectedOrders.value = [];
+    fetchOrders(); // Refresh orders after deletion
   } catch (error) {
     console.error("Error deleting orders:", error);
   }
 };
 
+// Popup visibility management
+const isPopupVisible = ref(false);
 const showPopup = () => {
   isPopupVisible.value = true;
 };
-
 const hidePopup = () => {
   isPopupVisible.value = false;
 };
 
-const totalOrdersCount = computed(() => orders.value.length);
-
-const filteredOrders = computed(() => {
-  if (!orders.value) return [];
-  const filteredBySearch = orders.value.filter((order) => {
-    return Object.values(order).some((value) =>
-      String(value).toLowerCase().includes(searchTerm.value.toLowerCase())
-    );
-  });
-
-  const filteredByType = filteredBySearch.filter(
-    (order) =>
-      selectedFilter.value === "All" ||
-      order.orderStatus === selectedFilter.value
-  );
-
-  return filteredByType;
-});
-
-onMounted(() => {
-  fetchOrders();
-  setInterval(() => {
-    fetchOrders();
-  }, 5000);
-});
+// Provide user data to Navigation component
+provide("user", user);
 </script>
 
 <template>
@@ -309,7 +204,7 @@ onMounted(() => {
     </div>
     <div class="menu">
       <div class="btns">
-        <p>Aantal orders: {{ totalOrdersCount }}</p>
+        <p>Aantal orders: {{ orders.length }}</p>
         <div
           @click="deleteSelectedOrders"
           class="btn display"
@@ -371,10 +266,6 @@ onMounted(() => {
             </router-link>
           </li>
         </ul>
-
-        <div v-else class="no-orders">
-          <p>No orders found matching the selected filters.</p>
-        </div>
       </div>
     </div>
   </div>
