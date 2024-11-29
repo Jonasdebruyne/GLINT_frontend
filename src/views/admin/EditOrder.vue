@@ -3,88 +3,87 @@ import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Navigation from "../../components/navComponent.vue";
 
-// Basis-URL afhankelijk van de omgeving
+// Base URL afhankelijk van productie/ontwikkelomgeving
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
   : "http://localhost:3000/api/v1";
 
-// Router en route-instellingen
+// Router en route
 const router = useRouter();
 const route = useRoute();
-const jwtToken = localStorage.getItem("jwtToken");
 
+// JWT-token ophalen en controleren
+const jwtToken = localStorage.getItem("jwtToken");
 if (!jwtToken) {
   router.push("/login");
 }
 
-// Verkrijg de productCode uit de routeparameter
-let productCode = route.params.id;
+// Data-instellingen
+const orderData = ref(null);
+const productCode = ref(route.params.id || "");
 
-// Orderdata en andere variabelen
-const orderData = ref < any > null;
-const orderStatus = ref < string > "";
+// Formulierdata
+const formData = ref({
+  customer: {
+    firstName: "",
+    lastName: "",
+    email: "",
+    message: "",
+    address: {
+      street: "",
+      houseNumber: "",
+      postalCode: "",
+      city: "",
+    },
+  },
+  productId: "",
+  lacesColor: "",
+  soleColor: "",
+  insideColor: "",
+  outsideColor: "",
+  orderStatus: "",
+});
 
+// Ordergegevens ophalen
 const fetchOrderData = async () => {
-  if (!productCode.value) {
-    console.error("Geen productcode beschikbaar.");
-    return;
-  }
-
   try {
-    const response = await fetch(`${baseURL}/orders/${productCode.value}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    const response = await fetch(`${baseURL}/orders/${productCode.value}`, {
+      headers: { Authorization: `Bearer ${jwtToken}` },
+    });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
     const data = await response.json();
     orderData.value = data.data.order;
 
-    if (orderData.value) {
-      orderStatus.value = orderData.value.orderStatus;
-    }
+    // Formulier vooraf vullen met opgehaalde gegevens
+    Object.assign(formData.value, orderData.value);
   } catch (error) {
-    console.error("Error fetching order data:", error);
-    alert("Er is een fout opgetreden bij het ophalen van de ordergegevens.");
+    console.error("Fout bij het ophalen van ordergegevens:", error);
   }
 };
 
-onMounted(() => {
-  fetchOrderData();
-});
-
 // Order bijwerken
 const updateOrder = async () => {
-  if (!orderStatus.value) {
-    alert("Vul alstublieft alle vereiste velden in.");
-    return;
-  }
-
   try {
     const response = await fetch(`${baseURL}/orders/${productCode.value}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${jwtToken}`,
       },
-      body: JSON.stringify({
-        orderStatus: orderStatus.value,
-        lacesColor: orderData.value.lacesColor, // Vullen met de waarde van de bestaande kleur
-        soleColor: orderData.value.soleColor,
-        insideColor: orderData.value.insideColor,
-        outsideColor: orderData.value.outsideColor,
-      }),
+      body: JSON.stringify(formData.value),
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-    const result = await response.json();
-    router.push("/admin/orders"); // Redirect na succesvolle update
+    router.push("/admin/orders");
   } catch (error) {
-    console.error("Error updating order:", error);
-    alert("Er is een fout opgetreden bij het bijwerken van de order.");
+    console.error("Fout bij het bijwerken van de order:", error);
   }
 };
+
+onMounted(fetchOrderData);
 </script>
 
 <template>
@@ -92,10 +91,118 @@ const updateOrder = async () => {
   <div class="content">
     <h1>Order Bewerken</h1>
     <form v-if="orderData" @submit.prevent="updateOrder">
+      <h2>Klantinformatie</h2>
       <div class="row">
         <div class="column">
+          <label for="firstName">Voornaam:</label>
+          <input
+            type="text"
+            id="firstName"
+            v-model="formData.customer.firstName"
+            required
+          />
+
+          <label for="lastName">Achternaam:</label>
+          <input
+            type="text"
+            id="lastName"
+            v-model="formData.customer.lastName"
+            required
+          />
+
+          <label for="email">E-mail:</label>
+          <input
+            type="email"
+            id="email"
+            v-model="formData.customer.email"
+            required
+          />
+
+          <label for="message">Bericht:</label>
+          <textarea id="message" v-model="formData.customer.message"></textarea>
+        </div>
+        <div class="column">
+          <h3>Adres</h3>
+          <label for="street">Straat:</label>
+          <input
+            type="text"
+            id="street"
+            v-model="formData.customer.address.street"
+            required
+          />
+
+          <label for="houseNumber">Huisnummer:</label>
+          <input
+            type="text"
+            id="houseNumber"
+            v-model="formData.customer.address.houseNumber"
+            required
+          />
+
+          <label for="postalCode">Postcode:</label>
+          <input
+            type="text"
+            id="postalCode"
+            v-model="formData.customer.address.postalCode"
+            required
+          />
+
+          <label for="city">Stad:</label>
+          <input
+            type="text"
+            id="city"
+            v-model="formData.customer.address.city"
+            required
+          />
+        </div>
+      </div>
+
+      <h2>Productinformatie</h2>
+      <div class="row">
+        <div class="column">
+          <label for="productId">Product ID:</label>
+          <input
+            type="text"
+            id="productId"
+            v-model="formData.productId"
+            required
+          />
+
+          <label for="lacesColor">Veterskleur:</label>
+          <input
+            type="text"
+            id="lacesColor"
+            v-model="formData.lacesColor"
+            required
+          />
+
+          <label for="soleColor">Zoolkleur:</label>
+          <input
+            type="text"
+            id="soleColor"
+            v-model="formData.soleColor"
+            required
+          />
+        </div>
+        <div class="column">
+          <label for="insideColor">Binnenkleur:</label>
+          <input
+            type="text"
+            id="insideColor"
+            v-model="formData.insideColor"
+            required
+          />
+
+          <label for="outsideColor">Buitenkleur:</label>
+          <input
+            type="text"
+            id="outsideColor"
+            v-model="formData.outsideColor"
+            required
+          />
+
           <label for="orderStatus">Status:</label>
-          <select v-model="orderStatus" id="orderStatus" required>
+          <select id="orderStatus" v-model="formData.orderStatus" required>
             <option value="pending">Pending</option>
             <option value="shipped">Shipped</option>
             <option value="delivered">Delivered</option>
@@ -105,11 +212,14 @@ const updateOrder = async () => {
       </div>
       <button type="submit" class="btn active">Bewerk Order</button>
     </form>
+    <div v-else>
+      <p>Bezig met laden...</p>
+    </div>
   </div>
 </template>
 
 <style scoped>
-/* Stijlen voor je formulier en pagina */
+/* Basisstijl */
 .content {
   width: 100%;
   height: 100vh;
@@ -118,39 +228,44 @@ const updateOrder = async () => {
 form {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 16px;
+  gap: 24px;
   width: 100%;
 }
 
-form .row {
+.row {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 120px;
-  width: 100%;
+  gap: 32px;
 }
 
-form .column {
+.column {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  width: 100%;
+  gap: 16px;
+  flex: 1;
 }
 
 input,
+textarea,
 select {
-  padding: 8px;
-  margin-bottom: 16px;
+  padding: 10px;
   border-radius: 4px;
-  border: 1px solid #333;
-  background-color: #333;
-  color: white;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  color: #333;
+  width: 100%;
 }
 
 button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
   color: white;
   cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
 }
 </style>

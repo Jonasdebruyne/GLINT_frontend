@@ -8,12 +8,19 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import QRCode from "qrcode";
 
 const lacesColors = ref([]);
+const lacesTextures = ref([]);
 const solesBottomColors = ref([]);
+const solesBottomTextures = ref([]);
 const solesTopColors = ref([]);
+const solesTopTextures = ref([]);
 const insideColors = ref([]);
+const insideTextures = ref([]);
 const outside1Colors = ref([]);
+const outside1Textures = ref([]);
 const outside2Colors = ref([]);
+const outside2Textures = ref([]);
 const outside3Colors = ref([]);
+const outside3Textures = ref([]);
 const firstName = ref("");
 const lastName = ref("");
 const email = ref("");
@@ -24,11 +31,14 @@ const city = ref("");
 const message = ref("");
 
 const selectedColor = ref(null);
+const selectedTexture = ref(null);
 const selectedLacesColor = ref(null);
 const selectedSoleBottomColor = ref(null);
 const selectedSoleTopColor = ref(null);
 const selectedInsideColor = ref(null);
-const selectedOutsideColor = ref(null);
+const selectedOutside1Color = ref(null);
+const selectedOutside2Color = ref(null);
+const selectedOutside3Color = ref(null);
 
 const route = useRoute();
 const productId = ref(null);
@@ -77,12 +87,24 @@ async function fetchProductData(code) {
     };
 
     lacesColors.value = data.data.product.lacesColor || [];
-    solesBottomColors.value = data.data.product.soleColor || [];
-    solesTopColors.value = data.data.product.soleColor || [];
+    lacesTextures.value = data.data.product.lacesTexture || [];
+    solesBottomColors.value = data.data.product.soleBottomColor || [];
+    solesBottomTextures.value = data.data.product.soleBottomTexture || [];
+
+    solesTopColors.value = data.data.product.soleTopColor || [];
+    solesTopTextures.value = data.data.product.soleTopTexture || [];
+
     insideColors.value = data.data.product.insideColor || [];
-    outside1Colors.value = data.data.product.outsideColor || [];
-    outside2Colors.value = data.data.product.outsideColor || [];
-    outside3Colors.value = data.data.product.outsideColor || [];
+    insideTextures.value = data.data.product.insideTexture || [];
+
+    outside1Colors.value = data.data.product.outside1Color || [];
+    outside1Textures.value = data.data.product.outside1Texture || [];
+
+    outside2Colors.value = data.data.product.outside2Color || [];
+    outside2Textures.value = data.data.product.outside2Texture || [];
+
+    outside3Colors.value = data.data.product.outside3Color || [];
+    outside3Textures.value = data.data.product.outside3Texture || [];
 
     const partnerId = data.data.product.partnerId;
     console.log("Partner ID:", partnerId);
@@ -161,7 +183,7 @@ function selectColorForInside(color) {
 
 function selectColorForOutside1(color) {
   selectedColor.value = color;
-  selectedOutsideColor.value = color;
+  selectedOutside1Color.value = color;
 
   if (window.outside && window.outside.material) {
     window.outside.material.color.set(color);
@@ -172,7 +194,7 @@ function selectColorForOutside1(color) {
 
 function selectColorForOutside2(color) {
   selectedColor.value = color;
-  selectedOutsideColor.value = color;
+  selectedOutside2Color.value = color;
 
   if (window.outside && window.outside.material) {
     window.outside.material.color.set(color);
@@ -183,10 +205,93 @@ function selectColorForOutside2(color) {
 
 function selectColorForOutside3(color) {
   selectedColor.value = color;
-  selectedOutsideColor.value = color;
+  selectedOutside3Color.value = color;
 
   if (window.outside && window.outside.material) {
     window.outside.material.color.set(color);
+  } else {
+    console.error("Outside object or its material not found");
+  }
+}
+
+// Textureselectiefuncties
+function selectTextureForLaces(texture) {
+  if (!color) {
+    console.error("Color is invalid");
+    return;
+  }
+
+  selectedTexture.value = texture;
+  selectedLacesColor.value = texture;
+
+  if (window.laces && window.laces.material) {
+    window.laces.material.texture.set(texture);
+  } else {
+    console.warn("Laces object or material is not available");
+  }
+}
+
+function selectTextureForBottomSole(texture) {
+  selectedTexture.value = texture;
+  selectedSoleBottomColor.value = texture;
+
+  if (window.sole && window.sole.material) {
+    window.sole.material.texture.set(texture);
+  } else {
+    console.error("Sole object or its material not found");
+  }
+}
+
+function selectTextureForTopSole(texture) {
+  selectedTexture.value = texture;
+  selectedSoleTopColor.value = texture;
+
+  if (window.sole && window.sole.material) {
+    window.sole.material.texture.set(texture);
+  } else {
+    console.error("Sole object or its material not found");
+  }
+}
+
+function selectTextureForInside(texture) {
+  selectedTexture.value = texture;
+  selectedInsideColor.value = texture;
+
+  if (window.inside && window.inside.material) {
+    window.inside.material.texture.set(texture);
+  } else {
+    console.error("Inside object or its material not found");
+  }
+}
+
+function selectTextureForOutside1(texture) {
+  selectedTexture.value = texture;
+  selectedOutside1Color.value = texture;
+
+  if (window.outside && window.outside.material) {
+    window.outside.material.texture.set(texture);
+  } else {
+    console.error("Outside object or its material not found");
+  }
+}
+
+function selectTextureForOutside2(texture) {
+  selectedTexture.value = texture;
+  selectedOutside2Color.value = texture;
+
+  if (window.outside && window.outside.material) {
+    window.outside.material.texture.set(texture);
+  } else {
+    console.error("Outside object or its material not found");
+  }
+}
+
+function selectTextureForOutside3(texture) {
+  selectedTexture.value = texture;
+  selectedOutside3Color.value = texture;
+
+  if (window.outside && window.outside.material) {
+    window.outside.material.texture.set(texture);
   } else {
     console.error("Outside object or its material not found");
   }
@@ -386,7 +491,9 @@ function validateColors() {
     selectedSoleBottomColor.value,
     selectedSoleTopColor.value,
     selectedInsideColor.value,
-    selectedOutsideColor.value,
+    selectedOutside1Color.value,
+    selectedOutside2Color.value,
+    selectedOutside3Color.value,
   ];
 
   return colors.every((color) => color); // Controleer of elke kleur aanwezig is
@@ -408,7 +515,9 @@ async function submitOrder() {
     soleBottomColor: selectedSoleBottomColor.value,
     soleTopColor: selectedSoleTopColor.value,
     insideColor: selectedInsideColor.value,
-    outsideColor: selectedOutsideColor.value,
+    outside1Color: selectedOutside1Color.value,
+    outside2Color: selectedOutside2Color.value,
+    outside3Color: selectedOutside3Color.value,
     firstName: firstName.value, // Gebruik .value voor andere ref variabelen
     lastName: lastName.value,
     email: email.value,
@@ -663,6 +772,7 @@ onMounted(() => {
         </div>
         <div class="config-ui__page page1 colorsItem display">
           <h2>Choose the color/texture of the laces</h2>
+          <h3>Colors</h3>
           <div class="row">
             <div
               v-for="color in lacesColors"
@@ -672,9 +782,20 @@ onMounted(() => {
               :style="{ backgroundColor: color }"
             ></div>
           </div>
+          <h3>Textures</h3>
+          <div class="row">
+            <div
+              v-for="texture in lacesTextures"
+              :key="texture"
+              :class="{ active: selectedTexture === texture }"
+              @click="selectTextureForLaces(texture)"
+              :style="{ backgroundColor: color }"
+            ></div>
+          </div>
         </div>
         <div class="config-ui__page page2 colorsItem">
           <h2>Choose the color/texture of the bottom sole</h2>
+          <h3>Colors</h3>
           <div class="row">
             <div
               v-for="color in solesBottomColors"
@@ -684,21 +805,43 @@ onMounted(() => {
               :style="{ backgroundColor: color }"
             ></div>
           </div>
+          <h3>Textures</h3>
+          <div class="row">
+            <div
+              v-for="texture in soleBottomTextures"
+              :key="texture"
+              :class="{ active: selectedTexture === texture }"
+              @click="selectTextureForBottomSole(texture)"
+              :style="{ backgroundColor: color }"
+            ></div>
+          </div>
         </div>
         <div class="config-ui__page page3 colorsItem">
           <h2>Choose the color/texture of the top sole</h2>
+          <h3>Colors</h3>
           <div class="row">
             <div
               v-for="color in solesTopColors"
               :key="color"
               :class="{ active: selectedColor === color }"
-              @click="selectColorForTopSole(color)"
+              @click="selectTextureForTopSole(color)"
+              :style="{ backgroundColor: color }"
+            ></div>
+          </div>
+          <h3>Textures</h3>
+          <div class="row">
+            <div
+              v-for="texture in solesTopTextures"
+              :key="texture"
+              :class="{ active: selectedTexture === texture }"
+              @click="selectTextureForTopSole(texture)"
               :style="{ backgroundColor: color }"
             ></div>
           </div>
         </div>
         <div class="config-ui__page page4 colorsItem">
           <h2>Choose the color/texture of the outside 1</h2>
+          <h3>Colors</h3>
           <div class="row">
             <div
               v-for="color in outside1Colors"
@@ -708,9 +851,20 @@ onMounted(() => {
               :style="{ backgroundColor: color }"
             ></div>
           </div>
+          <h3>Textures</h3>
+          <div class="row">
+            <div
+              v-for="texture in outside1Textures"
+              :key="texture"
+              :class="{ active: selectedTexture === texture }"
+              @click="selectTextureForOutside1(texture)"
+              :style="{ backgroundColor: color }"
+            ></div>
+          </div>
         </div>
         <div class="config-ui__page page5 colorsItem">
           <h2>Choose the color/texture of the outside 2</h2>
+          <h3>Colors</h3>
           <div class="row">
             <div
               v-for="color in outside2Colors"
@@ -720,9 +874,20 @@ onMounted(() => {
               :style="{ backgroundColor: color }"
             ></div>
           </div>
+          <h3>Textures</h3>
+          <div class="row">
+            <div
+              v-for="texture in outside2Textures"
+              :key="texture"
+              :class="{ active: selectedTexture === texture }"
+              @click="selectTextureForOutside2(texture)"
+              :style="{ backgroundColor: color }"
+            ></div>
+          </div>
         </div>
         <div class="config-ui__page page6 colorsItem">
           <h2>Choose the color/texture of the outside 3</h2>
+          <h3>Colors</h3>
           <div class="row">
             <div
               v-for="color in outside3Colors"
@@ -732,15 +897,36 @@ onMounted(() => {
               :style="{ backgroundColor: color }"
             ></div>
           </div>
+          <h3>Textures</h3>
+          <div class="row">
+            <div
+              v-for="texture in outside3Textures"
+              :key="texture"
+              :class="{ active: selectedTexture === texture }"
+              @click="selectTextureForOutside3(texture)"
+              :style="{ backgroundColor: color }"
+            ></div>
+          </div>
         </div>
         <div class="config-ui__page page7 colorsItem">
           <h2>Choose the color/texture of the inside</h2>
+          <h3>Colors</h3>
           <div class="row">
             <div
               v-for="color in insideColors"
               :key="color"
               :class="{ active: selectedColor === color }"
               @click="selectColorForInside(color)"
+              :style="{ backgroundColor: color }"
+            ></div>
+          </div>
+          <h3>Textures</h3>
+          <div class="row">
+            <div
+              v-for="texture in insideTextures"
+              :key="texture"
+              :class="{ active: selectedTexture === texture }"
+              @click="selectTextureForInside(texture)"
               :style="{ backgroundColor: color }"
             ></div>
           </div>
@@ -770,25 +956,25 @@ onMounted(() => {
             <div>
               <p>Color/texture of the outside 1</p>
               <p class="fontweight">
-                {{ selectedInsideColor || "Not selected" }}
+                {{ selectedOutside1Color || "Not selected" }}
               </p>
             </div>
             <div>
               <p>Color/texture of the outside 2</p>
               <p class="fontweight">
-                {{ selectedOutsideColor || "Not selected" }}
+                {{ selectedOutside2Color || "Not selected" }}
               </p>
             </div>
             <div>
               <p>Color/texture of the outside 3</p>
               <p class="fontweight">
-                {{ selectedOutsideColor || "Not selected" }}
+                {{ selectedOutside3Color || "Not selected" }}
               </p>
             </div>
             <div>
               <p>Color/texture of the inside</p>
               <p class="fontweight">
-                {{ selectedOutsideColor || "Not selected" }}
+                {{ selectedInsideColor || "Not selected" }}
               </p>
             </div>
           </div>
