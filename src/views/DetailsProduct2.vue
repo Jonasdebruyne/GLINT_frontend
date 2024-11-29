@@ -216,16 +216,14 @@ function selectColorForOutside3(color) {
 
 // Textureselectiefuncties
 function selectTextureForLaces(texture) {
-  if (!color) {
-    console.error("Color is invalid");
-    return;
-  }
-
   selectedTexture.value = texture;
-  selectedLacesColor.value = texture;
 
   if (window.laces && window.laces.material) {
-    window.laces.material.texture.set(texture);
+    const loader = new THREE.TextureLoader();
+    loader.load(texture, (loadedTexture) => {
+      window.laces.material.map = loadedTexture;
+      window.laces.material.needsUpdate = true; // Zorg ervoor dat de shader wordt geüpdatet
+    });
   } else {
     console.warn("Laces object or material is not available");
   }
