@@ -1174,6 +1174,7 @@ li svg {
 }
 
 .config-wrapper form .row .column input {
+  color: var(--white);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
   padding-left: 8px;
