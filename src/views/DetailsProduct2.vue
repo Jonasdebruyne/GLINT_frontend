@@ -131,6 +131,26 @@ watch(
   { immediate: true }
 );
 
+function highlightSelectedItem(color, part) {
+  // Zoek de container voor de geselecteerde laag
+  const elements = document.querySelectorAll(`.${part}`);
+
+  // Verwijder de 'selected' klasse van alle elementen
+  elements.forEach((element) => {
+    element.classList.remove("selected");
+  });
+
+  // Zoek het element dat overeenkomt met de geselecteerde kleur
+  const selectedElement = Array.from(elements).find(
+    (element) => element.dataset.color === color
+  );
+
+  // Voeg de 'selected' klasse toe aan het geselecteerde item
+  if (selectedElement) {
+    selectedElement.classList.add("selected");
+  }
+}
+
 // Kleurselectiefuncties
 function selectColorForLaces(color) {
   if (!color) {
@@ -146,6 +166,9 @@ function selectColorForLaces(color) {
   } else {
     console.warn("Laces object or material is not available");
   }
+
+  // Markeer de geselecteerde kleur in de UI
+  highlightSelectedItem(color, "lacesColor");
 }
 
 function selectColorForBottomSole(color) {
@@ -157,6 +180,8 @@ function selectColorForBottomSole(color) {
   } else {
     console.error("Sole object or its material not found");
   }
+
+  highlightSelectedItem(color, "soleBottomColor");
 }
 
 function selectColorForTopSole(color) {
@@ -168,6 +193,8 @@ function selectColorForTopSole(color) {
   } else {
     console.error("Sole object or its material not found");
   }
+
+  highlightSelectedItem(color, "soleTopColor");
 }
 
 function selectColorForInside(color) {
@@ -179,8 +206,11 @@ function selectColorForInside(color) {
   } else {
     console.error("Inside object or its material not found");
   }
+
+  highlightSelectedItem(color, "insideColor");
 }
 
+// Toevoegen voor buitenste lagen
 function selectColorForOutside1(color) {
   selectedColor.value = color;
   selectedOutside1Color.value = color;
@@ -190,6 +220,8 @@ function selectColorForOutside1(color) {
   } else {
     console.error("Outside object or its material not found");
   }
+
+  highlightSelectedItem(color, "outside1Color");
 }
 
 function selectColorForOutside2(color) {
@@ -201,6 +233,8 @@ function selectColorForOutside2(color) {
   } else {
     console.error("Outside object or its material not found");
   }
+
+  highlightSelectedItem(color, "outside2Color");
 }
 
 function selectColorForOutside3(color) {
@@ -212,6 +246,8 @@ function selectColorForOutside3(color) {
   } else {
     console.error("Outside object or its material not found");
   }
+
+  highlightSelectedItem(color, "outside3Color");
 }
 
 // Textureselectiefuncties
@@ -420,6 +456,63 @@ onMounted(() => {
       currentPageIndex = index;
       updateButtonVisibility();
     });
+
+    const bullets = document.querySelectorAll(".bullet");
+    const pages = document.querySelectorAll(".config-ui__page"); // Alle pagina's
+    let currentPageIndex = 0; // Houd bij welke pagina momenteel zichtbaar is
+
+    // Voeg een click-event toe aan elke bullet
+    bullets.forEach((bullet, index) => {
+      bullet.addEventListener("click", () => {
+        document.querySelector(".overview").style.display = "none";
+        // Verberg alle pagina's
+        pages.forEach((page) => {
+          page.style.display = "none"; // Zet display op 'none' voor alle pagina's
+        });
+
+        // Toon de pagina die overeenkomt met de aangeklikte bullet
+        if (pages[index]) {
+          pages[index].style.display = "flex"; // Zet display op 'flex' voor de gekozen pagina
+        }
+
+        // Verwijder de 'active' class van alle bullets en voeg het toe aan de aangeklikte bullet
+        bullets.forEach((b) => b.classList.remove("active")); // Verwijder 'active' van alle bullets
+        bullet.classList.add("active"); // Voeg 'active' toe aan de aangeklikte bullet
+
+        // Update de currentPageIndex
+        currentPageIndex = index;
+
+        // Update de zichtbaarheid van knoppen, als dat nodig is (optioneel)
+        updateButtonVisibility();
+      });
+    });
+
+    // Functie om een bullet als 'done' te markeren
+    function markBulletAsDone(index) {
+      const bullet = bullets[index];
+      bullet.classList.remove("active"); // Verwijder 'active' van de bullet
+      bullet.classList.add("done"); // Voeg 'done' toe om te markeren dat deze voltooid is
+    }
+
+    // Stel dat je een kleur of materiaal hebt geselecteerd
+    const colorOrMaterialSelectors =
+      document.querySelectorAll(".color, .material"); // Pas selectors aan voor je kleur- of materiaalkeuzes
+
+    colorOrMaterialSelectors.forEach((selector) => {
+      selector.addEventListener("change", (e) => {
+        // Stel je voor dat de bullet 3 (page3) de huidige actieve bullet is
+        if (currentPageIndex === 2) {
+          // Omdat de index 0-based is, is 2 de derde bullet (page3)
+          markBulletAsDone(2); // Markeer bullet 3 als 'done'
+        }
+        // Voeg hier extra logica toe om andere bullets als 'done' te markeren, afhankelijk van je logica.
+      });
+    });
+
+    function updateButtonVisibility() {
+      // Hier kun je logica toevoegen om knoppen te tonen of te verbergen afhankelijk van de huidige pagina
+      console.log(`Huidige pagina index: ${currentPageIndex}`);
+    }
   });
 
   nextButton?.addEventListener("click", () => {
@@ -707,417 +800,433 @@ onMounted(() => {
     </div>
     <div class="config-wrapper">
       <div class="elements">
-        <div class="overview">
-          <h2>Overview</h2>
-          <ul>
-            <li>
-              <p>1. Choose the color/texture of the laces</p>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
-                <path
-                  d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
-                ></path>
-              </svg>
-            </li>
-            <li>
-              <p>2. Choose the color/texture of the sole bottom</p>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
-                <path
-                  d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
-                ></path>
-              </svg>
-            </li>
-            <li>
-              <p>3. Choose the color/texture of the sole top</p>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
-                <path
-                  d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
-                ></path>
-              </svg>
-            </li>
-            <li>
-              <p>4. Choose the color/texture of the outside 1</p>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
-                <path
-                  d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
-                ></path>
-              </svg>
-            </li>
-            <li>
-              <p>5. Choose the color/texture of the outside 2</p>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
-                <path
-                  d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
-                ></path>
-              </svg>
-            </li>
-            <li>
-              <p>6. Choose the color/texture of the outside 3</p>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
-                <path
-                  d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
-                ></path>
-              </svg>
-            </li>
-            <li>
-              <p>7. Choose the color/texture of the inside</p>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
-                <path
-                  d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
-                ></path>
-              </svg>
-            </li>
-          </ul>
+        <div class="bullets">
+          <div class="bullet active" data-target="page1">1</div>
+          <div class="border"></div>
+          <div class="bullet" data-target="page2">2</div>
+          <div class="border"></div>
+          <div class="bullet" data-target="page3">3</div>
+          <div class="border"></div>
+          <div class="bullet" data-target="page4">4</div>
+          <div class="border"></div>
+          <div class="bullet" data-target="page5">5</div>
+          <div class="border"></div>
+          <div class="bullet" data-target="page6">6</div>
+          <div class="border"></div>
+          <div class="bullet" data-target="page7">7</div>
         </div>
-        <div class="config-ui__page page1 colorsItem display">
-          <h2>Choose the color/texture of the laces</h2>
-          <h3>Colors</h3>
-          <div class="row">
-            <div
-              v-for="color in lacesColors"
-              :key="color"
-              :class="{ active: selectedColor === color }"
-              @click="selectColorForLaces(color)"
-              :style="{ backgroundColor: color }"
-            ></div>
+        <div class="overviewConfig">
+          <div class="overview">
+            <h2>Overview</h2>
+            <ul>
+              <li>
+                <p>1. Choose the color/texture of the laces</p>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                  <path
+                    d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
+                  ></path>
+                </svg>
+              </li>
+              <li>
+                <p>2. Choose the color/texture of the sole bottom</p>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                  <path
+                    d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
+                  ></path>
+                </svg>
+              </li>
+              <li>
+                <p>3. Choose the color/texture of the sole top</p>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                  <path
+                    d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
+                  ></path>
+                </svg>
+              </li>
+              <li>
+                <p>4. Choose the color/texture of the outside 1</p>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                  <path
+                    d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
+                  ></path>
+                </svg>
+              </li>
+              <li>
+                <p>5. Choose the color/texture of the outside 2</p>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                  <path
+                    d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
+                  ></path>
+                </svg>
+              </li>
+              <li>
+                <p>6. Choose the color/texture of the outside 3</p>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                  <path
+                    d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
+                  ></path>
+                </svg>
+              </li>
+              <li>
+                <p>7. Choose the color/texture of the inside</p>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                  <path
+                    d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
+                  ></path>
+                </svg>
+              </li>
+            </ul>
           </div>
-          <h3>Textures</h3>
-          <div class="row">
-            <div
-              v-for="texture in lacesTextures"
-              :key="texture"
-              :class="{ active: selectedTexture === texture }"
-              @click="selectTextureForLaces(texture)"
-              :style="{ backgroundColor: color }"
-            ></div>
-          </div>
-        </div>
-        <div class="config-ui__page page2 colorsItem">
-          <h2>Choose the color/texture of the bottom sole</h2>
-          <h3>Colors</h3>
-          <div class="row">
-            <div
-              v-for="color in solesBottomColors"
-              :key="color"
-              :class="{ active: selectedColor === color }"
-              @click="selectColorForBottomSole(color)"
-              :style="{ backgroundColor: color }"
-            ></div>
-          </div>
-          <h3>Textures</h3>
-          <div class="row">
-            <div
-              v-for="texture in soleBottomTextures"
-              :key="texture"
-              :class="{ active: selectedTexture === texture }"
-              @click="selectTextureForBottomSole(texture)"
-              :style="{ backgroundColor: color }"
-            ></div>
-          </div>
-        </div>
-        <div class="config-ui__page page3 colorsItem">
-          <h2>Choose the color/texture of the top sole</h2>
-          <h3>Colors</h3>
-          <div class="row">
-            <div
-              v-for="color in solesTopColors"
-              :key="color"
-              :class="{ active: selectedColor === color }"
-              @click="selectTextureForTopSole(color)"
-              :style="{ backgroundColor: color }"
-            ></div>
-          </div>
-          <h3>Textures</h3>
-          <div class="row">
-            <div
-              v-for="texture in solesTopTextures"
-              :key="texture"
-              :class="{ active: selectedTexture === texture }"
-              @click="selectTextureForTopSole(texture)"
-              :style="{ backgroundColor: color }"
-            ></div>
-          </div>
-        </div>
-        <div class="config-ui__page page4 colorsItem">
-          <h2>Choose the color/texture of the outside 1</h2>
-          <h3>Colors</h3>
-          <div class="row">
-            <div
-              v-for="color in outside1Colors"
-              :key="color"
-              :class="{ active: selectedColor === color }"
-              @click="selectColorForOutside1(color)"
-              :style="{ backgroundColor: color }"
-            ></div>
-          </div>
-          <h3>Textures</h3>
-          <div class="row">
-            <div
-              v-for="texture in outside1Textures"
-              :key="texture"
-              :class="{ active: selectedTexture === texture }"
-              @click="selectTextureForOutside1(texture)"
-              :style="{ backgroundColor: color }"
-            ></div>
-          </div>
-        </div>
-        <div class="config-ui__page page5 colorsItem">
-          <h2>Choose the color/texture of the outside 2</h2>
-          <h3>Colors</h3>
-          <div class="row">
-            <div
-              v-for="color in outside2Colors"
-              :key="color"
-              :class="{ active: selectedColor === color }"
-              @click="selectColorForOutside2(color)"
-              :style="{ backgroundColor: color }"
-            ></div>
-          </div>
-          <h3>Textures</h3>
-          <div class="row">
-            <div
-              v-for="texture in outside2Textures"
-              :key="texture"
-              :class="{ active: selectedTexture === texture }"
-              @click="selectTextureForOutside2(texture)"
-              :style="{ backgroundColor: color }"
-            ></div>
-          </div>
-        </div>
-        <div class="config-ui__page page6 colorsItem">
-          <h2>Choose the color/texture of the outside 3</h2>
-          <h3>Colors</h3>
-          <div class="row">
-            <div
-              v-for="color in outside3Colors"
-              :key="color"
-              :class="{ active: selectedColor === color }"
-              @click="selectColorForOutside3(color)"
-              :style="{ backgroundColor: color }"
-            ></div>
-          </div>
-          <h3>Textures</h3>
-          <div class="row">
-            <div
-              v-for="texture in outside3Textures"
-              :key="texture"
-              :class="{ active: selectedTexture === texture }"
-              @click="selectTextureForOutside3(texture)"
-              :style="{ backgroundColor: color }"
-            ></div>
-          </div>
-        </div>
-        <div class="config-ui__page page7 colorsItem">
-          <h2>Choose the color/texture of the inside</h2>
-          <h3>Colors</h3>
-          <div class="row">
-            <div
-              v-for="color in insideColors"
-              :key="color"
-              :class="{ active: selectedColor === color }"
-              @click="selectColorForInside(color)"
-              :style="{ backgroundColor: color }"
-            ></div>
-          </div>
-          <h3>Textures</h3>
-          <div class="row">
-            <div
-              v-for="texture in insideTextures"
-              :key="texture"
-              :class="{ active: selectedTexture === texture }"
-              @click="selectTextureForInside(texture)"
-              :style="{ backgroundColor: color }"
-            ></div>
-          </div>
-        </div>
-        <!-- Summary section with selected colors -->
-        <div class="summary display">
-          <h2>Summary</h2>
-          <div class="configurations">
-            <div>
-              <p>Color/texture of the laces</p>
-              <p class="fontweight">
-                {{ selectedLacesColor || "Not selected" }}
-              </p>
-            </div>
-            <div>
-              <p>Color/texture of the bottom sole</p>
-              <p class="fontweight">
-                {{ selectedSoleBottomColor || "Not selected" }}
-              </p>
-            </div>
-            <div>
-              <p>Color/texture of the top sole</p>
-              <p class="fontweight">
-                {{ selectedSoleTopColor || "Not selected" }}
-              </p>
-            </div>
-            <div>
-              <p>Color/texture of the outside 1</p>
-              <p class="fontweight">
-                {{ selectedOutside1Color || "Not selected" }}
-              </p>
-            </div>
-            <div>
-              <p>Color/texture of the outside 2</p>
-              <p class="fontweight">
-                {{ selectedOutside2Color || "Not selected" }}
-              </p>
-            </div>
-            <div>
-              <p>Color/texture of the outside 3</p>
-              <p class="fontweight">
-                {{ selectedOutside3Color || "Not selected" }}
-              </p>
-            </div>
-            <div>
-              <p>Color/texture of the inside</p>
-              <p class="fontweight">
-                {{ selectedInsideColor || "Not selected" }}
-              </p>
-            </div>
-          </div>
-          <!-- Personal info form -->
-          <h3>Personal info</h3>
-          <form @submit.prevent="submitOrder">
+          <div class="config-ui__page page1 colorsItem display">
+            <h2>Choose the color/texture of the laces</h2>
+            <h3>Colors</h3>
             <div class="row">
-              <div class="column">
-                <label for="firstname">First Name</label>
-                <input
-                  type="text"
-                  id="firstname"
-                  name="firstname"
-                  v-model="firstName"
-                  placeholder="John"
-                  required
-                />
-              </div>
-              <div class="column">
-                <label for="lastname">Last Name</label>
-                <input
-                  type="text"
-                  id="lastname"
-                  name="lastname"
-                  v-model="lastName"
-                  placeholder="Doe"
-                  required
-                />
-              </div>
+              <div
+                v-for="color in lacesColors"
+                :key="color"
+                class="lacesColor"
+                :data-color="color"
+                :style="{ backgroundColor: color }"
+                @click="selectColorForLaces(color)"
+              ></div>
             </div>
-
+            <h3>Textures</h3>
             <div class="row">
-              <div class="column">
-                <label for="email">Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  v-model="email"
-                  placeholder="johndoe@gmail.com"
-                  required
-                />
-              </div>
+              <div
+                v-for="texture in lacesTextures"
+                :key="texture"
+                :class="{ active: selectedTexture === texture }"
+                @click="selectTextureForLaces(texture)"
+                :style="{ backgroundColor: color }"
+              ></div>
             </div>
-
+          </div>
+          <div class="config-ui__page page2 colorsItem">
+            <h2>Choose the color/texture of the bottom sole</h2>
+            <h3>Colors</h3>
             <div class="row">
-              <div class="column">
-                <label for="street">Street</label>
-                <input
-                  type="text"
-                  id="street"
-                  name="street"
-                  v-model="street"
-                  placeholder="Grote markt"
-                  required
-                />
-              </div>
-              <div class="column">
-                <label for="house-number">House Number</label>
-                <input
-                  type="text"
-                  id="house-number"
-                  name="house-number"
-                  v-model="houseNumber"
-                  placeholder="1"
-                  required
-                />
-              </div>
+              <div
+                v-for="color in solesBottomColors"
+                :key="color"
+                :class="{ active: selectedColor === color }"
+                @click="selectColorForBottomSole(color)"
+                :style="{ backgroundColor: color }"
+              ></div>
             </div>
-
+            <h3>Textures</h3>
             <div class="row">
-              <div class="column">
-                <label for="postalcode">Postal Code</label>
-                <input
-                  type="text"
-                  id="postalcode"
-                  name="postalcode"
-                  v-model="postalCode"
-                  placeholder="2800"
-                  required
-                />
-              </div>
-              <div class="column">
-                <label for="city">City</label>
-                <input
-                  type="text"
-                  id="city"
-                  name="city"
-                  v-model="city"
-                  placeholder="Mechelen"
-                  required
-                />
-              </div>
+              <div
+                v-for="texture in soleBottomTextures"
+                :key="texture"
+                :class="{ active: selectedTexture === texture }"
+                @click="selectTextureForBottomSole(texture)"
+                :style="{ backgroundColor: color }"
+              ></div>
             </div>
-
+          </div>
+          <div class="config-ui__page page3 colorsItem">
+            <h2>Choose the color/texture of the top sole</h2>
+            <h3>Colors</h3>
             <div class="row">
-              <div class="column">
-                <label for="message">Message</label>
-                <input
-                  type="text"
-                  id="message"
-                  name="message"
-                  v-model="message"
-                  placeholder="Your message"
-                />
+              <div
+                v-for="color in solesTopColors"
+                :key="color"
+                :class="{ active: selectedColor === color }"
+                @click="selectTextureForTopSole(color)"
+                :style="{ backgroundColor: color }"
+              ></div>
+            </div>
+            <h3>Textures</h3>
+            <div class="row">
+              <div
+                v-for="texture in solesTopTextures"
+                :key="texture"
+                :class="{ active: selectedTexture === texture }"
+                @click="selectTextureForTopSole(texture)"
+                :style="{ backgroundColor: color }"
+              ></div>
+            </div>
+          </div>
+          <div class="config-ui__page page4 colorsItem">
+            <h2>Choose the color/texture of the outside 1</h2>
+            <h3>Colors</h3>
+            <div class="row">
+              <div
+                v-for="color in outside1Colors"
+                :key="color"
+                :class="{ active: selectedColor === color }"
+                @click="selectColorForOutside1(color)"
+                :style="{ backgroundColor: color }"
+              ></div>
+            </div>
+            <h3>Textures</h3>
+            <div class="row">
+              <div
+                v-for="texture in outside1Textures"
+                :key="texture"
+                :class="{ active: selectedTexture === texture }"
+                @click="selectTextureForOutside1(texture)"
+                :style="{ backgroundColor: color }"
+              ></div>
+            </div>
+          </div>
+          <div class="config-ui__page page5 colorsItem">
+            <h2>Choose the color/texture of the outside 2</h2>
+            <h3>Colors</h3>
+            <div class="row">
+              <div
+                v-for="color in outside2Colors"
+                :key="color"
+                :class="{ active: selectedColor === color }"
+                @click="selectColorForOutside2(color)"
+                :style="{ backgroundColor: color }"
+              ></div>
+            </div>
+            <h3>Textures</h3>
+            <div class="row">
+              <div
+                v-for="texture in outside2Textures"
+                :key="texture"
+                :class="{ active: selectedTexture === texture }"
+                @click="selectTextureForOutside2(texture)"
+                :style="{ backgroundColor: color }"
+              ></div>
+            </div>
+          </div>
+          <div class="config-ui__page page6 colorsItem">
+            <h2>Choose the color/texture of the outside 3</h2>
+            <h3>Colors</h3>
+            <div class="row">
+              <div
+                v-for="color in outside3Colors"
+                :key="color"
+                :class="{ active: selectedColor === color }"
+                @click="selectColorForOutside3(color)"
+                :style="{ backgroundColor: color }"
+              ></div>
+            </div>
+            <h3>Textures</h3>
+            <div class="row">
+              <div
+                v-for="texture in outside3Textures"
+                :key="texture"
+                :class="{ active: selectedTexture === texture }"
+                @click="selectTextureForOutside3(texture)"
+                :style="{ backgroundColor: color }"
+              ></div>
+            </div>
+          </div>
+          <div class="config-ui__page page7 colorsItem">
+            <h2>Choose the color/texture of the inside</h2>
+            <h3>Colors</h3>
+            <div class="row">
+              <div
+                v-for="color in insideColors"
+                :key="color"
+                :class="{ active: selectedColor === color }"
+                @click="selectColorForInside(color)"
+                :style="{ backgroundColor: color }"
+              ></div>
+            </div>
+            <h3>Textures</h3>
+            <div class="row">
+              <div
+                v-for="texture in insideTextures"
+                :key="texture"
+                :class="{ active: selectedTexture === texture }"
+                @click="selectTextureForInside(texture)"
+                :style="{ backgroundColor: color }"
+              ></div>
+            </div>
+          </div>
+          <div class="summary display">
+            <h2>Summary</h2>
+            <div class="configurations">
+              <div>
+                <p>Color/texture of the laces</p>
+                <p class="fontweight">
+                  {{ selectedLacesColor || "Not selected" }}
+                </p>
+              </div>
+              <div>
+                <p>Color/texture of the bottom sole</p>
+                <p class="fontweight">
+                  {{ selectedSoleBottomColor || "Not selected" }}
+                </p>
+              </div>
+              <div>
+                <p>Color/texture of the top sole</p>
+                <p class="fontweight">
+                  {{ selectedSoleTopColor || "Not selected" }}
+                </p>
+              </div>
+              <div>
+                <p>Color/texture of the outside 1</p>
+                <p class="fontweight">
+                  {{ selectedOutside1Color || "Not selected" }}
+                </p>
+              </div>
+              <div>
+                <p>Color/texture of the outside 2</p>
+                <p class="fontweight">
+                  {{ selectedOutside2Color || "Not selected" }}
+                </p>
+              </div>
+              <div>
+                <p>Color/texture of the outside 3</p>
+                <p class="fontweight">
+                  {{ selectedOutside3Color || "Not selected" }}
+                </p>
+              </div>
+              <div>
+                <p>Color/texture of the inside</p>
+                <p class="fontweight">
+                  {{ selectedInsideColor || "Not selected" }}
+                </p>
               </div>
             </div>
+            <!-- Personal info form -->
+            <h3>Personal info</h3>
+            <form @submit.prevent="submitOrder">
+              <div class="row">
+                <div class="column">
+                  <label for="firstname">First Name</label>
+                  <input
+                    type="text"
+                    id="firstname"
+                    name="firstname"
+                    v-model="firstName"
+                    placeholder="John"
+                    required
+                  />
+                </div>
+                <div class="column">
+                  <label for="lastname">Last Name</label>
+                  <input
+                    type="text"
+                    id="lastname"
+                    name="lastname"
+                    v-model="lastName"
+                    placeholder="Doe"
+                    required
+                  />
+                </div>
+              </div>
 
-            <button type="submit" class="btn active">Checkout</button>
-            <p class="errorMessage"></p>
-            <p class="successMessage"></p>
-          </form>
-        </div>
+              <div class="row">
+                <div class="column">
+                  <label for="email">Email</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    v-model="email"
+                    placeholder="johndoe@gmail.com"
+                    required
+                  />
+                </div>
+              </div>
 
-        <div class="links">
-          <a href="#" class="backButton" style="visibility: hidden">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 320 512"
-              style="transform: rotate(180deg)"
-            >
-              <path
-                d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
-              ></path>
-            </svg>
-            <p>Back</p>
-          </a>
+              <div class="row">
+                <div class="column">
+                  <label for="street">Street</label>
+                  <input
+                    type="text"
+                    id="street"
+                    name="street"
+                    v-model="street"
+                    placeholder="Grote markt"
+                    required
+                  />
+                </div>
+                <div class="column">
+                  <label for="house-number">House Number</label>
+                  <input
+                    type="text"
+                    id="house-number"
+                    name="house-number"
+                    v-model="houseNumber"
+                    placeholder="1"
+                    required
+                  />
+                </div>
+              </div>
 
-          <a href="#" class="nextButton" style="visibility: visible">
-            <p>Next</p>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
-              <path
-                d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
-              ></path>
-            </svg>
-          </a>
+              <div class="row">
+                <div class="column">
+                  <label for="postalcode">Postal Code</label>
+                  <input
+                    type="text"
+                    id="postalcode"
+                    name="postalcode"
+                    v-model="postalCode"
+                    placeholder="2800"
+                    required
+                  />
+                </div>
+                <div class="column">
+                  <label for="city">City</label>
+                  <input
+                    type="text"
+                    id="city"
+                    name="city"
+                    v-model="city"
+                    placeholder="Mechelen"
+                    required
+                  />
+                </div>
+              </div>
 
-          <a href="#" class="summaryButton" style="display: none">
-            <p>Summary</p>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
-              <path
-                d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
-              ></path>
-            </svg>
-          </a>
+              <div class="row">
+                <div class="column">
+                  <label for="message">Message</label>
+                  <input
+                    type="text"
+                    id="message"
+                    name="message"
+                    v-model="message"
+                    placeholder="Your message"
+                  />
+                </div>
+              </div>
+
+              <button type="submit" class="btn active">Checkout</button>
+              <p class="errorMessage"></p>
+              <p class="successMessage"></p>
+            </form>
+          </div>
+          <div class="links">
+            <a href="#" class="backButton" style="visibility: hidden">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 320 512"
+                style="transform: rotate(180deg)"
+              >
+                <path
+                  d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
+                ></path>
+              </svg>
+              <p>Back</p>
+            </a>
+
+            <a href="#" class="nextButton" style="visibility: visible">
+              <p>Next</p>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                <path
+                  d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
+                ></path>
+              </svg>
+            </a>
+
+            <a href="#" class="summaryButton" style="display: none">
+              <p>Summary</p>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                <path
+                  d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
+                ></path>
+              </svg>
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -1306,9 +1415,54 @@ li svg {
 .config-wrapper .elements {
   display: flex;
   flex-direction: column;
+  gap: 24px;
   height: 100%;
+  width: 100%;
+}
+
+.config-wrapper .elements .overviewConfig {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+}
+
+.config-wrapper .elements .bullets {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   justify-content: space-between;
   width: 100%;
+}
+
+.config-wrapper .bullets .bullet {
+  opacity: 0.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 29.54px;
+  border: 1px solid var(--white);
+  color: var(--white);
+  border-radius: 100%;
+  font-size: 11px;
+}
+
+.config-wrapper .bullets .bullet.active {
+  opacity: 1;
+  border: 1px solid var(--white);
+}
+
+.config-wrapper .bullets .bullet.done {
+  opacity: 1;
+  background-color: var(--white);
+}
+
+.config-wrapper .bullets .border {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  width: 16px;
 }
 
 .config-wrapper .overview,
