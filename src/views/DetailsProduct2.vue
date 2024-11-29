@@ -168,7 +168,17 @@ onMounted(() => {
   const container = document.querySelector(".model");
   renderer.setSize(container.offsetWidth, container.offsetHeight);
   container.appendChild(renderer.domElement);
-
+  const envTextureLoader = new THREE.CubeTextureLoader();
+  const environmentMap = envTextureLoader.load([
+    "/textures/px.png",
+    "/textures/nx.png",
+    "/textures/py.png",
+    "/textures/ny.png",
+    "/textures/pz.png",
+    "/textures/nz.png",
+  ]);
+  scene.background = environmentMap;
+  scene.environment = environmentMap;
   const light = new THREE.PointLight(0xffffff, 1, 100);
   light.position.set(10, 10, 10);
   scene.add(light);
@@ -364,6 +374,7 @@ async function submitOrder() {
     postalCode: postalCode.value,
     city: city.value,
     message: message.value || "", // Zet lege waarde voor 'message' als deze niet ingevuld is
+    
   };
 
   // Log de data die je verstuurt naar de server
@@ -582,6 +593,38 @@ onMounted(() => {
             </li>
             <li>
               <p>2. Choose the color of the sole</p>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                <path
+                  d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
+                ></path>
+              </svg>
+            </li>
+            <li>
+              <p>3. Choose the color of the inside of your shoe</p>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                <path
+                  d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
+                ></path>
+              </svg>
+            </li>
+            <li>
+              <p>4. Choose the color of the outside of your shoe</p>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                <path
+                  d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
+                ></path>
+              </svg>
+            </li>
+            <li>
+              <p>5. Choose the texture of the inside</p>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                <path
+                  d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
+                ></path>
+              </svg>
+            </li>
+            <li>
+              <p>2. Choose the texture of the bottom of the</p>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
                 <path
                   d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"
