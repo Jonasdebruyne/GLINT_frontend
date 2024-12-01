@@ -797,7 +797,7 @@ onMounted(() => {
 
   summaryButton?.addEventListener("click", () => {
     // Verberg alle div's binnen .overviewConfig
-    document.querySelectorAll(".overviewConfig div").forEach((div) => {
+    document.querySelectorAll(".overviewConfig .colorsItem").forEach((div) => {
       div.style.display = "none";
     });
 
