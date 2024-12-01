@@ -88,6 +88,7 @@ async function fetchProductData(code) {
 
     lacesColors.value = data.data.product.lacesColor || [];
     lacesTextures.value = data.data.product.lacesTexture || [];
+    console.log(lacesColors.value);
     console.log(data.data.product.lacesTexture);
     solesBottomColors.value = data.data.product.soleBottomColor || [];
     solesBottomTextures.value = data.data.product.soleBottomTexture || [];
@@ -894,8 +895,8 @@ onMounted(() => {
             <h3>Textures</h3>
             <div class="row">
               <div
-                v-for="color in lacesColors"
-                :key="color"
+                v-for="texture in lacesColors"
+                :key="texture"
                 :class="['texture', { active: selectedTexture === texture }]"
                 @click="selectColorForLaces(texture)"
                 :style="{ backgroundImage: texture }"
