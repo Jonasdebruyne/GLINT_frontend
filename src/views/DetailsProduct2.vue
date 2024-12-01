@@ -1267,9 +1267,21 @@ onMounted(() => {
             <div class="configurations">
               <div>
                 <p>Color/texture of the laces</p>
-                <p class="fontweight">
-                  {{ selectedLacesColor || "Not selected" }}
-                </p>
+                <div class="row">
+                  <p
+                    :style="{
+                      backgroundColor: selectedLacesColor || 'transparent',
+                    }"
+                  ></p>
+                  <p
+                    :style="{
+                      backgroundImage: texture
+                        ? 'url(' + texture + ')'
+                        : 'none',
+                      backgroundColor: texture ? 'transparent' : 'gray',
+                    }"
+                  ></p>
+                </div>
               </div>
               <div>
                 <p>Color/texture of the bottom sole</p>
