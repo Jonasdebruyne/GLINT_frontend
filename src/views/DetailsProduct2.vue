@@ -731,6 +731,7 @@ onMounted(() => {
         // Toon knoppen
         document.querySelector(".backButton").style.display = "flex";
         document.querySelector(".nextButton").style.display = "flex";
+        document.querySelector(".nextButton").style.visibility = "visible";
 
         // Verberg alle pagina's
         pages.forEach((page) => {
