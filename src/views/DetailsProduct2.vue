@@ -894,10 +894,10 @@ onMounted(() => {
             <h3>Textures</h3>
             <div class="row">
               <div
-                v-for="texture in lacesTextures"
-                :key="texture"
-                :class="{ active: selectedTexture === texture }"
-                @click="selectTextureForLaces(texture)"
+                v-for="color in lacesColors"
+                :key="color"
+                :class="['texture', { active: selectedTexture === texture }]"
+                @click="selectColorForLaces(texture)"
                 :style="{ backgroundImage: texture }"
               ></div>
             </div>
@@ -919,7 +919,7 @@ onMounted(() => {
               <div
                 v-for="texture in soleBottomTextures"
                 :key="texture"
-                :class="{ active: selectedTexture === texture }"
+                :class="['texture', { active: selectedTexture === texture }]"
                 @click="selectTextureForBottomSole(texture)"
                 :style="{ backgroundImage: texture }"
               ></div>
@@ -942,7 +942,7 @@ onMounted(() => {
               <div
                 v-for="texture in solesTopTextures"
                 :key="texture"
-                :class="{ active: selectedTexture === texture }"
+                :class="['texture', { active: selectedTexture === texture }]"
                 @click="selectTextureForTopSole(texture)"
                 :style="{ backgroundImage: texture }"
               ></div>
@@ -965,7 +965,7 @@ onMounted(() => {
               <div
                 v-for="texture in outside1Textures"
                 :key="texture"
-                :class="{ active: selectedTexture === texture }"
+                :class="['texture', { active: selectedTexture === texture }]"
                 @click="selectTextureForOutside1(texture)"
                 :style="{ backgroundImage: texture }"
               ></div>
@@ -988,7 +988,7 @@ onMounted(() => {
               <div
                 v-for="texture in outside2Textures"
                 :key="texture"
-                :class="{ active: selectedTexture === texture }"
+                :class="['texture', { active: selectedTexture === texture }]"
                 @click="selectTextureForOutside2(texture)"
                 :style="{ backgroundImage: texture }"
               ></div>
@@ -1011,7 +1011,7 @@ onMounted(() => {
               <div
                 v-for="texture in outside3Textures"
                 :key="texture"
-                :class="{ active: selectedTexture === texture }"
+                :class="['texture', { active: selectedTexture === texture }]"
                 @click="selectTextureForOutside3(texture)"
                 :style="{ backgroundImage: texture }"
               ></div>
@@ -1531,6 +1531,12 @@ li svg {
   flex-direction: row;
   flex-wrap: wrap;
   gap: 16px;
+}
+
+.colorsItem .row .texture {
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 
 .colorsItem .row div {
