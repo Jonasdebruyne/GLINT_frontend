@@ -696,6 +696,8 @@ onMounted(() => {
       bullet.addEventListener("click", () => {
         document.querySelector(".overview").style.display = "none";
         document.querySelector(".summary").style.display = "none";
+        document.querySelector(".backButton").style.display = "flex";
+        document.querySelector(".nextButton").style.display = "flex";
         // Verberg alle pagina's
         pages.forEach((page) => {
           page.style.display = "none"; // Zet display op 'none' voor alle pagina's
