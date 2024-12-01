@@ -875,7 +875,7 @@ async function submitOrder() {
 
   // Verzamelen van formulierdata inclusief kleurkeuzes en productCode
   const orderData = {
-    productCode: productCode.value || productCode, // Voeg productCode toe (gebruik .value als het een ref is)
+    productCode,
     lacesColor: selectedLacesColor.value,
     lacesTexture: selectedLacesTexture.value,
     soleBottomColor: selectedSoleBottomColor.value,
