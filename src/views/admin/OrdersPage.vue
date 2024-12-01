@@ -463,6 +463,76 @@ select {
   width: 150px;
 }
 
+.orders .top p:nth-child(5),
+.orders .list li p:nth-child(5) {
+  width: 150px;
+}
+
+.orders .top p:nth-child(6),
+.orders .list li p:nth-child(6) {
+  width: 150px;
+}
+
+.orders .top p:nth-child(7),
+.orders .list li p:nth-child(7) {
+  width: 150px;
+}
+
+.orders .top p:nth-child(8),
+.orders .list li p:nth-child(8) {
+  width: 150px;
+}
+
+.orders .top p:nth-child(9),
+.orders .list li p:nth-child(9) {
+  width: 150px;
+}
+
+.orders .top p:nth-child(10),
+.orders .list li p:nth-child(10) {
+  width: 150px;
+}
+
+.orders .top p:nth-child(11),
+.orders .list li p:nth-child(11) {
+  width: 150px;
+}
+
+.orders .top p:nth-child(12),
+.orders .list li p:nth-child(12) {
+  width: 150px;
+}
+
+.orders .top p:nth-child(13),
+.orders .list li p:nth-child(13) {
+  width: 150px;
+}
+
+.orders .top p:nth-child(14),
+.orders .list li p:nth-child(14) {
+  width: 150px;
+}
+
+.orders .top p:nth-child(15),
+.orders .list li p:nth-child(15) {
+  width: 150px;
+}
+
+.orders .top p:nth-child(16),
+.orders .list li p:nth-child(16) {
+  width: 150px;
+}
+
+.orders .top p:nth-child(17),
+.orders .list li p:nth-child(17) {
+  width: 150px;
+}
+
+.orders .top p:nth-child(18),
+.orders .list li p:nth-child(18) {
+  width: 150px;
+}
+
 .orders .list li p:hover {
   text-decoration: underline;
 }
