@@ -1731,16 +1731,21 @@ li svg {
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.config-wrapper .summary .configurations div {
+  gap: 48px;
+}
+
 .config-wrapper .summary .configurations div .row {
   display: flex;
   flex-direction: row;
-  gap: 8px;
+  gap: 16px;
   border: none;
+  width: auto;
 }
 
 .config-wrapper .summary .configurations div .row p {
-  width: 8px;
-  height: 8px;
+  width: 24px;
+  height: 24px;
   border: 1px solid var(--white);
   border-radius: 50%;
 }
