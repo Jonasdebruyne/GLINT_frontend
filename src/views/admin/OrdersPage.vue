@@ -237,9 +237,19 @@ provide("user", user);
         <p>Order ID</p>
         <p>ProductCode</p>
         <p>LacesColor</p>
-        <p>SoleColor</p>
+        <p>LacesTexture</p>
+        <p>SoleBottomColor</p>
+        <p>SoleBottomTexture</p>
+        <p>SoleTopColor</p>
+        <p>SoleTopTexture</p>
         <p>InsideColor</p>
-        <p>OutsideColor</p>
+        <p>InsideTexture</p>
+        <p>Outside1Color</p>
+        <p>Outside1Texture</p>
+        <p>Outside2Color</p>
+        <p>Outside2Texture</p>
+        <p>Outside3Color</p>
+        <p>Outside3Texture</p>
         <p>Status</p>
       </div>
 
@@ -255,9 +265,19 @@ provide("user", user);
               <p>{{ order._id }}</p>
               <p>{{ order.productCode }}</p>
               <p>{{ order.lacesColor }}</p>
-              <p>{{ order.soleColor }}</p>
+              <p>{{ order.lacesTexture }}</p>
+              <p>{{ order.soleBottomColor }}</p>
+              <p>{{ order.soleBottomTexture }}</p>
+              <p>{{ order.soleTopColor }}</p>
+              <p>{{ order.soleTopTexture }}</p>
               <p>{{ order.insideColor }}</p>
-              <p>{{ order.outsideColor }}</p>
+              <p>{{ order.insideTexture }}</p>
+              <p>{{ order.outside1Color }}</p>
+              <p>{{ order.outside1Texture }}</p>
+              <p>{{ order.outside2Color }}</p>
+              <p>{{ order.outside2Texture }}</p>
+              <p>{{ order.outside3Color }}</p>
+              <p>{{ order.outside3Texture }}</p>
               <p>{{ order.orderStatus }}</p>
             </router-link>
           </li>
