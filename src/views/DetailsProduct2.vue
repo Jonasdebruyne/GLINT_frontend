@@ -1377,7 +1377,7 @@ onMounted(() => {
                   ></p>
                   <p
                     :style="{
-                      backgroundImage: texture
+                      backgroundImage: selectedInsideTexture
                         ? 'url(' + selectedInsideTexture + ')'
                         : 'none',
                     }"
