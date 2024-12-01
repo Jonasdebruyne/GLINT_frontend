@@ -1738,7 +1738,7 @@ li svg {
   border: none;
 }
 
-.config-wrapper .summary .configurations div .row div {
+.config-wrapper .summary .configurations div .row p {
   width: 8px;
   height: 8px;
   border: 1px solid var(--white);
