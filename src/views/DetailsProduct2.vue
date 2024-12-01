@@ -720,6 +720,39 @@ onMounted(() => {
       });
     });
 
+    const configurations = document.querySelectorAll(".config-item"); // Verkrijg alle configuratie-items
+
+    configurations.forEach((configItem, index) => {
+      configItem.addEventListener("click", () => {
+        // Verberg overview en summary
+        document.querySelector(".overview").style.display = "none";
+        document.querySelector(".summary").style.display = "none";
+
+        // Toon knoppen
+        document.querySelector(".backButton").style.display = "flex";
+        document.querySelector(".nextButton").style.display = "flex";
+
+        // Verberg alle pagina's
+        pages.forEach((page) => {
+          page.style.display = "none"; // Verberg alle pagina's
+        });
+
+        // Toon de pagina die overeenkomt met de aangeklikte configuratie
+        if (pages[index]) {
+          pages[index].style.display = "flex"; // Toon de geselecteerde pagina
+        }
+
+        // Verwijder de 'active' klasse van alle bullets en voeg het toe aan de geselecteerde bullet
+        bullets.forEach((b) => b.classList.remove("active"));
+        if (bullets[index]) {
+          bullets[index].classList.add("active"); // Voeg de 'active' klasse toe aan de aangeklikte bullet
+        }
+
+        // Optioneel: Update de zichtbaarheid van de knoppen
+        updateButtonVisibility();
+      });
+    });
+
     // Functie om een bullet als 'done' te markeren
     function markBulletAsDone(index) {
       const bullet = bullets[index];
@@ -1268,7 +1301,7 @@ onMounted(() => {
           <div class="summary display">
             <h2>Summary</h2>
             <div class="configurations">
-              <div>
+              <div class="config-item">
                 <p>Color/texture of the laces</p>
                 <div class="row">
                   <p
@@ -1285,7 +1318,7 @@ onMounted(() => {
                   ></p>
                 </div>
               </div>
-              <div>
+              <div class="config-item">
                 <p>Color/texture of the bottom sole</p>
                 <div class="row">
                   <p
@@ -1302,7 +1335,7 @@ onMounted(() => {
                   ></p>
                 </div>
               </div>
-              <div>
+              <div class="config-item">
                 <p>Color/texture of the top sole</p>
                 <div class="row">
                   <p
@@ -1319,7 +1352,7 @@ onMounted(() => {
                   ></p>
                 </div>
               </div>
-              <div>
+              <div class="config-item">
                 <p>Color/texture of the outside 1</p>
                 <div class="row">
                   <p
@@ -1336,7 +1369,7 @@ onMounted(() => {
                   ></p>
                 </div>
               </div>
-              <div>
+              <div class="config-item">
                 <p>Color/texture of the outside 2</p>
                 <div class="row">
                   <p
@@ -1353,7 +1386,7 @@ onMounted(() => {
                   ></p>
                 </div>
               </div>
-              <div>
+              <div class="config-item">
                 <p>Color/texture of the outside 3</p>
                 <div class="row">
                   <p
@@ -1370,7 +1403,7 @@ onMounted(() => {
                   ></p>
                 </div>
               </div>
-              <div>
+              <div class="config-item">
                 <p>Color/texture of the inside</p>
                 <div class="row">
                   <p
