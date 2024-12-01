@@ -165,7 +165,6 @@ function selectColorForLaces(color) {
 
   selectedColor.value = color;
   selectedLacesColor.value = color;
-  selectedLacesTexture.value = null;
 
   if (window.laces && window.laces.material) {
     window.laces.material.color.set(color);
@@ -180,7 +179,6 @@ function selectColorForLaces(color) {
 function selectColorForBottomSole(color) {
   selectedColor.value = color;
   selectedSoleBottomColor.value = color;
-  selectedSoleBottomTexture.value = null;
 
   if (window.sole_bottom && window.sole_bottom.material) {
     window.sole_bottom.material.color.set(color);
@@ -194,7 +192,6 @@ function selectColorForBottomSole(color) {
 function selectColorForTopSole(color) {
   selectedColor.value = color;
   selectedSoleTopColor.value = color;
-  selectedSoleTopTexture.value = null;
 
   if (window.sole_top && window.sole_top.material) {
     window.sole_top.material.color.set(color);
@@ -208,7 +205,6 @@ function selectColorForTopSole(color) {
 function selectColorForInside(color) {
   selectedColor.value = color;
   selectedInsideColor.value = color;
-  selectedInsideTexture.value = null;
 
   if (window.inside && window.inside.material) {
     window.inside.material.color.set(color);
@@ -223,7 +219,6 @@ function selectColorForInside(color) {
 function selectColorForOutside1(color) {
   selectedColor.value = color;
   selectedOutside1Color.value = color;
-  selectedOutside1Texture.value = null;
 
   if (window.outside1 && window.outside1.material) {
     window.outside1.material.color.set(color);
@@ -237,7 +232,6 @@ function selectColorForOutside1(color) {
 function selectColorForOutside2(color) {
   selectedColor.value = color;
   selectedOutside2Color.value = color;
-  selectedOutside2Texture.value = null;
 
   if (window.outside2 && window.outside2.material) {
     window.outside2.material.color.set(color);
@@ -251,7 +245,6 @@ function selectColorForOutside2(color) {
 function selectColorForOutside3(color) {
   selectedColor.value = color;
   selectedOutside3Color.value = color;
-  selectedOutside3Texture.value = null;
 
   if (window.outside3 && window.outside3.material) {
     window.outside3.material.color.set(color);
@@ -271,7 +264,6 @@ function selectTextureForLaces(texture) {
   }
 
   selectedTexture.value = texture;
-  selectedLacesColor.value = null;
   selectedLacesTexture.value = texture;
 
   const loader = new THREE.TextureLoader();
@@ -315,7 +307,6 @@ function selectTextureForBottomSole(texture) {
   }
 
   selectedTexture.value = texture;
-  selectedSoleBottomColor.value = null;
   selectedSoleBottomTexture.value = texture;
 
   const loader = new THREE.TextureLoader();
@@ -359,7 +350,6 @@ function selectTextureForTopSole(texture) {
   }
 
   selectedTexture.value = texture;
-  selectedSoleTopColor.value = null;
   selectedSoleTopTexture.value = texture;
 
   const loader = new THREE.TextureLoader();
@@ -403,7 +393,6 @@ function selectTextureForInside(texture) {
   }
 
   selectedTexture.value = texture;
-  selectedInsideColor.value = null;
   selectedInsideTexture.value = texture;
 
   const loader = new THREE.TextureLoader();
@@ -447,7 +436,6 @@ function selectTextureForOutside1(texture) {
   }
 
   selectedTexture.value = texture;
-  selectedOutside1Color.value = null;
   selectedOutside1Texture.value = texture;
 
   const loader = new THREE.TextureLoader();
@@ -491,7 +479,6 @@ function selectTextureForOutside2(texture) {
   }
 
   selectedTexture.value = texture;
-  selectedOutside2Color.value = null;
   selectedOutside2Texture.value = texture;
 
   const loader = new THREE.TextureLoader();
@@ -535,7 +522,6 @@ function selectTextureForOutside3(texture) {
   }
 
   selectedTexture.value = texture;
-  selectedOutside3Color.value = null;
   selectedOutside3Texture.value = texture;
 
   const loader = new THREE.TextureLoader();
