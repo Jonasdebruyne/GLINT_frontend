@@ -250,21 +250,12 @@ function selectColorForOutside3(color) {
 
 // Textureselectiefuncties
 function selectTextureForLaces(texture) {
-  console.log(texture);
-
   if (!texture) {
     console.error("Texture is invalid");
     return;
   }
 
   selectedTexture.value = texture;
-
-  // Zorg ervoor dat 'window.laces' en 'window.laces.material' beschikbaar zijn
-  console.log("window.laces:", window.laces);
-  console.log(
-    "window.laces.material:",
-    window.laces ? window.laces.material : null
-  );
 
   const loader = new THREE.TextureLoader();
   loader.setCrossOrigin("anonymous");
