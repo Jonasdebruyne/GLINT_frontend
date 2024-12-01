@@ -88,6 +88,7 @@ async function fetchProductData(code) {
 
     lacesColors.value = data.data.product.lacesColor || [];
     lacesTextures.value = data.data.product.lacesTexture || [];
+    console.log(data.data.product.lacesTexture);
     solesBottomColors.value = data.data.product.soleBottomColor || [];
     solesBottomTextures.value = data.data.product.soleBottomTexture || [];
 
@@ -897,7 +898,7 @@ onMounted(() => {
                 :key="texture"
                 :class="{ active: selectedTexture === texture }"
                 @click="selectTextureForLaces(texture)"
-                :style="{ backgroundColor: color }"
+                :style="{ backgroundImage: texture }"
               ></div>
             </div>
           </div>
@@ -920,7 +921,7 @@ onMounted(() => {
                 :key="texture"
                 :class="{ active: selectedTexture === texture }"
                 @click="selectTextureForBottomSole(texture)"
-                :style="{ backgroundColor: color }"
+                :style="{ backgroundImage: texture }"
               ></div>
             </div>
           </div>
@@ -943,7 +944,7 @@ onMounted(() => {
                 :key="texture"
                 :class="{ active: selectedTexture === texture }"
                 @click="selectTextureForTopSole(texture)"
-                :style="{ backgroundColor: color }"
+                :style="{ backgroundImage: texture }"
               ></div>
             </div>
           </div>
@@ -966,7 +967,7 @@ onMounted(() => {
                 :key="texture"
                 :class="{ active: selectedTexture === texture }"
                 @click="selectTextureForOutside1(texture)"
-                :style="{ backgroundColor: color }"
+                :style="{ backgroundImage: texture }"
               ></div>
             </div>
           </div>
@@ -989,7 +990,7 @@ onMounted(() => {
                 :key="texture"
                 :class="{ active: selectedTexture === texture }"
                 @click="selectTextureForOutside2(texture)"
-                :style="{ backgroundColor: color }"
+                :style="{ backgroundImage: texture }"
               ></div>
             </div>
           </div>
@@ -1012,7 +1013,7 @@ onMounted(() => {
                 :key="texture"
                 :class="{ active: selectedTexture === texture }"
                 @click="selectTextureForOutside3(texture)"
-                :style="{ backgroundColor: color }"
+                :style="{ backgroundImage: texture }"
               ></div>
             </div>
           </div>
