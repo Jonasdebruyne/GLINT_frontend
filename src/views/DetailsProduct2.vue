@@ -1767,7 +1767,8 @@ li svg {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.colorsItem .row div.active {
+.colorsItem .row div.active,
+.colorsItem .row div.selected {
   border: 3px solid var(--purple);
 }
 
