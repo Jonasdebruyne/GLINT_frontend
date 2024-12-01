@@ -106,6 +106,7 @@ const fetchPartnerData = async () => {
 const fetchOrders = async () => {
   const ordersData = await fetchDataFromApi(`${baseURL}/orders`);
   orders.value = ordersData?.orders || [];
+  console.log(orders.value);
 };
 
 // Initial Fetch on Mount
