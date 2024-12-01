@@ -263,7 +263,7 @@ function selectTextureForLaces(texture) {
   }
 
   selectedTexture.value = texture;
-  selectedLacesTexture.value = color;
+  selectedLacesTexture.value = texture;
 
   const loader = new THREE.TextureLoader();
   loader.setCrossOrigin("anonymous");
@@ -297,7 +297,7 @@ function selectTextureForBottomSole(texture) {
   }
 
   selectedTexture.value = texture;
-  selectedSoleBottomTexture.value = color;
+  selectedSoleBottomTexture.value = texture;
 
   const loader = new THREE.TextureLoader();
   loader.setCrossOrigin("anonymous");
@@ -331,7 +331,7 @@ function selectTextureForTopSole(texture) {
   }
 
   selectedTexture.value = texture;
-  selectedSoleTopTexture.value = color;
+  selectedSoleTopTexture.value = texture;
 
   const loader = new THREE.TextureLoader();
   loader.setCrossOrigin("anonymous");
@@ -365,7 +365,7 @@ function selectTextureForInside(texture) {
   }
 
   selectedTexture.value = texture;
-  selectedInsideTexture.value = color;
+  selectedInsideTexture.value = texture;
 
   const loader = new THREE.TextureLoader();
   loader.setCrossOrigin("anonymous");
@@ -399,7 +399,7 @@ function selectTextureForOutside1(texture) {
   }
 
   selectedTexture.value = texture;
-  selectedOutside1Texture.value = color;
+  selectedOutside1Texture.value = texture;
 
   const loader = new THREE.TextureLoader();
   loader.setCrossOrigin("anonymous");
@@ -433,7 +433,7 @@ function selectTextureForOutside2(texture) {
   }
 
   selectedTexture.value = texture;
-  selectedOutside2Texture.value = color;
+  selectedOutside2Texture.value = texture;
 
   const loader = new THREE.TextureLoader();
   loader.setCrossOrigin("anonymous");
@@ -467,7 +467,7 @@ function selectTextureForOutside3(texture) {
   }
 
   selectedTexture.value = texture;
-  selectedOutside3Texture.value = color;
+  selectedOutside3Texture.value = texture;
 
   const loader = new THREE.TextureLoader();
   loader.setCrossOrigin("anonymous");
