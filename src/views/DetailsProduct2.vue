@@ -926,7 +926,7 @@ onMounted(() => {
             <h3>Textures</h3>
             <div class="row">
               <div
-                v-for="texture in soleBottomTextures"
+                v-for="texture in solesBottomTextures"
                 :key="texture"
                 :class="['texture', { active: selectedTexture === texture }]"
                 @click="selectTextureForBottomSole(texture)"
@@ -1045,7 +1045,7 @@ onMounted(() => {
                 :key="texture"
                 :class="{ active: selectedTexture === texture }"
                 @click="selectTextureForInside(texture)"
-                :style="{ backgroundColor: color }"
+                :style="{ backgroundImage: 'url(' + texture + ')' }"
               ></div>
             </div>
           </div>
