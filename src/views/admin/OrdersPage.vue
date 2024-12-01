@@ -277,7 +277,10 @@ provide("user", user);
             />
             <router-link :to="{ name: 'EditOrder', params: { id: order._id } }">
               <p>{{ order._id }}</p>
-              <p>{{ productCode }}</p>
+
+              <!-- Access productCode from order.productId -->
+              <p>{{ order.productId?.productCode || "No product code" }}</p>
+
               <p>{{ order.lacesColor }}</p>
               <p>{{ order.lacesTexture }}</p>
               <p>{{ order.soleBottomColor }}</p>
