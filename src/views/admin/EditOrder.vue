@@ -39,9 +39,19 @@ const formData = ref({
   },
   productId: "",
   lacesColor: "",
-  soleColor: "",
+  soleBottomColor: "",
+  soleTopColor: "",
   insideColor: "",
-  outsideColor: "",
+  outside1Color: "",
+  outside2Color: "",
+  outside3Color: "",
+  lacesTexture: "",
+  soleBottomTexture: "",
+  soleTopTexture: "",
+  insideTexture: "",
+  outside1Texture: "",
+  outside2Texture: "",
+  outside3Texture: "",
   orderStatus: "",
 });
 
@@ -176,14 +186,44 @@ onMounted(fetchOrderData);
             required
           />
 
-          <label for="soleColor">Zoolkleur:</label>
+          <label for="lacesTexture">Veters Texture:</label>
           <input
             type="text"
-            id="soleColor"
-            v-model="formData.soleColor"
+            id="lacesTexture"
+            v-model="formData.lacesTexture"
+          />
+
+          <label for="soleBottomColor">Zoolkleur (onderkant):</label>
+          <input
+            type="text"
+            id="soleBottomColor"
+            v-model="formData.soleBottomColor"
             required
           />
+
+          <label for="soleBottomTexture">Zool Texture (onderkant):</label>
+          <input
+            type="text"
+            id="soleBottomTexture"
+            v-model="formData.soleBottomTexture"
+          />
+
+          <label for="soleTopColor">Zoolkleur (bovenkant):</label>
+          <input
+            type="text"
+            id="soleTopColor"
+            v-model="formData.soleTopColor"
+            required
+          />
+
+          <label for="soleTopTexture">Zool Texture (bovenkant):</label>
+          <input
+            type="text"
+            id="soleTopTexture"
+            v-model="formData.soleTopTexture"
+          />
         </div>
+
         <div class="column">
           <label for="insideColor">Binnenkleur:</label>
           <input
@@ -193,12 +233,56 @@ onMounted(fetchOrderData);
             required
           />
 
-          <label for="outsideColor">Buitenkleur:</label>
+          <label for="insideTexture">Binnen Texture:</label>
           <input
             type="text"
-            id="outsideColor"
-            v-model="formData.outsideColor"
+            id="insideTexture"
+            v-model="formData.insideTexture"
+          />
+
+          <label for="outside1Color">Buitenkleur 1:</label>
+          <input
+            type="text"
+            id="outside1Color"
+            v-model="formData.outside1Color"
             required
+          />
+
+          <label for="outside1Texture">Buiten Texture 1:</label>
+          <input
+            type="text"
+            id="outside1Texture"
+            v-model="formData.outside1Texture"
+          />
+
+          <label for="outside2Color">Buitenkleur 2:</label>
+          <input
+            type="text"
+            id="outside2Color"
+            v-model="formData.outside2Color"
+            required
+          />
+
+          <label for="outside2Texture">Buiten Texture 2:</label>
+          <input
+            type="text"
+            id="outside2Texture"
+            v-model="formData.outside2Texture"
+          />
+
+          <label for="outside3Color">Buitenkleur 3:</label>
+          <input
+            type="text"
+            id="outside3Color"
+            v-model="formData.outside3Color"
+            required
+          />
+
+          <label for="outside3Texture">Buiten Texture 3:</label>
+          <input
+            type="text"
+            id="outside3Texture"
+            v-model="formData.outside3Texture"
           />
 
           <label for="orderStatus">Status:</label>
@@ -212,9 +296,6 @@ onMounted(fetchOrderData);
       </div>
       <button type="submit" class="btn active">Bewerk Order</button>
     </form>
-    <div v-else>
-      <p>Bezig met laden...</p>
-    </div>
   </div>
 </template>
 
