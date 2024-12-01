@@ -180,8 +180,8 @@ function selectColorForBottomSole(color) {
   selectedColor.value = color;
   selectedSoleBottomColor.value = color;
 
-  if (window.sole && window.sole.material) {
-    window.sole.material.color.set(color);
+  if (window.sole_bottom && window.sole_bottom.material) {
+    window.sole_bottom.material.color.set(color);
   } else {
     console.error("Sole object or its material not found");
   }
@@ -193,8 +193,8 @@ function selectColorForTopSole(color) {
   selectedColor.value = color;
   selectedSoleTopColor.value = color;
 
-  if (window.sole && window.sole.material) {
-    window.sole.material.color.set(color);
+  if (window.sole_top && window.sole_top.material) {
+    window.sole_top.material.color.set(color);
   } else {
     console.error("Sole object or its material not found");
   }
@@ -220,8 +220,8 @@ function selectColorForOutside1(color) {
   selectedColor.value = color;
   selectedOutside1Color.value = color;
 
-  if (window.outside && window.outside.material) {
-    window.outside.material.color.set(color);
+  if (window.outside1 && window.outside1.material) {
+    window.outside1.material.color.set(color);
   } else {
     console.error("Outside object or its material not found");
   }
@@ -233,8 +233,8 @@ function selectColorForOutside2(color) {
   selectedColor.value = color;
   selectedOutside2Color.value = color;
 
-  if (window.outside && window.outside.material) {
-    window.outside.material.color.set(color);
+  if (window.outside2 && window.outside2.material) {
+    window.outside2.material.color.set(color);
   } else {
     console.error("Outside object or its material not found");
   }
@@ -246,8 +246,8 @@ function selectColorForOutside3(color) {
   selectedColor.value = color;
   selectedOutside3Color.value = color;
 
-  if (window.outside && window.outside.material) {
-    window.outside.material.color.set(color);
+  if (window.outside3 && window.outside3.material) {
+    window.outside3.material.color.set(color);
   } else {
     console.error("Outside object or its material not found");
   }
@@ -318,9 +318,9 @@ function selectTextureForBottomSole(texture) {
     (loadedTexture) => {
       if (loadedTexture) {
         // Zorg ervoor dat de texture wordt toegepast op het juiste object
-        if (window.sole && window.sole.material) {
-          window.sole.material.map = loadedTexture; // Pas de texture toe
-          window.sole.material.needsUpdate = true; // Zorg ervoor dat de material wordt geüpdatet
+        if (window.sole_bottom && window.sole_bottom.material) {
+          window.sole_bottom.material.map = loadedTexture; // Pas de texture toe
+          window.sole_bottom.material.needsUpdate = true; // Zorg ervoor dat de material wordt geüpdatet
           console.log("Texture successfully applied to laces!");
         } else {
           console.warn("Laces object or material is not available");
@@ -361,9 +361,9 @@ function selectTextureForTopSole(texture) {
     (loadedTexture) => {
       if (loadedTexture) {
         // Zorg ervoor dat de texture wordt toegepast op het juiste object
-        if (window.sole && window.sole.material) {
-          window.sole.material.map = loadedTexture; // Pas de texture toe
-          window.sole.material.needsUpdate = true; // Zorg ervoor dat de material wordt geüpdatet
+        if (window.sole_top && window.sole_top.material) {
+          window.sole_top.material.map = loadedTexture; // Pas de texture toe
+          window.sole_top.material.needsUpdate = true; // Zorg ervoor dat de material wordt geüpdatet
           console.log("Texture successfully applied to laces!");
         } else {
           console.warn("Laces object or material is not available");
@@ -447,9 +447,9 @@ function selectTextureForOutside1(texture) {
     (loadedTexture) => {
       if (loadedTexture) {
         // Zorg ervoor dat de texture wordt toegepast op het juiste object
-        if (window.outside && window.outside.material) {
-          window.outside.material.map = loadedTexture; // Pas de texture toe
-          window.outside.material.needsUpdate = true; // Zorg ervoor dat de material wordt geüpdatet
+        if (window.outside1 && window.outside1.material) {
+          window.outside1.material.map = loadedTexture; // Pas de texture toe
+          window.outside1.material.needsUpdate = true; // Zorg ervoor dat de material wordt geüpdatet
           console.log("Texture successfully applied to laces!");
         } else {
           console.warn("Laces object or material is not available");
@@ -490,9 +490,9 @@ function selectTextureForOutside2(texture) {
     (loadedTexture) => {
       if (loadedTexture) {
         // Zorg ervoor dat de texture wordt toegepast op het juiste object
-        if (window.outside && window.outside.material) {
-          window.outside.material.map = loadedTexture; // Pas de texture toe
-          window.outside.material.needsUpdate = true; // Zorg ervoor dat de material wordt geüpdatet
+        if (window.outside2 && window.outside2.material) {
+          window.outside2.material.map = loadedTexture; // Pas de texture toe
+          window.outside2.material.needsUpdate = true; // Zorg ervoor dat de material wordt geüpdatet
           console.log("Texture successfully applied to laces!");
         } else {
           console.warn("Laces object or material is not available");
@@ -533,9 +533,9 @@ function selectTextureForOutside3(texture) {
     (loadedTexture) => {
       if (loadedTexture) {
         // Zorg ervoor dat de texture wordt toegepast op het juiste object
-        if (window.outside && window.outside.material) {
-          window.outside.material.map = loadedTexture; // Pas de texture toe
-          window.outside.material.needsUpdate = true; // Zorg ervoor dat de material wordt geüpdatet
+        if (window.outside && window.outside3.material) {
+          window.outside3.material.map = loadedTexture; // Pas de texture toe
+          window.outside3.material.needsUpdate = true; // Zorg ervoor dat de material wordt geüpdatet
           console.log("Texture successfully applied to laces!");
         } else {
           console.warn("Laces object or material is not available");
@@ -609,9 +609,12 @@ onMounted(() => {
 
       gltf.scene.traverse((child) => {
         if (child.name === "laces") window.laces = child;
-        if (child.name === "sole_bottom") window.sole = child;
+        if (child.name === "sole_bottom") window.sole_bottom = child;
+        if (child.name === "sole_top") window.sole_top = child;
         if (child.name === "inside") window.inside = child;
-        if (child.name === "outside_1") window.outside = child;
+        if (child.name === "outside_1") window.outside1 = child;
+        if (child.name === "outside_2") window.outside2 = child;
+        if (child.name === "outside_3") window.outside3 = child;
       });
 
       const controls = new OrbitControls(camera, renderer.domElement);
