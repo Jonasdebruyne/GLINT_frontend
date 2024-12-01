@@ -61,7 +61,6 @@ async function fetchPartnerPackage(partnerId) {
 
     const data = await response.json();
     const partnerPackage = data.data.partner.package;
-    console.log("Partner Package:", partnerPackage);
 
     // Controleer of het pakket "Pro" is en pas de canCheckout waarde aan
     canCheckout.value = partnerPackage === "Pro";
@@ -88,8 +87,6 @@ async function fetchProductData(code) {
 
     lacesColors.value = data.data.product.lacesColor || [];
     lacesTextures.value = data.data.product.lacesTexture || [];
-    console.log(lacesColors.value);
-    console.log(data.data.product.lacesTexture);
     solesBottomColors.value = data.data.product.soleBottomColor || [];
     solesBottomTextures.value = data.data.product.soleBottomTexture || [];
 
@@ -109,7 +106,6 @@ async function fetchProductData(code) {
     outside3Textures.value = data.data.product.outside3Texture || [];
 
     const partnerId = data.data.product.partnerId;
-    console.log("Partner ID:", partnerId);
 
     // Haal de package van de partner op
     await fetchPartnerPackage(partnerId); // Wacht totdat de package is opgehaald
@@ -254,6 +250,8 @@ function selectColorForOutside3(color) {
 
 // Textureselectiefuncties
 function selectTextureForLaces(texture) {
+  console.log(texture);
+
   if (!texture) {
     console.error("Texture is invalid");
     return;
@@ -262,34 +260,35 @@ function selectTextureForLaces(texture) {
   selectedTexture.value = texture;
 
   // Zorg ervoor dat 'window.laces' en 'window.laces.material' beschikbaar zijn
-  if (window.laces && window.laces.material) {
-    const loader = new THREE.TextureLoader();
+  console.log("window.laces:", window.laces);
+  console.log(
+    "window.laces.material:",
+    window.laces ? window.laces.material : null
+  );
 
-    // Laad de texture
-    loader.load(
-      texture,
-      (loadedTexture) => {
-        if (loadedTexture) {
-          // Zet de texture op het materiaal
-          window.laces.material.map = loadedTexture;
+  const loader = new THREE.TextureLoader();
+  loader.setCrossOrigin("anonymous");
 
-          // Zorg ervoor dat de shader wordt geüpdatet
-          window.laces.material.needsUpdate = true;
-
-          console.log("Texture successfully applied to laces!");
-        } else {
-          console.error("Failed to load texture");
-        }
-      },
-      // Progress callback (optioneel)
-      undefined,
-      (error) => {
-        console.error("Error loading texture:", error);
+  loader.load(
+    texture, // De URL van de texture
+    (loadedTexture) => {
+      if (loadedTexture) {
+        window.laces.material.map = loadedTexture;
+        window.laces.material.needsUpdate = true;
+        console.log("Texture successfully applied to laces!");
+      } else {
+        console.error(
+          "Failed to load texture: loadedTexture is null or undefined"
+        );
       }
-    );
-  } else {
-    console.warn("Laces object or material is not available");
-  }
+    },
+    undefined,
+    (error) => {
+      // Logging de volledige foutinformatie
+      console.error("Error loading texture:", error);
+      console.error("Error details:", error.target);
+    }
+  );
 }
 
 function selectTextureForBottomSole(texture) {
@@ -535,11 +534,6 @@ onMounted(() => {
         // Voeg hier extra logica toe om andere bullets als 'done' te markeren, afhankelijk van je logica.
       });
     });
-
-    function updateButtonVisibility() {
-      // Hier kun je logica toevoegen om knoppen te tonen of te verbergen afhankelijk van de huidige pagina
-      console.log(`Huidige pagina index: ${currentPageIndex}`);
-    }
   });
 
   nextButton?.addEventListener("click", () => {
@@ -730,7 +724,6 @@ function generateQRCode() {
 
   // Als het een iPhone is, doen we niets en stoppen we de functie
   if (isIphone) {
-    console.log("Geen QR-code nodig voor iPhone.");
     return;
   }
 
@@ -768,7 +761,6 @@ function generateQRCode() {
 // AR knop: op component mounten, detecteer device
 onMounted(() => {
   device.value = detectDevice();
-  console.log("Detected device:", device.value);
 });
 </script>
 
