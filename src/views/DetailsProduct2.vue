@@ -259,7 +259,7 @@ function selectTextureForLaces(texture) {
   if (window.laces && window.laces.material) {
     const loader = new THREE.TextureLoader();
     loader.load(texture, (loadedTexture) => {
-      window.laces.material.map = loadedTexture;
+      window.laces.material.map = loadedTexture; // Voor laces bijvoorbeeld
       window.laces.material.needsUpdate = true; // Zorg ervoor dat de shader wordt geüpdatet
     });
   } else {
@@ -895,7 +895,7 @@ onMounted(() => {
             <h3>Textures</h3>
             <div class="row">
               <div
-                v-for="texture in lacesColors"
+                v-for="texture in lacesTextures"
                 :key="texture"
                 :class="['texture', { active: selectedTexture === texture }]"
                 @click="selectTextureForLaces(texture)"
