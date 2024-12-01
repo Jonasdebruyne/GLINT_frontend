@@ -49,7 +49,7 @@ const selectedOutside3Texture = ref(null);
 
 const route = useRoute();
 const productId = ref(null);
-const productData = ref({ productName: "", productPrice: 0 });
+const productData = ref({ productName: "", productCode: "", productPrice: 0 });
 
 const isLoading = ref(true);
 const error = ref(null);
@@ -77,6 +77,7 @@ async function fetchPartnerPackage(partnerId) {
   }
 }
 
+let productCode = "";
 // Functie om productgegevens op te halen
 async function fetchProductData(code) {
   isLoading.value = true;
@@ -89,8 +90,11 @@ async function fetchProductData(code) {
     const data = await response.json();
     productData.value = {
       productName: data.data.product.productName,
+      productCode: data.data.product.productCode,
       productPrice: data.data.product.productPrice,
     };
+
+    productCode = data.data.product.productName;
 
     lacesColors.value = data.data.product.lacesColor || [];
     lacesTextures.value = data.data.product.lacesTexture || [];
@@ -869,23 +873,24 @@ async function submitOrder() {
     return;
   }
 
-  // Verzamelen van formulierdata inclusief kleurkeuzes
+  // Verzamelen van formulierdata inclusief kleurkeuzes en productCode
   const orderData = {
-    lacesColor: selectedLacesColor.value, // Gebruik .value om de ref variabele aan te roepen
-    lacesTexture: selectedLacesTexture.value, // Voeg textuur toe als het in de form staat
+    productCode: productCode.value || productCode, // Voeg productCode toe (gebruik .value als het een ref is)
+    lacesColor: selectedLacesColor.value,
+    lacesTexture: selectedLacesTexture.value,
     soleBottomColor: selectedSoleBottomColor.value,
-    soleBottomTexture: selectedSoleBottomTexture.value, // Voeg textuur toe
+    soleBottomTexture: selectedSoleBottomTexture.value,
     soleTopColor: selectedSoleTopColor.value,
-    soleTopTexture: selectedSoleTopTexture.value, // Voeg textuur toe
+    soleTopTexture: selectedSoleTopTexture.value,
     insideColor: selectedInsideColor.value,
-    insideTexture: selectedInsideTexture.value, // Voeg textuur toe
+    insideTexture: selectedInsideTexture.value,
     outside1Color: selectedOutside1Color.value,
-    outside1Texture: selectedOutside1Texture.value, // Voeg textuur toe
+    outside1Texture: selectedOutside1Texture.value,
     outside2Color: selectedOutside2Color.value,
-    outside2Texture: selectedOutside2Texture.value, // Voeg textuur toe
+    outside2Texture: selectedOutside2Texture.value,
     outside3Color: selectedOutside3Color.value,
-    outside3Texture: selectedOutside3Texture.value, // Voeg textuur toe
-    firstName: firstName.value, // Gebruik .value voor andere ref variabelen
+    outside3Texture: selectedOutside3Texture.value,
+    firstName: firstName.value,
     lastName: lastName.value,
     email: email.value,
     street: street.value,
@@ -1441,6 +1446,7 @@ onMounted(() => {
             <!-- Personal info form -->
             <h3>Personal info</h3>
             <form @submit.prevent="submitOrder">
+              <p style="display: none">{{ productCode }}</p>
               <div class="row">
                 <div class="column">
                   <label for="firstname">First Name</label>
