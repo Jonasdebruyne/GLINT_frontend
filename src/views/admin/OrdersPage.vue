@@ -413,7 +413,7 @@ select {
   gap: 40px;
   padding: 4px 16px;
   background-color: #1d1d1d;
-  align-items: center;
+  align-items: center; /* --- */
 }
 
 .orders .list {
