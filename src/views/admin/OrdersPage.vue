@@ -102,10 +102,12 @@ const fetchPartnerData = async () => {
   }
 };
 
+let productCode = "";
 // Fetch Orders Data
 const fetchOrders = async () => {
   const ordersData = await fetchDataFromApi(`${baseURL}/orders`);
   orders.value = ordersData?.orders || [];
+  productCode = ordersData.productId.productCode;
   console.log(ordersData);
 };
 
