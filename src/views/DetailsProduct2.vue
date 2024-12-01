@@ -898,7 +898,7 @@ onMounted(() => {
                 v-for="texture in lacesColors"
                 :key="texture"
                 :class="['texture', { active: selectedTexture === texture }]"
-                @click="selectColorForLaces(texture)"
+                @click="selectTextureForLaces(texture)"
                 :style="{ backgroundImage: texture }"
               ></div>
             </div>
