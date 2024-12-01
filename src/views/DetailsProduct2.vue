@@ -899,7 +899,7 @@ onMounted(() => {
                 :key="texture"
                 :class="['texture', { active: selectedTexture === texture }]"
                 @click="selectTextureForLaces(texture)"
-                :style="{ backgroundImage: texture }"
+                :style="{ backgroundImage: 'url(' + texture + ')' }"
               ></div>
             </div>
           </div>
