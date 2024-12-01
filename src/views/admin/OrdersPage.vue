@@ -107,8 +107,19 @@ let productCode = "";
 const fetchOrders = async () => {
   const ordersData = await fetchDataFromApi(`${baseURL}/orders`);
   orders.value = ordersData?.orders || [];
-  productCode = ordersData.productId.productCode;
-  console.log(ordersData);
+
+  // Iterate over each order to access productCode
+  orders.value.forEach((order) => {
+    if (order.productId && order.productId.productCode) {
+      console.log("Product Code:", order.productId.productCode);
+      // You can assign the productCode to a variable if you need to use it later
+      const productCode = order.productId.productCode;
+    } else {
+      console.log("Product Code is missing for order:", order._id);
+    }
+  });
+
+  console.log(ordersData); // Log the entire response for debugging
 };
 
 // Initial Fetch on Mount
@@ -266,7 +277,7 @@ provide("user", user);
             />
             <router-link :to="{ name: 'EditOrder', params: { id: order._id } }">
               <p>{{ order._id }}</p>
-              <p>{{ order.order.productId.productCode }}</p>
+              <p>{{ productCode }}</p>
               <p>{{ order.lacesColor }}</p>
               <p>{{ order.lacesTexture }}</p>
               <p>{{ order.soleBottomColor }}</p>
