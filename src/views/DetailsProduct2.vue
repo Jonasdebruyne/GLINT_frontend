@@ -254,14 +254,39 @@ function selectColorForOutside3(color) {
 
 // Textureselectiefuncties
 function selectTextureForLaces(texture) {
+  if (!texture) {
+    console.error("Texture is invalid");
+    return;
+  }
+
   selectedTexture.value = texture;
 
+  // Zorg ervoor dat 'window.laces' en 'window.laces.material' beschikbaar zijn
   if (window.laces && window.laces.material) {
     const loader = new THREE.TextureLoader();
-    loader.load(texture, (loadedTexture) => {
-      window.laces.material.map = loadedTexture; // Voor laces bijvoorbeeld
-      window.laces.material.needsUpdate = true; // Zorg ervoor dat de shader wordt geüpdatet
-    });
+
+    // Laad de texture
+    loader.load(
+      texture,
+      (loadedTexture) => {
+        if (loadedTexture) {
+          // Zet de texture op het materiaal
+          window.laces.material.map = loadedTexture;
+
+          // Zorg ervoor dat de shader wordt geüpdatet
+          window.laces.material.needsUpdate = true;
+
+          console.log("Texture successfully applied to laces!");
+        } else {
+          console.error("Failed to load texture");
+        }
+      },
+      // Progress callback (optioneel)
+      undefined,
+      (error) => {
+        console.error("Error loading texture:", error);
+      }
+    );
   } else {
     console.warn("Laces object or material is not available");
   }
@@ -934,7 +959,7 @@ onMounted(() => {
                 v-for="color in solesTopColors"
                 :key="color"
                 :class="{ active: selectedColor === color }"
-                @click="selectTextureForTopSole(color)"
+                @click="selectColorForTopSole(color)"
                 :style="{ backgroundColor: color }"
               ></div>
             </div>
