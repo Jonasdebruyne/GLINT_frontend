@@ -1731,6 +1731,20 @@ li svg {
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.config-wrapper .summary .configurations div .row {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  border: none;
+}
+
+.config-wrapper .summary .configurations div .row div {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--white);
+  border-radius: 50%;
+}
+
 .config-wrapper form .row {
   display: flex;
   flex-direction: row;
