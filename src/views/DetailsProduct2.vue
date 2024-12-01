@@ -533,7 +533,7 @@ function selectTextureForOutside3(texture) {
     (loadedTexture) => {
       if (loadedTexture) {
         // Zorg ervoor dat de texture wordt toegepast op het juiste object
-        if (window.outside && window.outside3.material) {
+        if (window.outside3 && window.outside3.material) {
           window.outside3.material.map = loadedTexture; // Pas de texture toe
           window.outside3.material.needsUpdate = true; // Zorg ervoor dat de material wordt geüpdatet
           console.log("Texture successfully applied to laces!");
