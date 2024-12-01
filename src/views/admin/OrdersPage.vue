@@ -409,7 +409,7 @@ select {
 
 .orders .top {
   display: grid;
-  grid-template-columns: repeat(17, 1fr);
+  grid-template-columns: repeat(18, 1fr);
   gap: 40px;
   padding: 4px 16px;
   background-color: #1d1d1d;
@@ -426,7 +426,7 @@ select {
 
 .orders .list li {
   display: grid;
-  grid-template-columns: repeat(17, 1fr);
+  grid-template-columns: repeat(18, 1fr);
   gap: 40px;
   align-items: center;
 }
