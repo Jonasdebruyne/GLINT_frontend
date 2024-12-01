@@ -33,12 +33,19 @@ const message = ref("");
 const selectedColor = ref(null);
 const selectedTexture = ref(null);
 const selectedLacesColor = ref(null);
+const selectedLacesTexture = ref(null);
 const selectedSoleBottomColor = ref(null);
+const selectedSoleBottomTexture = ref(null);
 const selectedSoleTopColor = ref(null);
+const selectedSoleTopTexture = ref(null);
 const selectedInsideColor = ref(null);
+const selectedInsideTexture = ref(null);
 const selectedOutside1Color = ref(null);
+const selectedOutside1Texture = ref(null);
 const selectedOutside2Color = ref(null);
+const selectedOutside2Texture = ref(null);
 const selectedOutside3Color = ref(null);
+const selectedOutside3Texture = ref(null);
 
 const route = useRoute();
 const productId = ref(null);
@@ -256,6 +263,7 @@ function selectTextureForLaces(texture) {
   }
 
   selectedTexture.value = texture;
+  selectedLacesTexture.value = color;
 
   const loader = new THREE.TextureLoader();
   loader.setCrossOrigin("anonymous");
@@ -283,69 +291,207 @@ function selectTextureForLaces(texture) {
 }
 
 function selectTextureForBottomSole(texture) {
-  selectedTexture.value = texture;
-  selectedSoleBottomColor.value = texture;
-
-  if (window.sole && window.sole.material) {
-    window.sole.material.texture.set(texture);
-  } else {
-    console.error("Sole object or its material not found");
+  if (!texture) {
+    console.error("Texture is invalid");
+    return;
   }
+
+  selectedTexture.value = texture;
+  selectedSoleBottomTexture.value = color;
+
+  const loader = new THREE.TextureLoader();
+  loader.setCrossOrigin("anonymous");
+
+  loader.load(
+    texture, // De URL van de texture
+    (loadedTexture) => {
+      if (loadedTexture) {
+        window.laces.material.map = loadedTexture;
+        window.laces.material.needsUpdate = true;
+        console.log("Texture successfully applied to laces!");
+      } else {
+        console.error(
+          "Failed to load texture: loadedTexture is null or undefined"
+        );
+      }
+    },
+    undefined,
+    (error) => {
+      // Logging de volledige foutinformatie
+      console.error("Error loading texture:", error);
+      console.error("Error details:", error.target);
+    }
+  );
 }
 
 function selectTextureForTopSole(texture) {
-  selectedTexture.value = texture;
-  selectedSoleTopColor.value = texture;
-
-  if (window.sole && window.sole.material) {
-    window.sole.material.texture.set(texture);
-  } else {
-    console.error("Sole object or its material not found");
+  if (!texture) {
+    console.error("Texture is invalid");
+    return;
   }
+
+  selectedTexture.value = texture;
+  selectedSoleTopTexture.value = color;
+
+  const loader = new THREE.TextureLoader();
+  loader.setCrossOrigin("anonymous");
+
+  loader.load(
+    texture, // De URL van de texture
+    (loadedTexture) => {
+      if (loadedTexture) {
+        window.laces.material.map = loadedTexture;
+        window.laces.material.needsUpdate = true;
+        console.log("Texture successfully applied to laces!");
+      } else {
+        console.error(
+          "Failed to load texture: loadedTexture is null or undefined"
+        );
+      }
+    },
+    undefined,
+    (error) => {
+      // Logging de volledige foutinformatie
+      console.error("Error loading texture:", error);
+      console.error("Error details:", error.target);
+    }
+  );
 }
 
 function selectTextureForInside(texture) {
-  selectedTexture.value = texture;
-  selectedInsideColor.value = texture;
-
-  if (window.inside && window.inside.material) {
-    window.inside.material.texture.set(texture);
-  } else {
-    console.error("Inside object or its material not found");
+  if (!texture) {
+    console.error("Texture is invalid");
+    return;
   }
+
+  selectedTexture.value = texture;
+  selectedInsideTexture.value = color;
+
+  const loader = new THREE.TextureLoader();
+  loader.setCrossOrigin("anonymous");
+
+  loader.load(
+    texture, // De URL van de texture
+    (loadedTexture) => {
+      if (loadedTexture) {
+        window.laces.material.map = loadedTexture;
+        window.laces.material.needsUpdate = true;
+        console.log("Texture successfully applied to laces!");
+      } else {
+        console.error(
+          "Failed to load texture: loadedTexture is null or undefined"
+        );
+      }
+    },
+    undefined,
+    (error) => {
+      // Logging de volledige foutinformatie
+      console.error("Error loading texture:", error);
+      console.error("Error details:", error.target);
+    }
+  );
 }
 
 function selectTextureForOutside1(texture) {
-  selectedTexture.value = texture;
-  selectedOutside1Color.value = texture;
-
-  if (window.outside && window.outside.material) {
-    window.outside.material.texture.set(texture);
-  } else {
-    console.error("Outside object or its material not found");
+  if (!texture) {
+    console.error("Texture is invalid");
+    return;
   }
+
+  selectedTexture.value = texture;
+  selectedOutside1Texture.value = color;
+
+  const loader = new THREE.TextureLoader();
+  loader.setCrossOrigin("anonymous");
+
+  loader.load(
+    texture, // De URL van de texture
+    (loadedTexture) => {
+      if (loadedTexture) {
+        window.laces.material.map = loadedTexture;
+        window.laces.material.needsUpdate = true;
+        console.log("Texture successfully applied to laces!");
+      } else {
+        console.error(
+          "Failed to load texture: loadedTexture is null or undefined"
+        );
+      }
+    },
+    undefined,
+    (error) => {
+      // Logging de volledige foutinformatie
+      console.error("Error loading texture:", error);
+      console.error("Error details:", error.target);
+    }
+  );
 }
 
 function selectTextureForOutside2(texture) {
-  selectedTexture.value = texture;
-  selectedOutside2Color.value = texture;
-
-  if (window.outside && window.outside.material) {
-    window.outside.material.texture.set(texture);
-  } else {
-    console.error("Outside object or its material not found");
+  if (!texture) {
+    console.error("Texture is invalid");
+    return;
   }
+
+  selectedTexture.value = texture;
+  selectedOutside2Texture.value = color;
+
+  const loader = new THREE.TextureLoader();
+  loader.setCrossOrigin("anonymous");
+
+  loader.load(
+    texture, // De URL van de texture
+    (loadedTexture) => {
+      if (loadedTexture) {
+        window.laces.material.map = loadedTexture;
+        window.laces.material.needsUpdate = true;
+        console.log("Texture successfully applied to laces!");
+      } else {
+        console.error(
+          "Failed to load texture: loadedTexture is null or undefined"
+        );
+      }
+    },
+    undefined,
+    (error) => {
+      // Logging de volledige foutinformatie
+      console.error("Error loading texture:", error);
+      console.error("Error details:", error.target);
+    }
+  );
 }
 
 function selectTextureForOutside3(texture) {
-  selectedTexture.value = texture;
-  selectedOutside3Color.value = texture;
-
-  if (window.outside && window.outside.material) {
-    window.outside.material.texture.set(texture);
-  } else {
-    console.error("Outside object or its material not found");
+  if (!texture) {
+    console.error("Texture is invalid");
+    return;
   }
+
+  selectedTexture.value = texture;
+  selectedOutside3Texture.value = color;
+
+  const loader = new THREE.TextureLoader();
+  loader.setCrossOrigin("anonymous");
+
+  loader.load(
+    texture, // De URL van de texture
+    (loadedTexture) => {
+      if (loadedTexture) {
+        window.laces.material.map = loadedTexture;
+        window.laces.material.needsUpdate = true;
+        console.log("Texture successfully applied to laces!");
+      } else {
+        console.error(
+          "Failed to load texture: loadedTexture is null or undefined"
+        );
+      }
+    },
+    undefined,
+    (error) => {
+      // Logging de volledige foutinformatie
+      console.error("Error loading texture:", error);
+      console.error("Error details:", error.target);
+    }
+  );
 }
 
 // Scene setup
