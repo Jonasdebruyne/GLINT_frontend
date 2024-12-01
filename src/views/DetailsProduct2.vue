@@ -922,7 +922,7 @@ onMounted(() => {
                 :key="texture"
                 :class="['texture', { active: selectedTexture === texture }]"
                 @click="selectTextureForBottomSole(texture)"
-                :style="{ backgroundImage: texture }"
+                :style="{ backgroundImage: 'url(' + texture + ')' }"
               ></div>
             </div>
           </div>
@@ -945,7 +945,7 @@ onMounted(() => {
                 :key="texture"
                 :class="['texture', { active: selectedTexture === texture }]"
                 @click="selectTextureForTopSole(texture)"
-                :style="{ backgroundImage: texture }"
+                :style="{ backgroundImage: 'url(' + texture + ')' }"
               ></div>
             </div>
           </div>
@@ -968,7 +968,7 @@ onMounted(() => {
                 :key="texture"
                 :class="['texture', { active: selectedTexture === texture }]"
                 @click="selectTextureForOutside1(texture)"
-                :style="{ backgroundImage: texture }"
+                :style="{ backgroundImage: 'url(' + texture + ')' }"
               ></div>
             </div>
           </div>
@@ -991,7 +991,7 @@ onMounted(() => {
                 :key="texture"
                 :class="['texture', { active: selectedTexture === texture }]"
                 @click="selectTextureForOutside2(texture)"
-                :style="{ backgroundImage: texture }"
+                :style="{ backgroundImage: 'url(' + texture + ')' }"
               ></div>
             </div>
           </div>
@@ -1014,7 +1014,7 @@ onMounted(() => {
                 :key="texture"
                 :class="['texture', { active: selectedTexture === texture }]"
                 @click="selectTextureForOutside3(texture)"
-                :style="{ backgroundImage: texture }"
+                :style="{ backgroundImage: 'url(' + texture + ')' }"
               ></div>
             </div>
           </div>
