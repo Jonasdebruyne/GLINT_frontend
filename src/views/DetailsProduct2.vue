@@ -1275,49 +1275,114 @@ onMounted(() => {
                   ></p>
                   <p
                     :style="{
-                      backgroundImage: texture
-                        ? 'url(' + texture + ')'
+                      backgroundImage: selectedLacesTexture
+                        ? 'url(' + selectedLacesTexture + ')'
                         : 'none',
-                      backgroundColor: texture ? 'transparent' : 'gray',
                     }"
                   ></p>
                 </div>
               </div>
               <div>
                 <p>Color/texture of the bottom sole</p>
-                <p class="fontweight">
-                  {{ selectedSoleBottomColor || "Not selected" }}
-                </p>
+                <div class="row">
+                  <p
+                    :style="{
+                      backgroundColor: selectedSoleBottomColor || 'transparent',
+                    }"
+                  ></p>
+                  <p
+                    :style="{
+                      backgroundImage: selectedSoleBottomTexture
+                        ? 'url(' + selectedSoleBottomTexture + ')'
+                        : 'none',
+                    }"
+                  ></p>
+                </div>
               </div>
               <div>
                 <p>Color/texture of the top sole</p>
-                <p class="fontweight">
-                  {{ selectedSoleTopColor || "Not selected" }}
-                </p>
+                <div class="row">
+                  <p
+                    :style="{
+                      backgroundColor: selectedSoleTopColor || 'transparent',
+                    }"
+                  ></p>
+                  <p
+                    :style="{
+                      backgroundImage: selectedSoleTopTexture
+                        ? 'url(' + selectedSoleTopTexture + ')'
+                        : 'none',
+                    }"
+                  ></p>
+                </div>
               </div>
               <div>
                 <p>Color/texture of the outside 1</p>
-                <p class="fontweight">
-                  {{ selectedOutside1Color || "Not selected" }}
-                </p>
+                <div class="row">
+                  <p
+                    :style="{
+                      backgroundColor: selectedOutside1Color || 'transparent',
+                    }"
+                  ></p>
+                  <p
+                    :style="{
+                      backgroundImage: selectedOutside1Texture
+                        ? 'url(' + selectedOutside1Texture + ')'
+                        : 'none',
+                    }"
+                  ></p>
+                </div>
               </div>
               <div>
                 <p>Color/texture of the outside 2</p>
-                <p class="fontweight">
-                  {{ selectedOutside2Color || "Not selected" }}
-                </p>
+                <div class="row">
+                  <p
+                    :style="{
+                      backgroundColor: selectedOutside2Color || 'transparent',
+                    }"
+                  ></p>
+                  <p
+                    :style="{
+                      backgroundImage: selectedOutside2Texture
+                        ? 'url(' + selectedOutside2Texture + ')'
+                        : 'none',
+                    }"
+                  ></p>
+                </div>
               </div>
               <div>
                 <p>Color/texture of the outside 3</p>
-                <p class="fontweight">
-                  {{ selectedOutside3Color || "Not selected" }}
-                </p>
+                <div class="row">
+                  <p
+                    :style="{
+                      backgroundColor: selectedOutside3Color || 'transparent',
+                    }"
+                  ></p>
+                  <p
+                    :style="{
+                      backgroundImage: selectedOutside3Texture
+                        ? 'url(' + selectedOutside3Texture + ')'
+                        : 'none',
+                    }"
+                  ></p>
+                </div>
               </div>
               <div>
                 <p>Color/texture of the inside</p>
-                <p class="fontweight">
-                  {{ selectedInsideColor || "Not selected" }}
-                </p>
+                <div class="row">
+                  <p
+                    :style="{
+                      backgroundColor: selectedInsideColor || 'transparent',
+                    }"
+                  ></p>
+                  <p
+                    :style="{
+                      backgroundImage: texture
+                        ? 'url(' + selectedInsideTexture + ')'
+                        : 'none',
+                    }"
+                  ></p>
+                </div>
               </div>
             </div>
             <!-- Personal info form -->
