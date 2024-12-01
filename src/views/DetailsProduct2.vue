@@ -796,9 +796,16 @@ onMounted(() => {
   });
 
   summaryButton?.addEventListener("click", () => {
+    // Verberg alle div's binnen .overviewConfig
+    document.querySelectorAll(".overviewConfig div").forEach((div) => {
+      div.style.display = "none";
+    });
+
+    // Verberg de backButton en summaryButton
     document.querySelector(".backButton").style.display = "none";
     document.querySelector(".summaryButton").style.display = "none";
-    pages[currentPageIndex]?.style.setProperty("display", "none");
+
+    // Toon de .summary sectie
     document.querySelector(".summary").style.display = "flex";
   });
 
