@@ -108,7 +108,6 @@ const fetchOrders = async () => {
   orders.value = ordersData?.orders || [];
   console.log(ordersData);
 };
-p;
 
 // Initial Fetch on Mount
 onMounted(async () => {
@@ -265,7 +264,7 @@ provide("user", user);
             />
             <router-link :to="{ name: 'EditOrder', params: { id: order._id } }">
               <p>{{ order._id }}</p>
-              <p>{{ order.productId.productCode }}</p>
+              <p>{{ order.order.productId.productCode }}</p>
               <p>{{ order.lacesColor }}</p>
               <p>{{ order.lacesTexture }}</p>
               <p>{{ order.soleBottomColor }}</p>
