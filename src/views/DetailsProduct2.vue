@@ -872,12 +872,19 @@ async function submitOrder() {
   // Verzamelen van formulierdata inclusief kleurkeuzes
   const orderData = {
     lacesColor: selectedLacesColor.value, // Gebruik .value om de ref variabele aan te roepen
+    lacesTexture: selectedLacesTexture.value, // Voeg textuur toe als het in de form staat
     soleBottomColor: selectedSoleBottomColor.value,
+    soleBottomTexture: selectedSoleBottomTexture.value, // Voeg textuur toe
     soleTopColor: selectedSoleTopColor.value,
+    soleTopTexture: selectedSoleTopTexture.value, // Voeg textuur toe
     insideColor: selectedInsideColor.value,
+    insideTexture: selectedInsideTexture.value, // Voeg textuur toe
     outside1Color: selectedOutside1Color.value,
+    outside1Texture: selectedOutside1Texture.value, // Voeg textuur toe
     outside2Color: selectedOutside2Color.value,
+    outside2Texture: selectedOutside2Texture.value, // Voeg textuur toe
     outside3Color: selectedOutside3Color.value,
+    outside3Texture: selectedOutside3Texture.value, // Voeg textuur toe
     firstName: firstName.value, // Gebruik .value voor andere ref variabelen
     lastName: lastName.value,
     email: email.value,
@@ -896,22 +903,24 @@ async function submitOrder() {
     const response = await fetch(`${baseURL}/orders/${productId.value}`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/json", // Zorg ervoor dat het type 'application/json' is
       },
-      body: JSON.stringify(orderData),
+      body: JSON.stringify(orderData), // Verzend de gegevens in JSON-formaat
     });
 
+    // Controleer of de server een succesvolle reactie heeft gegeven
     if (!response.ok) {
       const errorResponse = await response.json();
       console.error("Server error response:", errorResponse);
       throw new Error(errorResponse.message || "Failed to submit the order");
     }
 
+    // Ontvang de succesvolle serverresponse
     const result = await response.json();
     console.log("Order submitted successfully:", result);
 
     // Succesbericht tonen
-    document.querySelector(".errorMessage").innerHTML = "";
+    document.querySelector(".errorMessage").innerHTML = ""; // Verwijder eventuele foutmeldingen
     document.querySelector(".successMessage").innerHTML =
       "Order submitted successfully!";
   } catch (error) {
