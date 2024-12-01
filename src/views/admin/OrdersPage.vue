@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, onMounted, watch, provide } from "vue";
+import { ref, reactive, computed, onMounted, provide } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import Navigation from "../../components/navComponent.vue";
@@ -29,19 +29,15 @@ const parseJwt = (token) => {
 
 // Check for token validity
 const token = getToken();
-if (!token) {
-  router.push("/login");
-}
-
 const tokenPayload = parseJwt(token);
 const userId = tokenPayload?.userId;
 const partnerId = tokenPayload?.partnerId || null;
 
+// If no valid userId, redirect to login
 if (!userId) {
   router.push("/login");
 }
 
-// Base URL for API calls (development vs production)
 const isProduction = window.location.hostname !== "localhost";
 const baseURL = isProduction
   ? "https://glint-backend-admin.onrender.com/api/v1"
@@ -65,7 +61,6 @@ const user = reactive({
 
 const partnerPackage = ref(null);
 const orders = ref([]);
-const data = ref([]);
 const selectedOrders = ref([]);
 const searchTerm = ref("");
 const selectedFilter = ref("All");
@@ -165,10 +160,11 @@ const confirmDelete = async () => {
 const deleteOrders = async () => {
   try {
     for (const id of selectedOrders.value) {
+      // Optimistically remove deleted orders from the list to update the UI instantly
+      orders.value = orders.value.filter((order) => order._id !== id);
       await fetch(`${baseURL}/orders/${id}`, { method: "DELETE" });
     }
     selectedOrders.value = [];
-    fetchOrders(); // Refresh orders after deletion
   } catch (error) {
     console.error("Error deleting orders:", error);
   }
@@ -266,6 +262,9 @@ provide("user", user);
             </router-link>
           </li>
         </ul>
+        <div v-if="filteredOrders.length === 0" class="no-orders">
+          No orders found
+        </div>
       </div>
     </div>
   </div>
