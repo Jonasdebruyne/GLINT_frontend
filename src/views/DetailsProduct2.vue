@@ -750,7 +750,6 @@ onMounted(() => {
         }
 
         // Optioneel: Update de zichtbaarheid van de knoppen
-        updateButtonVisibility();
       });
     });
 
